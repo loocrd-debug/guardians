@@ -5,7 +5,12 @@
 (() => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition
   const $ = s => document.querySelector(s)
-  const WAKE = /(가디언즈|가디언스|가디언|과디언즈|guardians?)/i
+  const WAKE = /(헤이|해이|hey|하이\s*가디언|가디언즈)/i
+  const DO = /(검사|점검|체크|확인)\s*(좀\s*)?(해|하여|해서)?\s*(줘|주세요|줄래|줄래요|주라|봐|부탁|해\s*줘|해\s*줄래)/   // '검사해 줘'가 나와야 실행
+  const NUM = t => t.replace(/이십사/g, '24').replace(/스물\s*넷/g, '24').replace(/\s+/g, ' ')
+  let ALIAS = []; fetch('/api/ai/aliases').then(r => r.json()).then(a => { ALIAS = a.map(x => [new RegExp(x.pattern, 'i'), x.url]) }).catch(() => {})
+  const NAMES = { 'gov.kr': '정부24', 'data.go.kr': '공공데이터포털', 'korea.kr': '정책브리핑', 'mois.go.kr': '행정안전부', 'epeople.go.kr': '국민신문고', 'hometax.go.kr': '홈택스', 'bokjiro.go.kr': '복지로', 'law.go.kr': '법제처', 'g2b.go.kr': '나라장터', 'work.go.kr': '워크넷', 'nhis.or.kr': '국민건강보험', 'epost.go.kr': '우체국', 'moe.go.kr': '교육부', 'seoul.go.kr': '서울시', 'kdi.re.kr': '한국개발연구원' }
+  const siteOf = t => { const z = t.replace(/\s+/g, ''); for (const [re, u] of ALIAS) if (re.test(t) || re.test(z)) return u; const m = t.match(/([a-z0-9-]+\.)+(go\.kr|or\.kr|re\.kr|kr|com)/i); return m ? 'https://' + m[0] : null }
   const css = document.createElement('style'); css.textContent = `
 .gv-fab{position:fixed;right:22px;bottom:22px;z-index:9000;display:none;align-items:center;gap:7px;border:0;border-radius:22px;background:#111;color:#fff;padding:9px 15px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;opacity:.82}
 .gv-fab:hover{opacity:1}.gv-fab.on{display:inline-flex}.gv-fab b{width:7px;height:7px;border-radius:50%;background:#666}.gv-fab.live b{background:#3ddc84;animation:gvdot 2s ease-in-out infinite}
@@ -31,14 +36,14 @@
   document.body.appendChild(fab); document.body.appendChild(box)
   const K = 'g-assist-live'; let live = false, active = false, mode = 'cmd', speaking = false, rec = null, stream = null, ac = null, raf = 0, idleT = 0
   const setS = s => { box.dataset.s = s }
-  const label = () => { fab.innerHTML = `<b aria-hidden="true"></b>${live ? '“가디언즈”라고 불러 주세요' : 'AI 비서'}`; fab.classList.toggle('live', live); fab.setAttribute('aria-pressed', String(live)); fab.title = live ? '누르면 부르기 모드를 끕니다' : '누르면 "가디언즈"라고 부를 때 바로 듣는 모드를 켭니다' }
+  const label = () => { fab.innerHTML = `<b aria-hidden="true"></b>${live ? '“헤이~ ○○ 검사해 줘”' : 'AI 비서'}`; fab.classList.toggle('live', live); fab.setAttribute('aria-pressed', String(live)); fab.title = live ? '누르면 부르기 모드를 끕니다' : '누르면 "헤이"라고 부를 때 바로 듣는 모드를 켭니다' }
   // ── 비서 음성 (Google 한국어 → Windows 한국어 순)
   const voice = () => { const v = (speechSynthesis.getVoices() || []).filter(v => /ko(-|_)KR/i.test(v.lang)); return v.find(x => /google/i.test(x.name)) || v[0] }
   function say(t, then) { $('#gvSay').textContent = t; setS('speak'); speaking = true; lastSaid = t; saidAt = Date.now(); buf = ''; clearTimeout(bufT); try { rec && rec.abort() } catch (_) {}
     try { speechSynthesis.cancel() } catch (_) {}
     const u = new SpeechSynthesisUtterance(t.replace(/PPTX/g, '피피티').replace(/KRDS/g, '케이알디에스')); u.lang = 'ko-KR'; const v = voice(); if (v) u.voice = v; u.rate = 1.07
     let done = false; const fin = () => { if (done) return; done = true; setTimeout(() => { speaking = false; saidAt = Date.now(); if (box.dataset.s === 'speak') setS(active ? 'listen' : 'idle'); if (then) { then() } startRec() }, 800) }
-    u.onend = fin; u.onerror = fin; setTimeout(fin, Math.max(3500, t.length * 180)); speechSynthesis.speak(u) }
+    u.onend = fin; u.onerror = ev => { if (v && /google/i.test(v.name) && !u.__retry) { const w = (speechSynthesis.getVoices() || []).find(x => /ko(-|_)KR/i.test(x.lang) && !/google/i.test(x.name)); if (w) { const u2 = new SpeechSynthesisUtterance(u.text); u2.lang = 'ko-KR'; u2.voice = w; u2.rate = 1.07; u2.__retry = true; u2.onend = fin; u2.onerror = fin; speechSynthesis.speak(u2); return } } fin() }; setTimeout(fin, Math.max(3500, t.length * 180)); speechSynthesis.speak(u) }
   // ── 마이크 게이지 (부르기 모드에서 이미 허용된 마이크 · PC 안에서만 계산)
   async function meterOn() { if (stream) return; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); ac = new (window.AudioContext || window.webkitAudioContext)(); const an = ac.createAnalyser(); an.fftSize = 512; ac.createMediaStreamSource(stream).connect(an)
       const bars = [...box.querySelectorAll('.gv-meter i')], d = new Uint8Array(an.frequencyBinCount), orb = box.querySelector('.gv-orb')
@@ -49,13 +54,17 @@
   const norm = x => String(x || '').replace(/[^가-힣a-z0-9]/gi, '')
   const isEcho = t => { const a = norm(t), b = norm(lastSaid); if (!a || !b) return false; if (Date.now() - saidAt > 15000) return false
     let hit = 0; for (let i = 0; i + 2 <= a.length; i++) if (b.includes(a.slice(i, i + 2))) hit++; return hit / Math.max(1, a.length - 1) > .6 }   // 비서가 방금 한 말과 60% 이상 겹치면 되울림
-  function flush() { const t = buf.trim(); buf = ''; if (!t || isEcho(t)) return
+  function flush() { let t = NUM(buf.trim()); buf = ''; if (!t || isEcho(t)) return
     if (box.dataset.s === 'run' || box.dataset.s === 'think') return   // 검사 · 해석 중에는 듣지 않음
-    if (!active) { if (!WAKE.test(t)) return; wake(); const rest = t.split(WAKE).pop().replace(/^[\s,.~!?]+/, '').trim(); $('#gvHeard').textContent = '“' + t + '”'; if (rest.length > 3) handle(rest); else say('네, 말씀하세요.'); return }
-    $('#gvHeard').textContent = '“' + t + '”'; handle(t.replace(WAKE, '').replace(/^[\s,.~!?]+/, '').trim() || t) }
+    if (!active) { if (!WAKE.test(t)) return; wake(); t = t.split(WAKE).pop().replace(/^[\s,.~!?]+/, '').trim(); pend = '' ; if (!t) { say('네, 말씀하세요.'); return } }
+    if (mode === 'report') { $('#gvHeard').textContent = '“' + t + '”'; handle(t); return }
+    pend = (pend + ' ' + t.replace(WAKE, '')).trim(); $('#gvHeard').textContent = '“' + pend + '”'
+    if (DO.test(pend) || (siteOf(pend) && /검사|점검/.test(pend))) { const c = pend; pend = ''; handle(c); return }
+    clearTimeout(waitT); waitT = setTimeout(() => { if (active && pend && box.dataset.s === 'listen') { say('어느 사이트를 검사할지 말씀하시고, "검사해 줘"로 끝내 주세요.') } }, 5000) }
+  let pend = '', waitT = 0
   function startRec() { if (!live || speaking || !SR) return; try { rec && rec.abort() } catch (_) {}
-    rec = new SR(); rec.lang = 'ko-KR'; rec.continuous = true; rec.interimResults = true
-    rec.onresult = ev => { let interim = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) buf += ' ' + r[0].transcript; else interim += r[0].transcript }
+    rec = new SR(); rec.lang = 'ko-KR'; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 3
+    rec.onresult = ev => { let interim = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) { let best = r[0].transcript; for (let k = 0; k < r.length; k++) { const c = NUM(r[k].transcript); if (siteOf(c) || DO.test(c) || WAKE.test(c)) { best = r[k].transcript; break } } buf += ' ' + best } else interim += r[0].transcript }
       const now = (buf + ' ' + interim).trim(); if (!now || isEcho(now)) return
       if (!active && WAKE.test(now)) wake(); if (active) { $('#gvHeard').textContent = '“' + now + '”'; bumpIdle() }
       clearTimeout(bufT); bufT = setTimeout(flush, interim ? 1600 : 1100) }   // 말이 끝나고 잠깐 조용해지면 한 문장으로 처리
@@ -64,7 +73,7 @@
     try { rec.start(); if (active && box.dataset.s !== 'run') setS('listen') } catch (_) {} }
   function wake() { if (active) return; active = true; box.classList.add('on'); setS('listen'); meterOn(); bumpIdle() }
   function bumpIdle() { clearTimeout(idleT); idleT = setTimeout(() => { if (active && box.dataset.s === 'listen') close() }, 25000) }
-  function close() { active = false; mode = 'cmd'; box.classList.remove('on'); setS('idle'); meterOff(); $('#gvHeard').textContent = ''; clearTimeout(idleT); try { speechSynthesis.cancel() } catch (_) {} speaking = false; startRec() }
+  function close() { active = false; mode = 'cmd'; pend = ''; clearTimeout(waitT); box.classList.remove('on'); setS('idle'); meterOff(); $('#gvHeard').textContent = ''; clearTimeout(idleT); try { speechSynthesis.cancel() } catch (_) {} speaking = false; startRec() }
   // ── 대화
   const yes = t => /(응|어|네|예|그래|좋아|부탁|해\s*줘|해\s*주세요|출력|만들어|저장|오케이|ok|yes|피피티|ppt|엑셀|excel|html|둘\s*다|전부|모두)/i.test(t)
   const no = t => /^(아니|아뇨|됐어|괜찮아|필요\s*없|그만|no)/i.test(t.trim())
@@ -77,11 +86,13 @@
       return say('결과서를 출력해 드릴까요? 네 또는 아니요로 말씀해 주세요.') }
     if (no(t)) return say('네, 필요하시면 언제든 불러 주세요.', () => setTimeout(close, 1500))
     setS('think'); $('#gvSay').textContent = '네, 알겠습니다…'
-    let r; try { r = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json() } catch (e) { r = { ok: false, error: e.message } }
-    if (!r.ok) return say(r.error && /체험/.test(r.error) ? r.error : '죄송합니다. 잠시 후 다시 말씀해 주세요.')
+    let r = null; const u = siteOf(NUM(t))
+    if (u) r = { ok: true, url: u, checks: { checkLinks: /링크/.test(t), checkSpelling: /오탈자|맞춤법/.test(t), checkKRDS: /krds|케이알디에스|디자인/i.test(t), checkW3C: /표준|html/i.test(t) }, reply: '' }
+    if (!r) try { r = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json() } catch (e) { r = { ok: false, error: e.message } }
+    if (!r || !r.ok) return say(r.error && /체험/.test(r.error) ? r.error : '죄송합니다. 잠시 후 다시 말씀해 주세요.')
     if (!r.url) { askAgain++; if (askAgain > 2) { askAgain = 0; return say('사이트 이름을 알아듣지 못했습니다. 화면의 주소 칸에 입력해 주세요.', () => setTimeout(close, 2500)) } return say(`“${t}”에서 사이트 이름을 찾지 못했습니다. 예를 들어 국민신문고 접근성 검사해 줘, 처럼 말씀해 주세요.`) }
     askAgain = 0
-    const host = r.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); const nm = (r.reply || '').match(/^([^(（\s]+)\s*\(/); const site = nm ? nm[1] : host
+    const host = r.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); const site = NAMES[host] || ((r.reply || '').match(/^([^(（\s]+)\s*\(/) || [])[1] || host
     say(`네, 알겠습니다. ${site} 검사를 시작합니다.`, () => { setS('run'); $('#gvHeard').textContent = '검사 중… 보통 30초 정도 걸립니다'; watch() })
     try { window.runCommand && window.runCommand(t, r) } catch (_) {} }
   function watch() { const t0 = Date.now(); const iv = setInterval(() => { const now = $('#run-now'); if (now && box.dataset.s === 'run') $('#gvHeard').textContent = now.textContent; bumpIdle()
@@ -97,6 +108,8 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && active) close(); if (e.altKey && /^[vVㅍ]$/.test(e.key)) { e.preventDefault(); toggle() } })
   // AI가 켜졌거나 체험 모드일 때만 버튼 · 부르기 모드는 다시 열어도 유지(마이크가 이미 허용된 경우)
   const check = async () => { try { const a = await (await fetch('/api/ai/status')).json(); fab.classList.toggle('on', !!a.enabled || !!(a.demo && a.demo.on)) } catch (_) {} }
+  const unlock = () => { try { const z = new SpeechSynthesisUtterance(' '); z.volume = 0; speechSynthesis.speak(z) } catch (_) {} document.removeEventListener('pointerdown', unlock, true); document.removeEventListener('keydown', unlock, true) }
+  document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true)
   label(); check(); setInterval(check, 60000); try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {} } catch (_) {}
   if (localStorage.getItem(K) && SR && navigator.permissions) navigator.permissions.query({ name: 'microphone' }).then(p => { if (p.state === 'granted') { live = true; label(); startRec() } else localStorage.removeItem(K) }).catch(() => {})
 })()
