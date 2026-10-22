@@ -34,10 +34,10 @@
   const label = () => { fab.innerHTML = `<b aria-hidden="true"></b>${live ? '“가디언즈”라고 불러 주세요' : 'AI 비서'}`; fab.classList.toggle('live', live); fab.setAttribute('aria-pressed', String(live)); fab.title = live ? '누르면 부르기 모드를 끕니다' : '누르면 "가디언즈"라고 부를 때 바로 듣는 모드를 켭니다' }
   // ── 비서 음성 (Google 한국어 → Windows 한국어 순)
   const voice = () => { const v = (speechSynthesis.getVoices() || []).filter(v => /ko(-|_)KR/i.test(v.lang)); return v.find(x => /google/i.test(x.name)) || v[0] }
-  function say(t, then) { $('#gvSay').textContent = t; setS('speak'); speaking = true; try { rec && rec.abort() } catch (_) {}
+  function say(t, then) { $('#gvSay').textContent = t; setS('speak'); speaking = true; lastSaid = t; saidAt = Date.now(); buf = ''; clearTimeout(bufT); try { rec && rec.abort() } catch (_) {}
     try { speechSynthesis.cancel() } catch (_) {}
     const u = new SpeechSynthesisUtterance(t.replace(/PPTX/g, '피피티').replace(/KRDS/g, '케이알디에스')); u.lang = 'ko-KR'; const v = voice(); if (v) u.voice = v; u.rate = 1.07
-    let done = false; const fin = () => { if (done) return; done = true; speaking = false; if (box.dataset.s === 'speak') setS('idle'); then ? then() : startRec() }
+    let done = false; const fin = () => { if (done) return; done = true; setTimeout(() => { speaking = false; saidAt = Date.now(); if (box.dataset.s === 'speak') setS(active ? 'listen' : 'idle'); if (then) { then() } startRec() }, 800) }
     u.onend = fin; u.onerror = fin; setTimeout(fin, Math.max(3500, t.length * 180)); speechSynthesis.speak(u) }
   // ── 마이크 게이지 (부르기 모드에서 이미 허용된 마이크 · PC 안에서만 계산)
   async function meterOn() { if (stream) return; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); ac = new (window.AudioContext || window.webkitAudioContext)(); const an = ac.createAnalyser(); an.fftSize = 512; ac.createMediaStreamSource(stream).connect(an)
@@ -45,12 +45,20 @@
       const loop = () => { an.getByteFrequencyData(d); let sum = 0; bars.forEach((b, i) => { const v = d[2 + i * 3] / 255; sum += v; b.style.height = Math.max(4, v * 30) + 'px' }); if (box.dataset.s === 'listen') orb.style.transform = `scale(${1 + Math.min(.22, sum / bars.length * .5)})`; raf = requestAnimationFrame(loop) }; loop() } catch (_) {} }
   function meterOff() { cancelAnimationFrame(raf); box.querySelector('.gv-orb').style.transform = ''; try { stream && stream.getTracks().forEach(t => t.stop()) } catch (_) {} try { ac && ac.close() } catch (_) {} stream = ac = null }
   // ── 계속 듣기 (부르기 모드)
+  let buf = '', bufT = 0, lastSaid = '', saidAt = 0, askAgain = 0
+  const norm = x => String(x || '').replace(/[^가-힣a-z0-9]/gi, '')
+  const isEcho = t => { const a = norm(t), b = norm(lastSaid); if (!a || !b) return false; if (Date.now() - saidAt > 15000) return false
+    let hit = 0; for (let i = 0; i + 2 <= a.length; i++) if (b.includes(a.slice(i, i + 2))) hit++; return hit / Math.max(1, a.length - 1) > .6 }   // 비서가 방금 한 말과 60% 이상 겹치면 되울림
+  function flush() { const t = buf.trim(); buf = ''; if (!t || isEcho(t)) return
+    if (box.dataset.s === 'run' || box.dataset.s === 'think') return   // 검사 · 해석 중에는 듣지 않음
+    if (!active) { if (!WAKE.test(t)) return; wake(); const rest = t.split(WAKE).pop().replace(/^[\s,.~!?]+/, '').trim(); $('#gvHeard').textContent = '“' + t + '”'; if (rest.length > 3) handle(rest); else say('네, 말씀하세요.'); return }
+    $('#gvHeard').textContent = '“' + t + '”'; handle(t.replace(WAKE, '').replace(/^[\s,.~!?]+/, '').trim() || t) }
   function startRec() { if (!live || speaking || !SR) return; try { rec && rec.abort() } catch (_) {}
     rec = new SR(); rec.lang = 'ko-KR'; rec.continuous = true; rec.interimResults = true
-    rec.onresult = ev => { let interim = '', fin = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; (r.isFinal ? (fin += r[0].transcript) : (interim += r[0].transcript)) }
-      const now = (fin || interim).trim(); if (!now) return
-      if (!active) { if (WAKE.test(now)) { wake(); $('#gvHeard').textContent = '“' + now + '”' } if (fin && WAKE.test(fin)) { const rest = fin.split(WAKE).pop().replace(/^[\s,.~!?]+/, '').trim(); if (rest.length > 3) handle(rest); else say('네, 말씀하세요.') } return }
-      $('#gvHeard').textContent = '“' + now + '”'; if (fin) handle(fin.replace(WAKE, '').replace(/^[\s,.~!?]+/, '').trim() || fin) }
+    rec.onresult = ev => { let interim = ''; for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) buf += ' ' + r[0].transcript; else interim += r[0].transcript }
+      const now = (buf + ' ' + interim).trim(); if (!now || isEcho(now)) return
+      if (!active && WAKE.test(now)) wake(); if (active) { $('#gvHeard').textContent = '“' + now + '”'; bumpIdle() }
+      clearTimeout(bufT); bufT = setTimeout(flush, interim ? 1600 : 1100) }   // 말이 끝나고 잠깐 조용해지면 한 문장으로 처리
     rec.onerror = ev => { if (ev.error === 'not-allowed') { live = false; localStorage.removeItem(K); label() } }
     rec.onend = () => { if (live && !speaking) setTimeout(startRec, 250) }
     try { rec.start(); if (active && box.dataset.s !== 'run') setS('listen') } catch (_) {} }
@@ -71,7 +79,8 @@
     setS('think'); $('#gvSay').textContent = '네, 알겠습니다…'
     let r; try { r = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json() } catch (e) { r = { ok: false, error: e.message } }
     if (!r.ok) return say(r.error && /체험/.test(r.error) ? r.error : '죄송합니다. 잠시 후 다시 말씀해 주세요.')
-    if (!r.url) return say('어느 사이트를 검사할까요?')
+    if (!r.url) { askAgain++; if (askAgain > 2) { askAgain = 0; return say('사이트 이름을 알아듣지 못했습니다. 화면의 주소 칸에 입력해 주세요.', () => setTimeout(close, 2500)) } return say(`“${t}”에서 사이트 이름을 찾지 못했습니다. 예를 들어 국민신문고 접근성 검사해 줘, 처럼 말씀해 주세요.`) }
+    askAgain = 0
     const host = r.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); const nm = (r.reply || '').match(/^([^(（\s]+)\s*\(/); const site = nm ? nm[1] : host
     say(`네, 알겠습니다. ${site} 검사를 시작합니다.`, () => { setS('run'); $('#gvHeard').textContent = '검사 중… 보통 30초 정도 걸립니다'; watch() })
     try { window.runCommand && window.runCommand(t, r) } catch (_) {} }
