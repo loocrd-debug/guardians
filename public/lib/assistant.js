@@ -82,7 +82,7 @@
   // ── 부르기 모드 켜기 · 끄기 (버튼 한 번 — 마이크는 처음 한 번만 허용)
   async function toggle() { if (!SR) { alert('이 브라우저는 음성 인식을 지원하지 않습니다. 크롬이나 엣지를 사용해 주세요.'); return }
     if (live) { live = false; localStorage.removeItem(K); try { rec && rec.abort() } catch (_) {} close(); label(); return }
-    try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()) } catch (e) { alert('마이크를 허용해 주세요. 주소창 왼쪽 자물쇠 → 마이크 → 허용'); return }
+    try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()) } catch (e) { alert(e && e.name === 'NotFoundError' ? '이 PC에서 마이크를 찾지 못했습니다.\n헤드셋 · USB 마이크를 연결하고, Windows 설정 › 개인 정보 › 마이크에서 데스크톱 앱 · 브라우저의 마이크 사용을 켠 뒤 다시 눌러 주세요.' : '마이크 사용이 막혀 있습니다.\n주소창 왼쪽 자물쇠 → 마이크 → 허용(이 사이트 방문 시 항상)으로 바꾼 뒤 다시 눌러 주세요.'); return }
     live = true; localStorage.setItem(K, '1'); label(); startRec() }
   fab.onclick = toggle
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && active) close(); if (e.altKey && /^[vVㅍ]$/.test(e.key)) { e.preventDefault(); toggle() } })

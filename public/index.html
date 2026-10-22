@@ -676,7 +676,7 @@ $('#dlXlsx').addEventListener('click', () => dl('/api/report/excel', `검사보�
 $('#dlHtml').addEventListener('click', () => dl('/api/report', `검사보고서_${stamp()}.html`))
 $('#again').addEventListener('click', () => { urlIn.value=''; go1.disabled=true; show('p1'); urlIn.focus() })
 </script>
-<script src="/lib/assistant.js" defer></script>
+<script src="/lib/assistant.js?v=6.21.2" defer></script>
 <script src="/lib/nav.js" defer><script>if (location.hash === '#ai') { history.replaceState(null, '', '/'); setTimeout(() => window.__openAi && window.__openAi(), 400) }</script>
 </body>
 </html>
