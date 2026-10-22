@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스크린 리더 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main{max-width:1180px;margin:0 auto;padding:0 40px 120px}
+  .bar{display:flex;gap:10px;align-items:flex-end;margin-top:28px;flex-wrap:wrap}
+  .f{flex:1;min-width:280px} .f label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .f input{width:100%;height:50px;padding:0 14px;border:1px solid var(--line)!important;border-radius:10px!important;font:inherit;font-size:16px;background:#fff}
+  .f input:focus{outline:none;border-color:var(--ink)!important}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:50px}
+  .seg button{padding:0 18px;border:0;background:#fff;font:inherit;font-size:14px;color:var(--muted);cursor:pointer} .seg button.on{background:var(--ink);color:#fff}
+  .run{height:50px;padding:0 26px;border:0;border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer} .run:disabled{background:var(--line);color:#bdbdbd}
+  .hint{font-size:13px;color:var(--muted);margin-top:10px}
+  .res{display:none;margin-top:36px} .res.on{display:block}
+  .stats{display:flex;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
+  .stat{flex:1;padding:16px 20px;border-right:1px solid var(--line)} .stat:last-child{border-right:0}
+  .stat b{display:block;font-size:26px;font-weight:800;letter-spacing:-.04em} .stat span{font-size:12.5px;color:var(--muted)} .stat.bad b{color:var(--bad)} .stat.good b{color:var(--good)}
+  .grid{display:grid;grid-template-columns:420px 1fr;gap:36px;align-items:start}
+  .phone{position:sticky;top:20px}
+  .frame{border:1px solid var(--line);border-radius:22px;padding:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  .frame.desktop{border-radius:12px;padding:8px}
+  .screen{position:relative;overflow:auto;max-height:70vh;border-radius:12px;background:var(--soft)}
+  .screen img{display:block;width:100%;height:auto}
+  .hl{position:absolute;border:2px solid var(--bad);background:rgba(239,98,83,.15);border-radius:4px;box-shadow:0 0 0 3px #fff;pointer-events:none;display:none}
+  .hl.ok{border-color:var(--ink);background:rgba(34,34,34,.10)}
+  .dev{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+  .ctl{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .ctl button{height:40px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer} .ctl button:hover{border-color:var(--ink)} .ctl button.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ctl label{font-size:13px;color:var(--muted);display:inline-flex;gap:6px;align-items:center} .ctl select{height:40px;border:1px solid var(--line)!important;border-radius:8px!important;padding:0 8px;font:inherit}
+  .ctl .sp{flex:1}
+  .list{border-top:1px solid var(--line)}
+  .ln{display:grid;grid-template-columns:36px 1fr;gap:12px;padding:10px 8px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px;line-height:1.5}
+  .ln:hover{background:var(--soft)} .ln.on{background:var(--soft);outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}
+  .ln .no{font-size:12px;color:var(--muted);padding-top:2px}
+  .ln.landmark,.ln.landmark-end{color:var(--muted);font-size:13px} .ln.landmark .t{font-weight:600;color:var(--ink)}
+  .ln.text .t{color:#555} .ln.struct .t{color:var(--ink)}
+  .ln.element .t{font-weight:500}
+  .ln .role{display:inline-block;font-size:11px;font-weight:700;color:var(--muted);background:var(--soft);padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:1px}
+  .ln .iss{display:block;font-size:12.5px;color:var(--bad);margin-top:3px}
+  .ln .src{font-size:11px;color:var(--muted);margin-left:6px}
+  .ln.hide{display:none}
+  .mob{margin-top:28px;border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+  .mob h3{font-size:16px;font-weight:700;margin:0 0 10px} .mob table{width:100%;border-collapse:collapse;font-size:13.5px} .mob td{padding:8px 6px;border-bottom:1px solid var(--line)} .mob td:last-child{text-align:right;font-weight:700} .mob td.bad{color:var(--bad)} .mob td.good{color:var(--good)}
+  .err{color:var(--bad);margin-top:16px;display:none}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}.phone{position:static}main{padding:0 20px 80px}}
+</style>
+</head>
+<body>
+<header class="g-top"><div class="g-top-in">
+  <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+  <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html" class="on">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+</div></header>
+<div class="g-title"><h1>스크린 리더 시뮬레이션</h1><p>화면 낭독기가 읽는 순서와 내용을 대본으로 보고 들을 수 있습니다. 폰 없이 모바일 읽기 순서를 점검하세요.</p></div>
+
+<main>
+  <div class="bar">
+    <div class="f"><label for="url">사이트 주소</label><input id="url" type="url" placeholder="www.example.go.kr"></div>
+    <div><label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px">기기</label>
+      <div class="seg" id="dev"><button data-d="iphone" class="on">iPhone</button><button data-d="galaxy">Galaxy</button><button data-d="desktop">데스크톱</button></div></div>
+    <button class="run" id="run" disabled>읽기 대본 만들기</button>
+  </div>
+  <div class="hint">낭독기(VoiceOver·TalkBack·센스리더)가 읽는 방식을 흉내 낸 것으로 실제 제품과 어순·표현이 조금 다를 수 있습니다. 이름·순서·누락은 같은 규칙(접근 가능한 이름 계산)으로 판정합니다.</div>
+  <div class="err" id="err"></div>
+
+  <section class="res" id="res">
+    <div class="stats" id="stats"></div>
+    <div class="grid">
+      <div class="phone">
+        <div class="frame" id="frame"><div class="screen" id="screen"><img id="shot" alt="렌더링 캡처"><div class="hl" id="hl"></div></div></div>
+        <div class="dev" id="devcap"></div>
+      </div>
+      <div>
+        <div class="ctl">
+          <button class="dark" id="play">▶ 처음부터 듣기</button><button id="stop">■ 정지</button>
+          <label>속도 <select id="rate"><option value="0.9">느리게</option><option value="1.1" selected>보통</option><option value="1.5">빠르게</option></select></label>
+          <label><input type="checkbox" id="onlyIssue" style="accent-color:var(--ink)"> 문제만 보기</label>
+          <label><input type="checkbox" id="skipText" style="accent-color:var(--ink)"> 본문 글 건너뛰기</label>
+          <span class="sp"></span><button id="dl">대본 저장 (.txt)</button>
+        </div>
+        <div class="list" id="list"></div>
+        <div class="mob" id="mob"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+
+<script>
+const $ = s => document.querySelector(s)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const ISSUE_KO = { 'no-name':'이름 없음', 'img-no-alt':'대체 텍스트 없음', 'placeholder-only':'placeholder만', 'generic-link':'목적 불명 링크', 'same-name-diff-target':'같은 이름·다른 주소', 'tabindex-positive':'tabindex 양수', 'hidden-focusable':'숨김 안 초점', 'heading-skip':'제목 단계 건너뜀', 'empty-heading':'빈 제목', 'table-no-th':'제목 셀 없는 표' }
+let device = 'iphone', R = null, cur = -1, playing = false
+document.querySelectorAll('#dev button').forEach(b => b.onclick = () => { device = b.dataset.d; document.querySelectorAll('#dev button').forEach(x => x.classList.toggle('on', x === b)) })
+$('#url').addEventListener('input', () => $('#run').disabled = !$('#url').value.trim())
+$('#url').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('#run').disabled) $('#run').click() })
+;(() => { const q = new URLSearchParams(location.search).get('url'); if (q) { $('#url').value = q; $('#run').disabled = false } })()
+
+$('#run').onclick = async () => {
+  stop(); const b = $('#run'); b.disabled = true; b.textContent = '렌더링·대본 생성 중… (10~20초)'; $('#err').style.display = 'none'
+  try {
+    const r = await fetch('/api/reader', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url: $('#url').value.trim(), device }) })
+    const d = await r.json(); if (!r.ok || d.error) throw new Error(d.error || `서버 오류 ${r.status}`)
+    R = d; render()
+  } catch (e) { $('#err').textContent = '실패: ' + e.message; $('#err').style.display = 'block' }
+  finally { b.disabled = false; b.textContent = '다시 만들기' }
+}
+
+function render(){
+  $('#res').classList.add('on')
+  const s = R.stats
+  $('#stats').innerHTML = [['읽는 줄', s.total, ''], ['요소', s.elements, ''], ['문제', s.issues, s.issues ? 'bad' : 'good'], ['제목', s.headings, ''], ['링크', s.links, ''], ['버튼', s.buttons, ''], ['이미지', s.images, '']]
+    .map(([l, n, c]) => `<div class="stat ${c}"><b>${n}</b><span>${l}</span></div>`).join('')
+  $('#frame').className = 'frame' + (R.device === 'desktop' ? ' desktop' : '')
+  $('#shot').src = 'data:image/jpeg;base64,' + R.screenshot
+  $('#devcap').textContent = `${R.deviceName} · ${R.viewport.width}×${R.viewport.height} · ${esc(R.title||'')}`
+  $('#list').innerHTML = R.items.map(it => `<div class="ln ${it.kind}" data-i="${it.i}" id="ln${it.i}">
+    <div class="no">${it.i + 1}</div>
+    <div><span class="t">${it.kind === 'element' ? `<span class="role">${esc((it.text.split(',')[0]||''))}</span>${esc(it.text.split(',').slice(1).join(',').trim() || '')}` : esc(it.text)}</span>${it.nameSrc && it.kind === 'element' && it.name && it.nameSrc !== 'text' ? `<span class="src">이름 출처: ${esc(({'aria-label':'aria-label','aria-labelledby':'aria-labelledby','alt':'alt','title':'title(보조)','placeholder':'placeholder(취약)','label':'label','value':'value','svg-title':'svg title'})[it.nameSrc] || it.nameSrc)}</span>` : ''}
+      ${(it.issues||[]).map(x => `<span class="iss">${ISSUE_KO[x.code] || x.code} — ${esc(x.msg)}</span>`).join('')}</div></div>`).join('')
+  document.querySelectorAll('.ln').forEach(el => el.onclick = () => { stop(); focusLine(+el.dataset.i); speakOne(+el.dataset.i) })
+  applyFilter()
+  const m = R.mobile, isMob = R.device !== 'desktop'
+  $('#mob').innerHTML = `<h3>${isMob ? '모바일 점검' : '화면 점검'}</h3><table>
+    <tr><td>viewport 메타 태그</td><td class="${m.viewportMeta ? 'good' : 'bad'}">${m.viewportMeta ? '있음' : '없음 — 모바일에서 축소 렌더링됨'}</td></tr>
+    <tr><td>가로 스크롤 발생</td><td class="${m.horizontalScroll ? 'bad' : 'good'}">${m.horizontalScroll ? `발생 (페이지 ${m.pageWidth}px > 화면 ${m.viewportWidth}px)` : '없음'}</td></tr>
+    <tr><td>터치 대상 24px 미만</td><td class="${m.smallTargets ? 'bad' : 'good'}">${m.smallTargets} / ${m.interactive}개</td></tr>
+    <tr><td>12px 미만 글자 블록</td><td class="${m.smallText ? 'bad' : 'good'}">${m.smallText}개</td></tr></table>`
+}
+function applyFilter(){ const oi = $('#onlyIssue').checked, st = $('#skipText').checked
+  R.items.forEach(it => { const el = $('#ln'+it.i); const hide = (oi && !(it.issues||[]).length) || (st && it.kind === 'text'); el.classList.toggle('hide', hide) }) }
+$('#onlyIssue').onchange = applyFilter; $('#skipText').onchange = applyFilter
+
+function focusLine(i){
+  document.querySelectorAll('.ln.on').forEach(e => e.classList.remove('on'))
+  const el = $('#ln'+i); if (!el) return; el.classList.add('on'); el.scrollIntoView({ block:'center', behavior:'smooth' })
+  const it = R.items[i], hl = $('#hl'), img = $('#shot')
+  if (it.rect && it.rect.w && it.rect.h && img.naturalWidth) {
+    const k = img.clientWidth / (R.viewport.width)   // 캡처는 CSS px 기준 뷰포트 폭
+    hl.style.display = 'block'; hl.className = 'hl' + ((it.issues||[]).length ? '' : ' ok')
+    hl.style.left = (it.rect.x * k) + 'px'; hl.style.top = (it.rect.y * k) + 'px'; hl.style.width = Math.max(6, it.rect.w * k) + 'px'; hl.style.height = Math.max(6, it.rect.h * k) + 'px'
+    const sc = $('#screen'); const y = it.rect.y * k; if (y < sc.scrollTop || y > sc.scrollTop + sc.clientHeight - 60) sc.scrollTo({ top: Math.max(0, y - sc.clientHeight / 3), behavior:'smooth' })
+  } else hl.style.display = 'none'
+}
+function voice(){ const vs = speechSynthesis.getVoices(); return vs.find(v => /ko/i.test(v.lang) && /Heami|Google|Yuna|Neural/i.test(v.name)) || vs.find(v => /ko/i.test(v.lang)) || null }
+function say(text){ return new Promise(res => { const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; const v = voice(); if (v) u.voice = v; u.rate = parseFloat($('#rate').value); u.onend = res; u.onerror = res; speechSynthesis.speak(u) }) }
+function visible(i){ return !$('#ln'+i).classList.contains('hide') }
+async function speakOne(i){ if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); focusLine(i); await say(R.items[i].text.replace(/\s*[—–]\s*/g, ', ')) }
+$('#play').onclick = async () => {
+  if (!R) return; if (!('speechSynthesis' in window)) { alert('이 브라우저는 음성 합성을 지원하지 않습니다.'); return }
+  stop(); playing = true; $('#play').textContent = '읽는 중…'
+  for (let i = 0; i < R.items.length && playing; i++) { if (!visible(i)) continue; focusLine(i); await say(R.items[i].text.replace(/\s*[—–]\s*/g, ', ')); const iss = R.items[i].issues || []; if (iss.length && playing) await say('문제, ' + (ISSUE_KO[iss[0].code] || '')) }
+  playing = false; $('#play').textContent = '▶ 처음부터 듣기'
+}
+function stop(){ playing = false; if ('speechSynthesis' in window) speechSynthesis.cancel(); $('#play').textContent = '▶ 처음부터 듣기' }
+$('#stop').onclick = stop
+$('#dl').onclick = () => {
+  if (!R) return
+  const lines = [`스크린 리더 읽기 대본 — ${R.title||''}`, `${R.url} · ${R.deviceName} · ${new Date(R.at).toLocaleString('ko-KR')}`, `읽는 줄 ${R.stats.total} · 문제 ${R.stats.issues}`, '', ...R.items.map(it => `${String(it.i+1).padStart(3)}  ${it.text}${(it.issues||[]).map(x => `\n      ! ${ISSUE_KO[x.code]||x.code}: ${x.msg}`).join('')}`)]
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\n')], { type:'text/plain' })); a.download = `스크린리더_대본_${new Date().toISOString().slice(0,10)}.txt`; a.click()
+}
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {}
+</script>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>

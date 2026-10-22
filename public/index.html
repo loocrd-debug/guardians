@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가디언즈 — 웹 품질 검사</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  :root{
+    --ink:#222; --paper:#fff; --line:#ebebeb; --line-strong:#222;
+    --muted:#8c8c8c; --soft:#f4f4f4; --bad:#ef6253; --good:#41b979; --warn:#f0a34d;
+    --w:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;overflow-y:scroll}
+  body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;
+       color:var(--ink);background:var(--paper);font-size:15px;line-height:1.5;letter-spacing:-.01em}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+
+
+  /* ── 상단 배지 (망 상태 · AI) ── */
+  .net{font-size:12px;color:var(--muted);margin-left:auto;margin-right:24px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .net i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block} .net.off i{background:var(--warn)}
+  .ai-link{font-size:13px;color:var(--muted);margin-right:20px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .ai-link i{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block} .ai-link.on i{background:var(--ink)} .ai-link:hover{color:var(--ink)}
+  /* 메인 입력창은 밑줄형 유지 (theme.css 입력 규칙 예외) */
+  .field input[type="url"]{border:0!important;border-bottom:2px solid var(--line-strong)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+  .field input[type="url"]:focus-visible{outline:none!important;border-bottom-color:var(--ink)!important;box-shadow:0 2px 0 0 var(--ink)!important}
+  .cmd input,.modal input{border:1px solid var(--line)!important;border-radius:10px!important}
+  /* ── 진행 단계 ── */
+  .steps{max-width:var(--w);margin:0 auto;padding:36px 40px 0;display:flex;gap:28px;font-size:15px;color:var(--muted)}
+  .steps span{display:flex;align-items:center;gap:8px}
+  .steps b{display:inline-flex;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .steps .on{color:var(--ink)} .steps .on b{background:var(--ink);border-color:var(--ink);color:#fff}
+  .steps .done b{background:var(--soft);border-color:var(--soft)}
+
+  /* ── 본문 ── */
+  main{max-width:var(--w);margin:0 auto;padding:44px 40px 120px}
+  .panel{display:none} .panel.on{display:block}
+  h1{font-size:38px;font-weight:800;letter-spacing:-.04em;line-height:1.2}
+  h1 + p{margin-top:12px;font-size:17px;color:var(--muted)}
+  h2{font-size:24px;font-weight:700;letter-spacing:-.03em}
+
+  /* 밑줄 입력창 */
+  .field{margin-top:56px;max-width:760px}
+  .field label{display:block;font-size:15px;color:var(--muted);margin-bottom:4px}
+  .field input{width:100%;border:0;border-bottom:2px solid var(--line-strong);padding:14px 0;font-size:24px;font-weight:500;letter-spacing:-.02em;background:transparent;border-radius:0}
+  .field input::placeholder{color:#c4c4c4;font-weight:400}
+  .field input:focus-visible{outline:none;border-bottom-color:var(--ink);box-shadow:0 2px 0 0 var(--ink)}
+  .field .hint{margin-top:10px;font-size:13px;color:var(--muted)}
+
+  /* 통버튼 */
+  .cta{display:block;width:100%;max-width:760px;height:60px;margin-top:40px;background:var(--ink);color:#fff;font-size:17px;font-weight:600;border-radius:10px}
+  .cta:disabled{background:var(--line);color:#bdbdbd;cursor:default}
+  .row-actions{display:flex;gap:10px;max-width:760px;margin-top:40px}
+  .row-actions .cta{margin:0;flex:1}
+  .ghost{height:60px;padding:0 28px;border:1px solid var(--line);border-radius:10px;font-size:17px;font-weight:600}
+  .ghost:hover{border-color:var(--ink)}
+
+  /* 검사 항목 목록 (행 + 구분선) */
+  .list{margin-top:36px;max-width:760px;border-top:1px solid var(--line)}
+  .item{display:flex;align-items:center;gap:20px;padding:22px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .item .txt{flex:1} .item .name{font-size:17px;font-weight:600} .item .desc{font-size:14px;color:var(--muted);margin-top:3px}
+  .item .time{font-size:13px;color:var(--muted);white-space:nowrap}
+  .sw{position:relative;width:46px;height:26px;border-radius:13px;background:var(--line);flex:none;transition:background .15s}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+  .item.on .sw{background:var(--ink)} .item.on .sw::after{transform:translateX(20px)}
+  .item input{position:absolute;opacity:0;width:0;height:0}
+  .depth{display:flex;gap:18px;margin-top:10px;font-size:13px}
+  .depth label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink)}
+  .depth input{position:static;opacity:1;width:auto;height:auto;accent-color:var(--ink);margin:0}
+  .depth span{color:var(--muted);font-size:12px}
+  .list-foot{display:flex;justify-content:space-between;align-items:center;max-width:760px;margin-top:14px;font-size:14px;color:var(--muted)}
+  .list-foot button{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+
+  /* 진행 중 */
+  .progress{margin-top:56px;max-width:760px}
+  .progress .now{font-size:24px;font-weight:600}
+  .progress .bar{height:2px;background:var(--line);margin-top:20px;overflow:hidden}
+  .progress .bar i{display:block;height:100%;width:30%;background:var(--ink);animation:slide 1.4s ease-in-out infinite}
+  @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+  .progress ul{margin-top:24px;list-style:none}
+  .progress li{padding:10px 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:15px;display:flex;justify-content:space-between}
+  .progress li.done{color:var(--ink)} .progress li.done::after{content:"완료";font-size:13px;color:var(--good)}
+  @media (prefers-reduced-motion:reduce){.progress .bar i{animation:none;width:100%}}
+
+  /* 결과 */
+  .result-head{display:grid;grid-template-columns:260px 1fr;gap:48px;padding:8px 0 40px;border-bottom:1px solid var(--line)}
+  .score{font-size:96px;font-weight:800;letter-spacing:-.06em;line-height:1}
+  .score small{font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--muted);margin-left:6px}
+  .score-cap{font-size:15px;color:var(--muted);margin-top:6px}
+  .verdict{font-size:24px;font-weight:700;letter-spacing:-.03em;padding-top:14px}
+  .verdict .bad{color:var(--bad)} .verdict .good{color:var(--good)}
+  .meta{margin-top:14px;font-size:14px;color:var(--muted);line-height:1.9}
+  .meta b{color:var(--ink);font-weight:500}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+  .stat{padding:24px 0;border-right:1px solid var(--line);padding-left:24px}
+  .stat:first-child{padding-left:0} .stat:last-child{border-right:0}
+  .stat .n{font-size:32px;font-weight:800;letter-spacing:-.04em} .stat .l{font-size:14px;color:var(--muted);margin-top:2px}
+  .stat.bad .n{color:var(--bad)} .stat.good .n{color:var(--good)}
+  .sect{padding:36px 0 8px;display:flex;align-items:baseline;justify-content:space-between}
+  .sect .cnt{font-size:15px;color:var(--muted)}
+  .viol{border-top:1px solid var(--line)}
+  .v{padding:20px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:72px 1fr;gap:20px;align-items:start}
+  .v .lv{font-size:13px;font-weight:600;padding-top:2px}
+  .lv.critical,.lv.serious{color:var(--bad)} .lv.moderate{color:var(--warn)} .lv.minor{color:var(--muted)}
+  .v .t{font-size:17px;font-weight:600} .v .d{font-size:14px;color:var(--muted);margin-top:4px}
+  .v .ref{font-size:13px;margin-top:8px;color:var(--muted)} .v .ref a{text-decoration:underline;text-underline-offset:3px}
+  .v .ref code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--soft);padding:2px 6px;border-radius:4px;color:var(--ink)}
+  .empty{padding:40px 0;color:var(--muted);font-size:17px}
+  .dl{display:flex;gap:10px;margin-top:44px;max-width:760px}
+  .dl .cta{margin:0;flex:1.4} .dl .ghost{flex:1}
+
+
+  /* ④ 신뢰도: 위치 하이라이트 */
+  .shot{position:relative;margin-top:16px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--soft);max-width:100%}
+  .shot img{display:block;width:100%;height:auto}
+  .shot .box{position:absolute;border:2px solid var(--bad);background:rgba(239,98,83,.14);box-sizing:border-box;pointer-events:none;transition:box-shadow .15s}
+  .shot .box.moderate,.shot .box.minor{border-color:var(--warn);background:rgba(240,163,77,.14)}
+  .shot .box.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+  .shot .tag{position:absolute;left:0;top:-18px;font-size:11px;font-weight:700;color:#fff;background:var(--bad);padding:1px 6px;border-radius:4px;white-space:nowrap}
+  .shot .box.moderate .tag,.shot .box.minor .tag{background:var(--warn)}
+  .shot-cap{font-size:13px;color:var(--muted);margin-top:8px}
+  .v .nodes{margin-top:10px;font-size:13px}
+  .v .nodes summary{cursor:pointer;color:var(--ink);font-weight:500;list-style:none;display:inline-flex;gap:8px;align-items:center}
+  .v .nodes summary::after{content:"펼치기";color:var(--muted);font-size:12px} .v .nodes[open] summary::after{content:"접기"}
+  .v .node{margin-top:8px;padding:10px 12px;background:var(--soft);border-radius:8px}
+  .v .node .sel{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--ink);word-break:break-all}
+  .v .node pre{margin:6px 0 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#444;white-space:pre-wrap;word-break:break-all;max-height:96px;overflow:auto}
+  .v .node .fix{margin-top:6px;font-size:12.5px;color:#444;white-space:pre-line}
+  .v .loc{font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;background:none;border:0;padding:0;cursor:pointer;font:inherit}
+  .kw{display:inline-block;font-size:12px;font-weight:600;color:var(--ink);background:var(--soft);padding:2px 8px;border-radius:4px;margin-right:6px}
+  .manual .v{grid-template-columns:44px 1fr} .manual .lv{color:var(--muted)}
+  .manual .t{font-weight:600;font-size:15px} .manual .d{font-size:13px}
+  .engine{font-size:12.5px;color:var(--muted);line-height:1.9;margin-top:8px}
+  .engine code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--soft);padding:1px 6px;border-radius:4px;color:var(--ink)}
+
+  /* 아코디언 섹션 */
+  details.acc{border-top:1px solid var(--line)}
+  details.acc > summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;padding:22px 0 14px;gap:16px}
+  details.acc > summary::-webkit-details-marker{display:none}
+  details.acc > summary h2{font-size:24px;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+  details.acc > summary h2::before{content:"";width:9px;height:9px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg);transition:transform .15s;margin-right:2px;position:relative;top:-2px}
+  details.acc[open] > summary h2::before{transform:rotate(45deg);top:-4px}
+  details.acc > summary .cnt{font-size:15px;color:var(--muted);white-space:nowrap}
+  details.acc > summary .cnt b{color:var(--ink);font-weight:600}
+  /* 위치 표시: 번호 마커 */
+  .shot .box{border-width:2px}
+  .shot .box.dim{opacity:.35}
+  .shot .box.on{opacity:1;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
+  .shot .num{position:absolute;left:-2px;top:-2px;transform:translate(-100%,-100%);min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:0 0 0 2px #fff}
+  .shot .box.moderate .num,.shot .box.minor .num{background:var(--warn)}
+  .shot-legend{display:flex;gap:16px;align-items:center;font-size:13px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .shot-legend .lsw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;font-style:normal}
+  .shot-legend button{background:none;border:1px solid var(--line);border-radius:6px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;color:var(--ink)}
+  .shot-legend button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .v.sel{background:var(--soft);margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:8px}
+  .v .vn{display:inline-flex;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--bad);color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center;margin-right:8px;vertical-align:2px}
+  .v .vn.moderate,.v .vn.minor{background:var(--warn)} .v .vn.none{background:var(--soft);color:var(--muted)}
+  .nowhere{font-size:12px;color:var(--muted);margin-left:6px}
+
+  .wwh{display:grid;grid-template-columns:52px 1fr;gap:8px 14px;margin-top:12px;font-size:13.5px;line-height:1.55}
+  .wwh .k{font-size:12px;font-weight:700;color:var(--muted);padding-top:2px}
+  .wwh .sel{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--ink);word-break:break-all}
+  .wwh .fixhow{color:var(--ink)}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .ba pre{margin:0;padding:10px 12px;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+  .ba .b{background:#fff5f4;border:1px solid #f7c9c3} .ba .a{background:#f1faf5;border:1px solid #bfe8d0}
+  .ba pre::before{display:block;font-family:inherit;font-size:11px;font-weight:700;margin-bottom:4px}
+  .ba .b::before{content:"수정 전";color:var(--bad)} .ba .a::before{content:"수정 후";color:var(--good)}
+  .ba.sug .b::before{content:"지금 (실제 코드)"} .ba.sug .a::before{content:"이렇게 (이 요소 맞춤 제안)"}
+  .sugmeta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12px;color:var(--muted);margin-top:6px}
+  .sugmeta b{color:var(--ink)} .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line);vertical-align:-2px;margin-right:3px}
+  .copy{font:inherit;font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--ink)} .copy:hover{border-color:var(--ink)}
+  .sugtag{font-size:11px;color:var(--muted)}
+  .fsum{font-size:12.5px;color:#555;white-space:pre-line;margin-top:6px}
+  .score-mini{font-size:13px;color:var(--muted);margin-top:6px} .score-mini b{color:var(--ink);font-weight:700;font-size:15px}
+  @media (max-width:760px){.ba{grid-template-columns:1fr}}
+
+  /* AI 보조 */
+  .ai-link{font-size:13px;color:var(--muted);margin-right:20px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .ai-link i{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block} .ai-link.on i{background:var(--ink)} .ai-link:hover{color:var(--ink)}
+  .cmd{max-width:760px;margin-top:28px;display:none} .cmd.on{display:block}
+  .cmd label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .cmd .row{display:flex;gap:8px;align-items:center}
+  .cmd input{flex:1;height:50px;padding:0 16px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:#fff}
+  .cmd input:focus{outline:none;border-color:var(--ink)}
+  .cmd button{height:50px;padding:0 18px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer} .cmd button:hover{border-color:var(--ink)}
+  .cmd button.go{background:var(--ink);color:#fff;border-color:var(--ink)} .cmd button.mic.rec{border-color:var(--bad);color:var(--bad)}
+  .cmd .hint{font-size:12px;color:var(--muted);margin-top:8px} .cmd .reply{font-size:14px;color:var(--ink);margin-top:10px;padding:12px 14px;background:var(--soft);border-radius:8px;display:none}
+  .aibtn{font:inherit;font-size:12px;padding:3px 10px;border:1px solid var(--ink);border-radius:6px;background:var(--ink);color:#fff;cursor:pointer} .aibtn:disabled{opacity:.5;cursor:default}
+  .aitag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;background:#fff8ef;color:#b9771f;margin-left:6px;vertical-align:1px}
+  .aisum{max-width:760px;margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:none}
+  .aisum h3{font-size:16px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px} .aisum ol,.aisum ul{padding-left:20px;margin:0 0 14px;font-size:14px;line-height:1.7} .aisum pre{white-space:pre-wrap;font:inherit;font-size:13.5px;line-height:1.7;background:var(--soft);padding:14px;border-radius:8px;margin:0}
+  .aisum .foot{font-size:12px;color:var(--muted);margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:50} .modal.on{display:flex}
+  .modal .box{background:#fff;border-radius:14px;padding:28px;width:min(520px,92vw)} .modal h3{font-size:20px;font-weight:700;margin:0 0 6px} .modal p{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.6}
+  .modal input{width:100%;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px} .modal .acts{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+  .modal button{height:42px;padding:0 16px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer} .modal button.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .modal .st{font-size:13px;margin-top:10px;color:var(--muted)}
+  .err{margin-top:24px;padding:16px 0;border-top:2px solid var(--bad);color:var(--bad);font-size:15px;max-width:760px;display:none}
+  .err.on{display:block}
+
+  footer{border-top:1px solid var(--line)}
+  .co-logo{height:14px;width:auto;vertical-align:-2px;margin-right:7px}
+  .foot-in{max-width:var(--w);margin:0 auto;padding:28px 40px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+  @media (max-width:760px){
+    .top-in,main,.steps,.foot-in{padding-left:20px;padding-right:20px}
+    .gnb{gap:16px;font-size:14px}
+    h1{font-size:30px} .field input{font-size:20px}
+    .result-head{grid-template-columns:1fr;gap:20px} .score{font-size:72px}
+    .stats{grid-template-columns:repeat(2,1fr)} .stat:nth-child(2){border-right:0} .stat:nth-child(3){padding-left:0;border-top:1px solid var(--line)} .stat:nth-child(4){border-top:1px solid var(--line)}
+    .dl,.row-actions{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+
+<header class="g-top">
+  <div class="g-top-in">
+    <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+<nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+  </div>
+</header>
+
+<nav class="steps" aria-label="진행 단계">
+  <span id="st1" class="on"><b>1</b>주소</span>
+  <span id="st2"><b>2</b>검사 항목</span>
+  <span id="st3"><b>3</b>결과</span>
+</nav>
+
+<main>
+
+  <!-- 1 주소 -->
+  <section class="panel on" id="p1" aria-labelledby="h1a">
+    <h1 id="h1a">어떤 사이트를 검사할까요?</h1>
+    <p>주소를 넣으면 접근성, 오탈자, 링크, 표준 준수를 한 번에 확인합니다.</p>
+    <div class="field">
+      <label for="url">사이트 주소</label>
+      <input id="url" type="url" placeholder="www.example.go.kr" autocomplete="url" spellcheck="false" autofocus>
+      <div class="hint">https:// 는 붙이지 않아도 됩니다.</div>
+    </div>
+    <button class="cta" id="go1" disabled>다음</button>
+    <div class="err" id="err1"></div>
+    <div class="cmd" id="cmd">
+      <label for="cmdIn">또는 말로 지시하기</label>
+      <div class="row"><input id="cmdIn" type="text" placeholder="예: 정부24 접근성이랑 링크 검사해서 PPTX로, 매주 월요일 9시 예약"><button class="mic" id="mic" title="마이크로 말하면 글로 바꿔 실행합니다 (Chrome·Edge)" style="display:none">🎙 음성으로 지시</button><button class="go" id="cmdGo">실행</button></div>
+      <div class="hint">주소는 별칭(정부24·공공데이터포털·행안부 …)이나 URL로. 검사 항목·예약·결과서 형식을 한 문장에 담아도 됩니다. <b>음성</b>: "🎙 음성으로 지시"를 누르고 1초 뒤 말하면 글로 바뀌어 실행됩니다 (Chrome·Edge, 인터넷 필요). 처음 뜨는 마이크 허용 창에서 <b>"허용"</b>을 고르세요 — "이번만 허용"은 새로 고치면 풀립니다.</div>
+      <div class="reply" id="cmdReply"></div>
+    </div>
+  </section>
+
+  <!-- 2 검사 항목 -->
+  <section class="panel" id="p2" aria-labelledby="h2a">
+    <h1 id="h2a">무엇을 검사할까요?</h1>
+    <p>기본 설정으로도 충분합니다. 필요 없는 항목은 끄세요.</p>
+    <div class="list" id="items">
+      <label class="item on" data-k="a11y" data-fixed="1">
+        <div class="txt"><div class="name">웹 접근성</div><div class="desc">KWCAG 2.2 · WCAG 2.1 기준으로 자동 진단합니다. 항상 포함됩니다.</div>
+          <div class="depth" role="radiogroup" aria-label="검사 깊이">
+            <label><input type="radio" name="depth" value="expert" checked> 전체 규칙 <span>정밀 · 권장</span></label>
+            <label><input type="radio" name="depth" value="simple"> 핵심 15개 규칙 <span>빠름 · 초보자용</span></label>
+          </div>
+        </div>
+        <span class="time">약 10초</span><span class="sw"></span>
+      </label>
+      <label class="item on" data-k="checkLinks">
+        <input type="checkbox" checked>
+        <div class="txt"><div class="name">깨진 링크</div><div class="desc" data-on="눌러도 열리지 않는 링크를 찾습니다." data-off="폐쇄망: 내부 링크만 판정하고, 외부(인터넷) 링크는 확인 불가로 표시합니다.">눌러도 열리지 않는 링크를 찾습니다.</div></div>
+        <span class="time">약 20초</span><span class="sw"></span>
+      </label>
+      <label class="item on" data-k="checkSpelling">
+        <input type="checkbox" checked>
+        <div class="txt"><div class="name">오탈자</div><div class="desc" data-on="한국어 맞춤법과 띄어쓰기 오류를 찾습니다. (Daum 맞춤법)" data-off="폐쇄망: 내장 규칙(공문서 빈출 오류 85종)으로 검사합니다.">한국어 맞춤법과 띄어쓰기 오류를 찾습니다.</div></div>
+        <span class="time">약 10초</span><span class="sw"></span>
+      </label>
+      <label class="item" data-k="checkKRDS">
+        <input type="checkbox">
+        <div class="txt"><div class="name">KRDS 정부 디자인 기준</div><div class="desc">디지털 정부서비스 UI/UX 가이드라인 28개 규칙을 확인합니다.</div></div>
+        <span class="time">약 10초</span><span class="sw"></span>
+      </label>
+      <label class="item" data-k="checkW3C">
+        <input type="checkbox">
+        <div class="txt"><div class="name">HTML 표준</div><div class="desc" data-on="W3C 공식 검증 서비스에 보내 표준 준수를 확인합니다." data-off="폐쇄망: 내장 검증기(html-validate)로 확인합니다.">W3C 공식 검증 서비스에 보내 표준 준수를 확인합니다.</div></div>
+        <span class="time">약 15초</span><span class="sw"></span>
+      </label>
+    </div>
+    <div class="list-foot">
+      <span id="est">예상 소요 약 40초</span>
+      <button type="button" id="reset">기본 설정으로</button>
+    </div>
+    <div class="row-actions">
+      <button class="ghost" id="back2">이전</button>
+      <button class="cta" id="go2">검사 시작</button>
+    </div>
+  </section>
+
+  <!-- 검사 중 -->
+  <section class="panel" id="p-run" aria-live="polite">
+    <h1>검사하고 있습니다</h1>
+    <p id="run-url"></p>
+    <div class="progress">
+      <div class="now" id="run-now">페이지를 여는 중</div>
+      <div class="bar"><i></i></div>
+      <ul id="run-list"></ul>
+    </div>
+  </section>
+
+  <!-- 3 결과 -->
+  <section class="panel" id="p3" aria-labelledby="h3a">
+    <div class="result-head">
+      <div>
+        <div class="score" id="score">0<small>건</small></div>
+        <div class="score-cap" id="scorecap">발견된 문제</div>
+      </div>
+      <div>
+        <h1 id="h3a" class="verdict" style="font-size:28px"></h1>
+        <div class="meta" id="meta"></div>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+
+    <details class="acc" id="acc-shot" open><summary><h2>위반 위치</h2><span class="cnt" id="shotcnt"></span></summary><div id="shotwrap"></div></details>
+
+    <details class="acc" id="acc-viol" open><summary><h2>접근성 위반</h2><span class="cnt" id="vcnt"></span></summary><div class="viol" id="viol"></div></details>
+
+    <div id="extra"></div>
+
+    <details class="acc" id="acc-manual"><summary><h2>사람이 확인해야 하는 항목</h2><span class="cnt" id="mcnt"></span></summary><div class="viol manual" id="manual"></div></details>
+
+    <div class="row-actions" id="aisumrow" style="margin-top:36px;display:none"><button class="ghost" id="aisumBtn" style="flex:1">AI 요약 · 전달문 만들기</button></div>
+    <div class="aisum" id="aisum"></div>
+    <div class="dl">
+      <button class="cta" id="dlPptx">PPTX 결과서 저장</button>
+      <button class="ghost" id="dlXlsx">Excel</button>
+      <button class="ghost" id="dlHtml">HTML</button>
+    </div>
+    <div class="row-actions" style="margin-top:14px">
+      <button class="ghost" id="again" style="flex:1">다른 사이트 검사</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="modal" id="aiModal"><div class="box">
+  <h3>AI 보조 설정</h3>
+  <p>개인 Claude API 키를 넣으면 빈칸 채움 · 요약 · 자연어 지시를 쓸 수 있습니다. 키는 이 PC의 도구 폴더(data/settings.json)에만 저장되고, AI는 검사 결과를 바꾸지 않습니다. 폐쇄망에서는 자동으로 꺼집니다.</p>
+  <p style="margin-top:-6px"><b>키 발급:</b> <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="text-decoration:underline;text-underline-offset:3px">console.anthropic.com → API Keys → Create Key</a> (claude.ai 구독과 별개로 API 크레딧 충전이 필요합니다. 시연 수십 회면 $1 미만) → <code>sk-ant-…</code>로 시작하는 키를 복사</p>
+  <input id="aiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+  <div class="st" id="aiSt"></div>
+  <div class="acts"><button id="aiTest">연결 확인</button><button id="aiClear">키 삭제</button><button class="dark" id="aiSave">저장</button><button id="aiClose">닫기</button></div>
+</div></div>
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+
+<script>
+const $ = s => document.querySelector(s)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+let scanResult = null, lastOpts = null
+
+/* ── 단계 전환 ── */
+function show(step){
+  ['p1','p2','p-run','p3'].forEach(id => $('#'+id).classList.toggle('on', id===step))
+  const idx = {p1:1,p2:2,'p-run':3,p3:3}[step]
+  ;[1,2,3].forEach(i => {
+    const el = $('#st'+i); el.className = i<idx ? 'done' : i===idx ? 'on' : ''
+  })
+  window.scrollTo({top:0})
+}
+
+/* ── 망 상태 ── */
+let NET = { online: true }
+fetch('/api/netstatus').then(r => r.json()).then(n => { if (!$('#net')) return;
+  NET = n; const el = $('#net'); el.className = 'net' + (n.online ? '' : ' off'); el.innerHTML = `<i></i>${n.online ? '인터넷 연결' : '폐쇄망 모드'}`
+  el.title = n.online ? '인터넷이 연결되어 있습니다. 모든 검사를 온라인 엔진으로 수행합니다.' : '인터넷에 연결되지 않았습니다. 오탈자·HTML 표준은 내장 엔진으로, 외부 링크는 확인 불가로 처리합니다.'
+  document.querySelectorAll('#items .desc[data-on]').forEach(d => d.textContent = n.online ? d.dataset.on : d.dataset.off)
+}).catch(() => {})
+
+/* ── 1 주소 ── */
+const urlIn = $('#url'), go1 = $('#go1')
+urlIn.addEventListener('input', () => go1.disabled = !urlIn.value.trim())
+urlIn.addEventListener('keydown', e => { if (e.key==='Enter' && !go1.disabled) go1.click() })
+go1.addEventListener('click', () => {
+  let u = urlIn.value.trim()
+  if (!/^https?:\/\//i.test(u)) u = (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(u) ? 'http://' : 'https://') + u
+  try { new URL(u) } catch { $('#err1').textContent = '주소 형식이 올바르지 않습니다. 예: www.example.go.kr'; $('#err1').classList.add('on'); return }
+  $('#err1').classList.remove('on'); urlIn.value = u
+  show('p2')
+})
+
+/* ── 2 항목 ── */
+const times = {a11y:10, checkLinks:20, checkSpelling:10, checkKRDS:10, checkW3C:15}
+function syncItems(){
+  let t = 0
+  document.querySelectorAll('#items .item').forEach(it => {
+    const cb = it.querySelector('input')
+    const on = it.dataset.fixed ? true : cb.checked
+    it.classList.toggle('on', on)
+    if (on) t += times[it.dataset.k] || 0
+  })
+  $('#est').textContent = `예상 소요 약 ${t}초`
+}
+document.querySelectorAll('#items .item input').forEach(cb => cb.addEventListener('change', syncItems))
+$('#reset').addEventListener('click', () => {
+  document.querySelectorAll('#items .item input').forEach(cb => cb.checked = ['checkLinks','checkSpelling'].includes(cb.closest('.item').dataset.k))
+  syncItems()
+})
+$('#back2').addEventListener('click', () => show('p1'))
+syncItems();
+
+/* ── 확장 프로그램 / 외부 링크에서 ?url= 로 진입 ── */
+;(() => {
+  const q = new URLSearchParams(location.search).get('url')
+  if (!q) return
+  let u = q.trim(); if (!/^https?:\/\//i.test(u)) u = 'https://' + u
+  try { new URL(u) } catch { return }
+  urlIn.value = u; go1.disabled = false
+  history.replaceState(null, '', location.pathname)
+  show('p2')
+})()
+
+/* ── 검사 실행 ── */
+function opts(){
+  const depth = (document.querySelector('input[name=depth]:checked')||{}).value || 'expert'
+  const o = { level:'wcag2aa', includeScreenshot:true, scanMode:depth, useW3CLinks:false,
+    reportMeta:{ org:'', dept:'', inspector:'', project:'', generatedAt:new Date().toLocaleString('ko-KR'), toolVersion:'v6.19' } }
+  document.querySelectorAll('#items .item input').forEach(cb => o[cb.closest('.item').dataset.k] = cb.checked)
+  return o
+}
+$('#go2').addEventListener('click', async () => {
+  const url = urlIn.value.trim(), o = opts(); lastOpts = o
+  show('p-run'); $('#run-url').textContent = url
+  const steps = [['페이지 열기','open'],['웹 접근성','a11y'], o.checkLinks&&['깨진 링크','checkLinks'], o.checkSpelling&&['오탈자','checkSpelling'], o.checkKRDS&&['KRDS','checkKRDS'], o.checkW3C&&['HTML 표준','checkW3C']].filter(Boolean)
+  $('#run-list').innerHTML = steps.map(([n,k]) => `<li data-k="${k}">${n}</li>`).join('')
+  // 진행 표시는 시간 기반 추정 (서버가 단계별 이벤트를 주지 않음)
+  let i = 0
+  const tick = setInterval(() => {
+    const li = $('#run-list').children[i]; if (!li) return clearInterval(tick)
+    li.classList.add('done'); i++
+    const next = $('#run-list').children[i]; $('#run-now').textContent = next ? next.textContent + ' 확인 중' : '결과를 정리하는 중'
+  }, 4500)
+  try {
+    const res = await fetch('/api/scan', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ url, ...o }) })
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).error || `서버 오류 (${res.status})`)
+    scanResult = await res.json()
+    clearInterval(tick); render(scanResult); show('p3'); aiStatus()
+  } catch (e) {
+    clearInterval(tick); show('p1')
+    $('#err1').textContent = '검사하지 못했습니다. ' + e.message + ' 주소를 확인하고 다시 시도하세요.'; $('#err1').classList.add('on')
+  }
+})
+
+/* ── 3 결과 ── */
+const LV = {critical:'치명적', serious:'심각', moderate:'보통', minor:'경미'}
+function render(r){
+  const s = r.summary || {}, ic = s.impactCounts || {}
+  const v = s.violations ?? (r.violations||[]).length
+  const totalIssues = v + (lastOpts?.checkLinks && r.links ? (r.links.dead||[]).length : 0) + (lastOpts?.checkSpelling && r.spelling ? (r.spelling.totalIssues ?? (r.spelling.issues||[]).length) : 0) + (lastOpts?.checkKRDS && r.krds ? (r.krds.failed||0) : 0) + (lastOpts?.checkW3C && r.w3c ? (r.w3c.errorCount||0) : 0)
+  $('#score').innerHTML = r.scoreConfidence === 'low' ? `<span style="font-size:40px;color:var(--muted)">판정 보류</span>` : `${totalIssues}<small>건</small>`
+  $('#scorecap').innerHTML = `발견된 문제 <span class="score-mini">· 접근성 점수 <b>${r.score ?? '-'}</b>점</span>`
+  $('#h3a').innerHTML = r.scoreConfidence === 'low' ? `<span class="bad">검사 규칙이 너무 적습니다.</span> ${esc(r.scoreNote||'')}` : totalIssues === 0
+    ? `<span class="good">자동 검사에서 문제가 없습니다.</span> 아래 수동 확인 항목을 검토하세요.`
+    : `<span class="bad">${v}건</span>의 접근성 위반${totalIssues > v ? ` 외 ${totalIssues - v}건` : ''} — 어디에, 무엇이, 어떻게 고칠지 아래에 정리했습니다.`
+  const en = r.engine || {}
+  $('#meta').innerHTML = `<b>${esc(r.pageTitle || '(제목 없음)')}</b><br>${esc(r.url)}<br>${esc(new Date(r.scannedAt||Date.now()).toLocaleString('ko-KR'))}
+    <div class="engine">기준 <code>${esc(en.criteria||'KWCAG 2.2 · WCAG 2.1')}</code> 수준 <code>${esc((en.level||'').replace('wcag2','WCAG 2.1 ').toUpperCase())}</code> 모드 <code>${en.mode==='simple'?'간편(핵심 15규칙)':'전문가(전체 규칙)'}</code><br>
+    망 <code>${en.network === 'offline' ? '폐쇄망(오프라인 엔진)' : '인터넷'}</code> 엔진 <code>axe-core ${esc(en.axe||'')}</code> <code>Playwright ${esc(en.playwright||'')}</code> <code>${esc(en.browser||'Chromium')}</code> 화면 <code>${esc(en.viewport||'')}</code><br>
+    점수 산식 <code>100 − (치명 규칙×15 + 심각×10 + 보통×5 + 경미×2)</code> · 규칙 단위 · 페이지 크기 무관</div>`
+  const ran = lastOpts || {}
+  const dead = ran.checkLinks && r.links ? (r.links.dead||[]).length : null
+  const typo = ran.checkSpelling && r.spelling ? (r.spelling.totalIssues ?? (r.spelling.issues||[]).length) : null
+  const krdsFail = ran.checkKRDS && r.krds ? r.krds.failed : null
+  const w3cErr = ran.checkW3C && r.w3c ? (r.w3c.errorCount ?? 0) : null
+  const cells = [['통과', s.passes ?? 0, 'good'], ['위반', v, v?'bad':'']]
+  if (dead !== null) cells.push(['깨진 링크', dead, dead?'bad':'good'])
+  if (typo !== null) cells.push(['오탈자', typo, typo?'bad':'good'])
+  if (krdsFail !== null) cells.push(['KRDS 미준수', krdsFail, krdsFail?'bad':'good'])
+  if (w3cErr !== null) cells.push(['HTML 오류', w3cErr, w3cErr?'bad':'good'])
+  $('#stats').style.gridTemplateColumns = `repeat(${cells.length},1fr)`
+  $('#stats').innerHTML = cells.map(([l,n,c]) => `<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('')
+
+  const vs = r.violations || []
+  $('#vcnt').textContent = vs.length ? `치명적 ${ic.critical||0} · 심각 ${ic.serious||0} · 보통 ${ic.moderate||0} · 경미 ${ic.minor||0}` : ''
+  // 위반마다 번호(표시 가능한 것만) 부여
+  const boxes = []; let num = 0
+  vs.forEach((x, vi) => {
+    const shown = (x.nodes||[]).filter(n => n.rect && !n.rect.hidden && n.rect.inView && !n.rect.big && !n.rect.covered)
+    x._num = shown.length ? ++num : null
+    x._why = !shown.length ? ((x.nodes||[]).some(n => n.rect && n.rect.big) ? '구조 전체 요소 · 표시 생략' : (x.nodes||[]).some(n => n.rect && n.rect.covered) ? '팝업 등에 가려짐' : (x.nodes||[]).some(n => n.rect && !n.rect.inView) ? '첫 화면 밖' : '화면에 안 보이는 요소') : ''
+    shown.forEach(n => boxes.push({ vi, num: x._num, impact: x.impact, id: x.id, r: n.rect }))
+  })
+  $('#acc-viol').open = true
+  $('#viol').innerHTML = vs.length ? vs.map((x, vi) => {
+    const n0 = (x.nodes||[])[0] || {}, fx = x.fix || {}
+    return `
+    <div class="v" id="v${vi}">
+      <div class="lv ${x.impact}">${LV[x.impact] || x.impact}</div>
+      <div>
+        <div class="t"><span class="vn ${x._num ? x.impact : 'none'}">${x._num ?? '–'}</span>${x.kwcag ? `<span class="kw">KWCAG ${esc(x.kwcag.no)}</span>` : `<span class="kw">모범 사례</span>`}${esc(x.help || x.description)}${x._why ? `<span class="nowhere">${x._why}</span>` : ''}${x.adjusted ? `<span class="kw" style="background:#fff8ef;color:#b9771f">조정됨 · 원래 ${({critical:'치명적',serious:'심각'})[x.originalImpact]}</span>` : ''}</div>
+        ${x.adjusted ? `<div class="d" style="color:#b9771f">${esc(x.adjusted)}</div>` : (x.adjustedNote ? `<div class="d" style="color:var(--muted)">${esc(x.adjustedNote)}</div>` : '')}
+        <div class="wwh">
+          <div class="k">어디</div><div><span class="sel">${esc((n0.target||[])[0]||'')}</span>${n0.line ? ` <span style="color:var(--muted)">· 소스 ${n0.line}행</span>` : ''}${x.nodes && x.nodes.length > 1 ? ` <span style="color:var(--muted)">· 외 ${x.nodes.length-1}곳</span>` : ''}${x._num ? ` · <button class="loc" onclick="focusBox(${vi})">캡처에서 보기</button>` : ''}${n0.html ? `<pre style="margin:6px 0 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#444;white-space:pre-wrap;word-break:break-all;max-height:72px;overflow:auto;background:var(--soft);padding:8px 10px;border-radius:6px">${esc(String(n0.html).slice(0,300))}</pre>` : ''}</div>
+          <div class="k">무엇</div><div>${esc(fx.why || x.description || '')}${n0.failureSummary ? `<div class="fsum">${esc(n0.failureSummary)}</div>` : ''}</div>
+          <div class="k">어떻게</div><div><div class="fixhow">${esc(fx.how || '규칙 설명 링크를 참고하세요.')}</div>${n0.suggest ? `
+            <div class="ba sug"><pre class="b">${esc(String(n0.html).slice(0,300))}</pre><pre class="a" id="sug${vi}">${esc(n0.suggest.after)}</pre></div>
+            <div class="sugmeta">${n0.suggest.contrast ? `<span class="swatch" style="background:${esc(n0.suggest.contrast.from)}"></span>${esc(n0.suggest.contrast.from)} <b>${n0.suggest.contrast.before}:1</b> → <span class="swatch" style="background:${esc(n0.suggest.contrast.to)}"></span>${esc(n0.suggest.contrast.to)} <b>${n0.suggest.contrast.after}:1</b> · 기준 ${n0.suggest.contrast.target}:1 · ` : ''}${n0.suggest.note ? esc(n0.suggest.note)+' · ' : ''}<button class="copy" onclick="copySug(${vi})">수정 후 코드 복사</button>${/\[[^\]]*\]/.test(n0.suggest.after) ? `<button class="aibtn" onclick="aiFill(${vi})" style="display:${AI.enabled?'':'none'}">AI로 빈칸 채우기</button>` : ''}<span class="sugtag">이 요소 맞춤 제안 · [ ] 안은 직접 채우세요</span></div>`
+            : ((fx.before || fx.after) ? `<div class="ba">${fx.before ? `<pre class="b">${esc(fx.before)}</pre>` : ''}${fx.after ? `<pre class="a">${esc(fx.after)}</pre>` : ''}</div><div class="sugmeta"><span class="sugtag">일반 예시</span></div>` : '')}</div>
+        </div>
+        <div class="ref">규칙 <code>${esc(x.id)}</code>${x.kwcag ? ` · ${esc(x.kwcag.ref)}` : ''}${(x.tags||[]).filter(t=>/^wcag\d{3,4}$/.test(t)).map(t=>' · WCAG '+t.replace('wcag','').split('').join('.')).join('')}${x.helpUrl ? ` · <a href="${esc(x.helpUrl)}" target="_blank" rel="noopener">규칙 설명</a>` : ''}</div>
+        ${x.nodes && x.nodes.length > 1 ? `<details class="nodes"><summary>해당 요소 ${x.nodes.length}개 전체</summary>${x.nodes.slice(0,12).map(n => `
+          <div class="node"><div class="sel">${esc((n.target||[])[0]||'')}${n.line ? ` <span style="color:var(--muted)">· ${n.line}행</span>` : ''}</div>
+          ${n.html ? `<pre>${esc(String(n.html).slice(0,300))}</pre>` : ''}</div>`).join('')}${x.nodes.length>12 ? `<div class="node" style="color:var(--muted)">외 ${x.nodes.length-12}개</div>` : ''}</details>` : ''}
+      </div>
+    </div>`}).join('') : `<div class="empty">자동 검사 기준의 위반이 없습니다. 아래 "사람이 확인해야 하는 항목"을 함께 검토하세요.</div>`
+
+  // 위반 위치 캡처: 번호 마커, 기본은 치명·심각만 진하게, 클릭으로 선택
+  if (r.screenshot && boxes.length) {
+    const vpw = (r.screenshotViewport||{}).width || 1280, vph = (r.screenshotViewport||{}).height || 900
+    $('#shotwrap').innerHTML = `<div class="shot" id="shot" style="aspect-ratio:${vpw}/${vph}">
+      <img src="data:image/png;base64,${r.screenshot}" alt="검사 대상 화면 캡처 (위반 위치 표시)">
+      ${boxes.slice().sort((a,b) => (b.r.w*b.r.h) - (a.r.w*a.r.h)).map((b, zi) => `<div class="box ${b.impact} ${(b.impact==='critical'||b.impact==='serious')?'':'dim'}" data-vi="${b.vi}" style="left:${b.r.x/vpw*100}%;top:${b.r.y/vph*100}%;width:${b.r.w/vpw*100}%;height:${b.r.h/vph*100}%;z-index:${10+zi}"><span class="num">${b.num}</span></div>`).join('')}
+    </div>
+    <div class="shot-legend"><span><i class="lsw" style="background:var(--bad)"></i>치명·심각</span><span><i class="lsw" style="background:var(--warn)"></i>보통·경미</span>
+      <button id="showAll" onclick="toggleAll()">보통·경미도 진하게</button><span>번호 = 아래 위반 목록 번호 · 마커를 누르면 해당 항목으로 이동</span></div>
+    <div class="shot-cap">좌표와 캡처를 같은 순간에 기록해 팝업 상태가 일치합니다. 첫 화면(${vpw}×${vph}) 밖 요소, 화면 절반 이상을 덮는 구조 요소, 팝업에 가려진 요소는 목록에 사유를 적고 표시하지 않습니다.</div>`
+    $('#shotcnt').innerHTML = `<b>${boxes.length}곳</b> 표시 · 위반 ${vs.length}건 중 ${num}건`
+    document.querySelectorAll('#shot .box').forEach(b => { b.style.pointerEvents='auto'; b.style.cursor='pointer'; b.onclick = () => { const vi = +b.dataset.vi; focusBox(vi); const el = $('#v'+vi); el.scrollIntoView({behavior:'smooth',block:'center'}) } })
+  } else {
+    $('#shotwrap').innerHTML = r.screenshot ? `<div class="empty">캡처 첫 화면에 표시할 수 있는 위반 요소가 없습니다.${vs.length ? ' 목록의 사유를 참고하세요.' : ''}</div>` : `<div class="empty">스크린샷이 없어 위치를 표시할 수 없습니다.</div>`
+    $('#shotcnt').textContent = ''
+    $('#acc-shot').open = !!vs.length
+  }
+
+  // 사람이 확인해야 하는 항목
+  const mi = r.manualItems || []
+  $('#mcnt').innerHTML = mi.length ? `<b>${mi.length}개</b> · 자동 검사로는 판정할 수 없음 · 펼쳐서 확인` : ''
+  $('#manual').innerHTML = mi.length ? mi.map(m => `<div class="v"><div class="lv">${esc(m.no)}</div><div><div class="t">${esc(m.name)}</div><div class="d">${esc(m.what)}</div><div class="ref">${esc(m.ref||'')}</div></div></div>`).join('') : ''
+
+  // 부가 검사 — 실행한 것만
+  let ex = ''
+  if (typo !== null) ex += block('오탈자', typo, (r.spelling.issues||[]).slice(0,12).map(e => `${esc(e.word||e.token||e.original||'')}${(e.suggestion||e.suggest||e.correct) ? ' → '+esc(e.suggestion||e.suggest||e.correct) : ''}${e.count > 1 ? ` <span style="color:var(--muted)">×${e.count}</span>` : ''}${e.reason ? ` <span style="color:var(--muted)">· ${esc(e.reason)}</span>` : ''}${e.context ? ` <span style="color:var(--muted)">(${esc(e.context)})</span>` : ''}`), r.spelling.engine === 'builtin' ? '내장 규칙(폐쇄망)' : (r.spelling.engine ? 'Daum 맞춤법' : ''))
+  if (dead !== null) ex += block('깨진 링크', dead, (r.links.dead||[]).slice(0,10).map(l => esc(typeof l==='string'?l:(l.url||l.href||''))+(l.status?` <span style="color:var(--muted)">${esc(l.status)}</span>`:'')).concat((r.links.unreachable||[]).slice(0,10).map(l => `<span style="color:var(--muted)">확인 불가 · </span>${esc(l.url||'')} <span style="color:var(--muted)">폐쇄망에서 외부 링크</span>`)), `검사한 링크 ${r.links.total ?? 0}개${(r.links.unreachable||[]).length ? ` · 외부 링크 ${r.links.unreachable.length}개 확인 불가` : ''}`)
+  if (krdsFail !== null) ex += block('KRDS 정부 디자인 기준', krdsFail, (r.krds.items||[]).filter(k=>!k.passed).slice(0,14).map(k => `${esc(k.name)}${k.partial ? ' <span style="color:var(--warn);font-size:13px">부분 준수</span>' : ''}${k.level==='필수' ? ' <span style="color:var(--bad);font-size:13px">필수</span>' : ''}${k.deepDetail ? `<div class="d">${esc(k.deepDetail)}</div>` : (k.recommend ? `<div class="d">${esc(k.recommend)}</div>` : '')}`), `${r.krds.passed}/${r.krds.total} 통과 · ${r.krds.score ?? ''}점`)
+  if (w3cErr !== null) ex += block('HTML 표준', w3cErr, (r.w3c.errors||[]).slice(0,10).map(m => esc(m.message||m.msg||'')+(m.lastLine?` <span style="color:var(--muted)">${m.lastLine}행</span>`:'')), r.w3c.engine === 'html-validate' ? '내장 검증기(폐쇄망)' : (r.w3c.engineNote ? '' : 'W3C Validator'))
+  $('#extra').innerHTML = ex
+}
+function block(title, n, lines, sub){
+  if (n === undefined || n === null) return ''
+  return `<details class="acc"${n ? ' open' : ''}><summary><h2>${title}</h2><span class="cnt">${sub ? sub+' · ' : ''}<b>${n}건</b></span></summary>
+    <div class="viol">${lines.length ? lines.map(l => `<div class="v"><div class="lv minor"></div><div class="t" style="font-weight:500;font-size:15px">${l}</div></div>`).join('') : `<div class="empty">문제가 없습니다.</div>`}</div></details>`
+}
+function copySug(vi){
+  const el = document.getElementById('sug'+vi); if (!el) return
+  navigator.clipboard.writeText(el.textContent).then(() => { const b = el.closest('.v').querySelector('.copy'); const t = b.textContent; b.textContent = '복사됨'; setTimeout(() => b.textContent = t, 1200) })
+}
+function focusBox(vi){
+  const shot = $('#shot'); if (!shot) return
+  shot.querySelectorAll('.box').forEach(b => { const on = b.dataset.vi == vi; b.classList.toggle('on', on); b.classList.toggle('dim', !on) })
+  document.querySelectorAll('#viol .v').forEach(v => v.classList.toggle('sel', v.id === 'v'+vi))
+  $('#acc-shot').open = true
+  shot.scrollIntoView({ behavior:'smooth', block:'center' })
+}
+function toggleAll(){
+  const b = $('#showAll'); const on = !b.classList.contains('on'); b.classList.toggle('on', on)
+  b.textContent = on ? '치명·심각만 진하게' : '보통·경미도 진하게'
+  $('#shot').querySelectorAll('.box').forEach(x => { x.classList.remove('on'); x.classList.toggle('dim', !on && !(x.classList.contains('critical')||x.classList.contains('serious'))) })
+  document.querySelectorAll('#viol .v').forEach(v => v.classList.remove('sel'))
+}
+
+
+/* ── AI 보조 ── */
+let AI = { enabled: false }
+const AIKEY = { get: () => localStorage.getItem('guardians_ai_key') || '', set: k => k ? localStorage.setItem('guardians_ai_key', k) : localStorage.removeItem('guardians_ai_key') }
+const _f = window.fetch; window.fetch = (u, o = {}) => { if (typeof u === 'string' && u.startsWith('/api/ai/') && AIKEY.get()) { o.headers = Object.assign({}, o.headers || {}, { 'x-anthropic-key': AIKEY.get() }) } return _f(u, o) }
+async function aiStatus(){ window.__aiStatusHook && window.__aiStatusHook();
+  try { AI = await (await fetch('/api/ai/status')).json() } catch { AI = { enabled:false } }
+  const l = $('#ailink'); l.className = 'ai-link' + (AI.enabled ? ' on' : ''); l.title = AI.enabled ? `AI 보조 켜짐 · ${AI.model||''}` : (AI.reason || 'AI 보조 꺼짐')
+  $('#cmd').classList.toggle('on', AI.enabled)
+  $('#aisumrow').style.display = AI.enabled && scanResult ? '' : 'none'
+  document.querySelectorAll('.aibtn').forEach(b => b.style.display = AI.enabled ? '' : 'none')
+  $('#mic').style.display = (AI.enabled && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) ? '' : 'none'
+}
+window.__openAi = () => { $('#aiModal').classList.add('on'); $('#aiSt').innerHTML = AI.keyMasked && AI.keyMasked !== 'mock' ? `저장된 키 ${esc(AI.keyMasked)} · ${AI.enabled ? '사용 가능' : esc(AI.reason||'')}` : `아직 키가 없습니다. 위 칸에 키를 붙여넣고 <b>연결 확인</b> → <b>저장</b>하세요.` }
+$('#aiClose').onclick = () => $('#aiModal').classList.remove('on')
+$('#aiSave').onclick = async () => { const k = $('#aiKey').value.trim(); if (!k) return; const r = await (await fetch('/api/ai/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anthropicKey: k }) })).json(); if (r.public) AIKEY.set(k); $('#aiKey').value=''; $('#aiSt').textContent = r.public ? '이 브라우저에 저장됨 (서버에는 저장하지 않음)' : '저장됨 ' + (r.keyMasked||''); await aiStatus() }
+$('#aiClear').onclick = async () => { AIKEY.set(''); await fetch('/api/ai/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anthropicKey: '' }) }); $('#aiSt').textContent = '키를 삭제했습니다'; await aiStatus() }
+$('#aiTest').onclick = async () => { $('#aiSt').textContent = '연결 확인 중…'; try { const r = await (await fetch('/api/ai/test', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anthropicKey: $('#aiKey').value.trim() }) })).json(); $('#aiSt').textContent = r.ok ? `연결 정상 (응답: ${r.reply})` : `실패: ${r.error}` } catch (e) { $('#aiSt').textContent = '실패: ' + e.message } }
+
+/* 자연어 지시 */
+async function runCommand(text){
+  if (!text.trim()) return
+  const rp = $('#cmdReply'); rp.style.display = 'block'; rp.textContent = '해석 중…'
+  try {
+    const r = await (await fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) })).json()
+    if (!r.ok) throw new Error(r.error || '해석 실패')
+    if (!r.url) { rp.textContent = '검사할 주소를 찾지 못했습니다. 사이트 이름이나 URL을 포함해 주세요. ' + (r.reply||''); return }
+    rp.textContent = r.reply || `${r.url} 검사를 준비합니다.`
+    urlIn.value = r.url; go1.disabled = false
+    for (const [k, v] of Object.entries(r.checks || {})) { const cb = document.querySelector(`#items .item[data-k="${k}"] input`); if (cb) cb.checked = !!v }
+    syncItems()
+    const depth = document.querySelector(`input[name=depth][value=${r.scanMode==='simple'?'simple':'expert'}]`); if (depth) depth.checked = true
+    if (r.schedule && r.schedule.freq) {
+      const sr = await fetch('/api/schedules', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url: r.url, name: '', freq: r.schedule.freq, time: r.schedule.time || '09:00', weekday: r.schedule.weekday ?? 1, ...r.checks, scanMode: r.scanMode || 'expert' }) })
+      if (sr.ok) rp.textContent += ' 예약을 등록했습니다(예약 검사 메뉴에서 확인).'
+    }
+    setTimeout(() => { show('p2'); setTimeout(() => $('#go2').click(), 600) }, 900)
+  } catch (e) { rp.textContent = '실패: ' + e.message }
+}
+$('#cmdGo').onclick = () => runCommand($('#cmdIn').value)
+$('#cmdIn').addEventListener('keydown', e => { if (e.key === 'Enter') runCommand($('#cmdIn').value) })
+$('#mic').onclick = async () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return
+  const b = $('#mic'), rp = $('#cmdReply'); const say = t => { rp.style.display='block'; rp.textContent = t }
+  // 1) 마이크 권한을 정식으로 요청 → Chrome이 "허용(항상)" 선택지를 제시. "이번만 허용"은 새로 고치면 사라짐
+  try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()) }
+  catch (e) { say(e.name === 'NotAllowedError' ? '마이크가 차단되어 있습니다. 주소창 왼쪽 ⓘ → 마이크 → "허용"(이번만 허용 아님) 선택 후 새로 고침하세요.' : '마이크를 찾을 수 없습니다: ' + e.message); return }
+  const rec = new SR(); rec.lang = 'ko-KR'; rec.interimResults = false; rec.maxAlternatives = 1
+  b.classList.add('rec'); b.textContent = '● 듣는 중… 말씀하세요'; say('듣고 있습니다. 예: "정부24 접근성 검사해서 PPTX로"')
+  let got = false
+  rec.onresult = ev => { got = true; const t = ev.results[0][0].transcript; $('#cmdIn').value = t; say('인식: ' + t); runCommand(t) }
+  rec.onerror = ev => { const m = { 'not-allowed': '마이크 사용이 차단되었습니다. 주소창 왼쪽 ⓘ → 마이크 → "허용" 후 새로 고침.', 'network': '음성 인식은 인터넷이 필요합니다(브라우저 음성 서비스). 직접 입력해 주세요.', 'no-speech': '말소리를 듣지 못했습니다. 버튼을 누른 뒤 1초 후 또렷하게 말해 주세요.', 'audio-capture': '마이크 장치가 없거나 다른 프로그램이 쓰고 있습니다.', 'aborted': '취소되었습니다.' }; say(m[ev.error] || ('음성 인식 실패(' + ev.error + '). 직접 입력해 주세요.')) }
+  rec.onend = () => { b.classList.remove('rec'); b.textContent = '🎙 음성으로 지시'; if (!got && rp.textContent.startsWith('듣고')) say('말소리를 듣지 못했습니다. 다시 눌러 말해 주세요.') }
+  try { rec.start() } catch (e) { say('음성 인식을 시작할 수 없습니다: ' + e.message); b.classList.remove('rec'); b.textContent = '🎙 음성으로 지시' }
+}
+
+/* 빈칸 채움 */
+async function aiFill(vi){
+  const x = scanResult.violations[vi]; const n = x.nodes[0]; const btn = document.querySelector(`#v${vi} .aibtn`)
+  if (!n || !n.suggest) return
+  btn.disabled = true; btn.textContent = 'AI가 채우는 중…'
+  try {
+    const r = await (await fetch('/api/ai/fill', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pageUrl: scanResult.url, pageTitle: scanResult.pageTitle, items: [{ i: 0, ruleId: x.id, html: n.html, ctx: n.ctx, after: n.suggest.after, target: (n.target||[])[0] }] }) })).json()
+    if (!r.ok) throw new Error(r.error || '실패')
+    const f = r.fills[0]
+    if (f && f.filled) { const pre = document.getElementById('sug'+vi); pre.textContent = f.filled; n.suggest.after = f.filled; btn.textContent = 'AI가 채움'; btn.insertAdjacentHTML('afterend', '<span class="aitag">AI 제안 · 확인 후 사용</span>') }
+    else { btn.textContent = '채울 내용 없음'; }
+  } catch (e) { btn.disabled = false; btn.textContent = '다시 시도 (' + e.message.slice(0,30) + ')' }
+}
+async function aiAllFill(){ const vs = scanResult.violations; for (let i = 0; i < vs.length; i++) { if (vs[i].nodes[0]?.suggest && /\[[^\]]*\]/.test(vs[i].nodes[0].suggest.after)) await aiFill(i) } }
+
+/* 요약·전달문 */
+$('#aisumBtn').onclick = async () => {
+  const b = $('#aisumBtn'), box = $('#aisum'); b.disabled = true; b.textContent = 'AI가 정리하는 중…'
+  try {
+    const r = await (await fetch('/api/ai/summary', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ result: { ...scanResult, screenshot: undefined }, audience: '개발사' }) })).json()
+    if (!r.ok) throw new Error(r.error || '실패')
+    box.style.display = 'block'
+    box.innerHTML = `<h3>요약 <span class="aitag">AI 제안 · 확인 후 사용</span></h3><ul>${(r.summary||[]).map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
+      <h3>우선 조치</h3><ol>${(r.actions||[]).map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+      <h3>개발사 전달 메일 초안</h3><pre id="aiMail">${esc(r.email||'')}</pre>
+      <div class="foot"><span>검사 결과의 숫자·항목만 사용해 작성됨 · 발송 전 확인</span><button class="copy" onclick="navigator.clipboard.writeText(document.getElementById('aiMail').textContent)">메일 본문 복사</button></div>`
+    b.textContent = '다시 만들기'
+  } catch (e) { b.textContent = '실패: ' + e.message.slice(0,40) } finally { b.disabled = false }
+}
+aiStatus()
+
+/* ── 다운로드 ── */
+async function dl(path, name){
+  if (!scanResult) return
+  const btn = event.currentTarget, old = btn.textContent; btn.textContent = '만드는 중…'; btn.disabled = true
+  try {
+    const res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...scanResult, reportMeta: opts().reportMeta }) })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || ('HTTP ' + res.status)) }
+    const blob = await res.blob(); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click()
+  } catch (e) { alert('결과서 생성 실패: ' + e.message + '\n\n다시 시도해도 같으면 결과서 설정(로고·기관 정보)을 확인해 주세요.') }
+  finally { btn.textContent = old; btn.disabled = false }
+}
+const stamp = () => new Date().toISOString().slice(0,10)
+$('#dlPptx').addEventListener('click', () => dl('/api/report/pptx', `접근성_결과서_${stamp()}.pptx`))
+$('#dlXlsx').addEventListener('click', () => dl('/api/report/excel', `검사보고서_${stamp()}.xlsx`))
+$('#dlHtml').addEventListener('click', () => dl('/api/report', `검사보고서_${stamp()}.html`))
+$('#again').addEventListener('click', () => { urlIn.value=''; go1.disabled=true; show('p1'); urlIn.focus() })
+</script>
+<script src="/lib/nav.js" defer><script>if (location.hash === '#ai') { history.replaceState(null, '', '/'); setTimeout(() => window.__openAi && window.__openAi(), 400) }</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# 의존성 · 큰 파일 (저장소에 넣지 않음 — 설치 파일은 GitHub Releases에)
+node_modules/
+runtime/
+chromium/
+chromium.zip
+*.exe
+*.zip
+installer/payload/
+installer/app.zip
+# 실행 중 생기는 데이터 · 비밀 정보 (절대 올리지 않음)
+data/*
+!data/support.example.json
+*.key
+*.pem
+.env
+docker-compose.override.yml

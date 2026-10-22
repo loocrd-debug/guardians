@@ -1,0 +1,21 @@
+{
+  "name": "a11y-inspector",
+  "version": "3.1.0",
+  "description": "Guardians - Web Accessibility Inspector",
+  "main": "server.cjs",
+  "scripts": {
+    "start": "node --max-old-space-size=512 server.cjs",
+    "setup": "npm install --omit=dev && npx playwright install chromium"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "axe-core": "^4.11.1",
+    "cors": "^2.8.6",
+    "docx": "^8.5.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "playwright": "^1.58.2",
+    "pptxgenjs": "^4.0.1"
+  }
+}

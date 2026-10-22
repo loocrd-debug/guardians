@@ -1,0 +1,18 @@
+services:
+  guardians:
+    build: .
+    image: solideo/guardians:6.19
+    container_name: guardians
+    restart: unless-stopped
+    ports: ["3000:3000"]          # 앞에 Nginx/Caddy 등으로 HTTPS 를 붙이세요
+    environment:
+      GUARDIANS_PUBLIC: "1"        # 공개 서비스 모드 (내부망 주소 차단 · AI 키 서버 미저장)
+      GUARDIANS_PASSWORD: "바꿔주세요"   # 접근 비밀번호 (브라우저가 아이디/비밀번호 창을 띄움, 아이디는 아무거나)
+      # ANTHROPIC_API_KEY: ""      # 서버 공용 AI 키를 쓰려면 지정 (지정하면 이용자가 키를 넣지 않아도 AI 사용)
+    volumes:
+      - ./data:/app/data           # 예약·회차 결과 보관
+      - ./downloads:/app/downloads # 다운로드 페이지에 올릴 설치 파일
+    shm_size: "1gb"                # Chromium 안정성
+    deploy:
+      resources:
+        limits: { memory: 2g }

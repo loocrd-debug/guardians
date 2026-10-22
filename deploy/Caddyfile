@@ -1,0 +1,4 @@
+# HTTPS 자동 발급 예시 (도메인이 있을 때). `caddy run` 또는 docker 로 실행
+guardians.example.go.kr {
+    reverse_proxy guardians:3000
+}

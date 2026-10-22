@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브라우저 호환 검사 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/tailwind.css">
+<link rel="stylesheet" href="/lib/fa/all.min.css">
+<style>
+  body { font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif; }
+  .spin { animation: spin 1s linear infinite }
+  @keyframes spin { to { transform: rotate(360deg) } }
+</style>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- 헤더 -->
+<header class="g-top">
+  <div class="g-top-in">
+    <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+    <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html" class="on">브라우저 호환</a><div class="g-more"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+  </div>
+</header>
+<div class="g-title"><h1>브라우저 호환 검사</h1><p>Chrome · Edge · Safari · Firefox에서 화면이 같게 보이는지 확인하고 증적을 남깁니다.</p></div>
+
+
+<main class="max-w-6xl mx-auto px-4 py-6">
+
+  <!-- 엔진 상태 -->
+  <div id="engineBar" class="bg-white border border-slate-200 rounded-xl p-4 mb-4 flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-4 text-sm">
+      <span class="font-semibold text-slate-700"><i class="fas fa-microchip mr-1 text-indigo-500"></i>브라우저 엔진</span>
+      <span id="engChromium" class="text-xs text-slate-400">Chromium: 확인중…</span>
+      <span id="engWebkit"   class="text-xs text-slate-400">WebKit: 확인중…</span>
+      <span id="engFirefox"  class="text-xs text-slate-400">Firefox: 확인중…</span>
+    </div>
+    <button id="btnInstall" onclick="installEngines()" class="hidden text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold">
+      <i class="fas fa-download mr-1"></i>WebKit·Firefox 엔진 설치 (~250MB)
+    </button>
+  </div>
+
+  <!-- 검사 입력 -->
+  <div class="bg-white border border-slate-200 rounded-xl p-5 mb-5">
+    <div class="flex items-center justify-between mb-2">
+      <label class="text-sm font-semibold text-slate-700">검사할 페이지 URL <span class="text-xs font-normal text-slate-400">— 한 줄에 하나씩 · 사이트 전체/폴더/로컬 파일 지원</span></label>
+      <div class="flex gap-2">
+        <button id="btnLogin" onclick="setupLogin()" class="text-xs bg-indigo-800 hover:bg-indigo-900 text-white px-3 py-1.5 rounded-lg font-semibold">
+          <i class="fas fa-lock mr-1"></i><span id="loginLabel">로그인 설정</span>
+        </button>
+        <button id="btnSite" onclick="loadSite()" class="text-xs bg-cyan-700 hover:bg-cyan-800 text-white px-3 py-1.5 rounded-lg font-semibold">
+          <i class="fas fa-sitemap mr-1"></i>사이트 전체 불러오기
+        </button>
+        <button onclick="loadFolder()" class="text-xs bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold">
+          <i class="fas fa-folder-open mr-1"></i>폴더 불러오기
+        </button>
+      </div>
+    </div>
+    <div class="flex gap-2 mb-3 items-start">
+      <textarea id="urlInput" rows="4" placeholder="https://www.example.go.kr/page1
+https://www.example.go.kr/page2
+C:\사이트\index.html"
+        class="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono resize-y"></textarea>
+      <button id="btnScan" onclick="runScan()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shrink-0 self-stretch">
+        <i class="fas fa-globe mr-1"></i>호환성<br>일괄 검사
+      </button>
+    </div>
+    <div class="flex items-center gap-4 text-sm text-slate-600 flex-wrap">
+      <span class="text-xs font-semibold text-slate-500">검사 브라우저:</span>
+      <label class="flex items-center gap-1.5"><input type="checkbox" id="bChrome" checked class="accent-indigo-600"> Chrome</label>
+      <label class="flex items-center gap-1.5"><input type="checkbox" id="bEdge" checked class="accent-indigo-600"> Edge</label>
+      <label class="flex items-center gap-1.5"><input type="checkbox" id="bSafari" checked class="accent-indigo-600"> Safari (WebKit)</label>
+      <label class="flex items-center gap-1.5"><input type="checkbox" id="bFirefox" class="accent-indigo-600"> Firefox</label>
+    </div>
+  </div>
+
+  <!-- 진행 상태 -->
+  <div id="progress" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-5 text-sm text-indigo-700">
+    <i class="fas fa-circle-notch spin mr-2"></i><span id="progressText">검사 중…</span>
+  </div>
+
+  <!-- 요약 -->
+  <div id="summaryBar" class="hidden grid grid-cols-3 gap-3 mb-5">
+    <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+      <div id="sumNormal" class="text-2xl font-extrabold text-green-600">0</div>
+      <div class="text-xs text-slate-500 mt-1">정상</div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+      <div id="sumWarn" class="text-2xl font-extrabold text-amber-600">0</div>
+      <div class="text-xs text-slate-500 mt-1">오류 감지</div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+      <div id="sumFail" class="text-2xl font-extrabold text-red-600">0</div>
+      <div class="text-xs text-slate-500 mt-1">실패</div>
+    </div>
+  </div>
+
+  <!-- 결과 그리드 -->
+  <div id="resultContainer" class="space-y-6 mb-5"></div>
+
+  <!-- 다운로드 -->
+  <div id="downloadBar" class="hidden bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
+    <div class="text-sm text-slate-600"><i class="fas fa-file-powerpoint text-orange-500 mr-1"></i>검사 증적을 PPTX 결과서로 저장할 수 있습니다 (누적된 검사 <span id="cntScans" class="font-bold">0</span>건)</div>
+    <div class="flex gap-2">
+      <button onclick="clearScans()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold">초기화</button>
+      <button onclick="downloadPptx()" class="text-xs bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-download mr-1"></i>PPTX 증적 다운로드</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BROWSER_LABEL = { chrome:'Chrome', edge:'Edge', safari:'Safari (WebKit)', firefox:'Firefox' }
+const BROWSER_ICON  = { chrome:'fab fa-chrome', edge:'fab fa-edge', safari:'fab fa-safari', firefox:'fab fa-firefox-browser' }
+let scanIds = []
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ── 엔진 상태 조회
+async function loadEngines() {
+  try {
+    const r = await fetch('/api/compat-engines').then(r=>r.json())
+    const e = r.engines || {}
+    setEng('engChromium', 'Chromium', e.chromium)
+    setEng('engWebkit',   'WebKit(Safari)', e.webkit)
+    setEng('engFirefox',  'Firefox', e.firefox)
+    document.getElementById('btnInstall').classList.toggle('hidden', e.webkit && e.firefox)
+  } catch(_) {}
+}
+function setEng(id, name, ok) {
+  const el = document.getElementById(id)
+  el.innerHTML = ok
+    ? `<i class="fas fa-check-circle text-green-500"></i> ${name}: 설치됨`
+    : `<i class="fas fa-times-circle text-red-400"></i> ${name}: 미설치`
+  el.className = 'text-xs ' + (ok ? 'text-green-600' : 'text-red-500')
+}
+
+// ── 엔진 설치
+async function installEngines() {
+  const btn = document.getElementById('btnInstall')
+  btn.disabled = true
+  btn.innerHTML = '<i class="fas fa-circle-notch spin mr-1"></i>설치 중… (5~10분, 창을 닫지 마세요)'
+  try {
+    const r = await fetch('/api/compat-install', { method:'POST' }).then(r=>r.json())
+    alert(r.ok ? '✅ ' + r.message : '❌ ' + (r.error||'설치 실패'))
+  } catch(e) { alert('설치 요청 실패: ' + e.message) }
+  btn.disabled = false
+  btn.innerHTML = '<i class="fas fa-download mr-1"></i>WebKit·Firefox 엔진 설치 (~250MB)'
+  loadEngines()
+}
+
+// ── 사이트 전체 불러오기 (크롤링 — 로그인 영역 제외)
+const LOGIN_PATTERNS = [/\/log-?in/i, /\/sign-?in/i, /\/sign-?up/i, /\/sign-?out/i, /\/log-?out/i,
+  /\/auth\b/i, /\/sso\b/i, /\/oauth/i, /\/register/i, /\/join\b/i, /\/member(ship)?\//i,
+  /\/mypage/i, /\/my-page/i, /password/i, /\/account\//i, /\/admin\b/i]
+
+function isLoginArea(u) { return LOGIN_PATTERNS.some(re => re.test(u)) }
+
+async function loadSite() {
+  const baseUrl = prompt('사이트 시작 URL을 입력하세요\n같은 도메인의 페이지를 자동 수집합니다 (로그인 영역 제외)', 'https://')
+  if (!baseUrl || baseUrl === 'https://') return
+  let maxPages = parseInt(prompt('최대 수집 페이지 수 (호환성 검사는 브라우저당 시간이 걸리므로 30 내외 권장)', '30'))
+  if (!maxPages || maxPages < 1) maxPages = 30
+  if (maxPages > 100) maxPages = 100
+
+  const btn = document.getElementById('btnSite')
+  btn.disabled = true
+  const orig = btn.innerHTML
+  btn.innerHTML = '<i class="fas fa-circle-notch spin mr-1"></i>사이트 탐색 중… (수 분 소요)'
+  try {
+    const r = await fetch('/api/sitescan/crawl', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ baseUrl, maxPages, useLogin: !!document.getElementById('btnLogin').dataset.active })
+    })
+    const d = await r.json()
+    if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status)
+    const all = d.urls || []
+    const kept = all.filter(u => !isLoginArea(u))
+    const excluded = all.length - kept.length
+    if (!kept.length) { alert('수집된 페이지가 없습니다'); return }
+    const ta = document.getElementById('urlInput')
+    ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + kept.join('\n')
+    alert(`✅ ${kept.length}개 페이지를 목록에 추가했습니다` + (excluded ? `\n(로그인 영역 ${excluded}개 자동 제외)` : ''))
+  } catch(e) { alert('사이트 탐색 실패: ' + e.message) }
+  btn.disabled = false
+  btn.innerHTML = orig
+}
+
+// ── 폴더 불러오기
+async function loadFolder() {
+  const folder = prompt('검사할 폴더 경로를 입력하세요 (하위 폴더 포함, 최대 100개)\n예: C:\\사이트\\html')
+  if (!folder) return
+  try {
+    const r = await fetch('/api/compat-folder', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ folder })
+    })
+    const d = await r.json()
+    if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status)
+    if (!d.count) { alert('폴더에서 HTML 파일을 찾지 못했습니다'); return }
+    const ta = document.getElementById('urlInput')
+    ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + d.files.join('\n')
+    alert(`✅ HTML ${d.count}개를 목록에 추가했습니다`)
+  } catch(e) { alert('폴더 검색 실패: ' + e.message) }
+}
+
+// ── 검사 실행 (다중)
+let totals = { normal:0, warning:0, failed:0 }
+async function runScan() {
+  const lines = document.getElementById('urlInput').value.split('\n').map(s=>s.trim()).filter(Boolean)
+  if (!lines.length) { alert('URL을 입력하세요'); return }
+  const browsers = []
+  if (document.getElementById('bChrome').checked)  browsers.push('chrome')
+  if (document.getElementById('bEdge').checked)    browsers.push('edge')
+  if (document.getElementById('bSafari').checked)  browsers.push('safari')
+  if (document.getElementById('bFirefox').checked) browsers.push('firefox')
+  if (!browsers.length) { alert('브라우저를 1개 이상 선택하세요'); return }
+
+  const btn = document.getElementById('btnScan')
+  btn.disabled = true
+  document.getElementById('progress').classList.remove('hidden')
+
+  for (let i = 0; i < lines.length; i++) {
+    document.getElementById('progressText').textContent =
+      `[${i+1}/${lines.length}] ${lines[i].slice(0,60)} — ${browsers.map(b=>BROWSER_LABEL[b]).join(', ')} 검사 중…`
+    try {
+      const res = await fetch('/api/compat-scan', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ url: lines[i], browsers })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status)
+      scanIds.push(data.id)
+      appendResult(data, i+1, lines.length)
+    } catch(e) {
+      appendError(lines[i], e.message, i+1)
+    }
+  }
+  btn.disabled = false
+  document.getElementById('progress').classList.add('hidden')
+}
+
+// ── 웹 브라우저 프레임 (브라우저별 차별화)
+function browserBar(browser, url) {
+  const u = esc(url)
+  if (browser === 'safari') {
+    return `<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 border-b border-slate-200">
+      <span class="flex gap-1 shrink-0">
+        <span class="w-2.5 h-2.5 rounded-full" style="background:#FF5F57"></span>
+        <span class="w-2.5 h-2.5 rounded-full" style="background:#FEBC2E"></span>
+        <span class="w-2.5 h-2.5 rounded-full" style="background:#28C840"></span>
+      </span>
+      <span class="flex-1 bg-white border border-slate-200 rounded-full px-3 py-0.5 text-xs text-slate-500 truncate text-center">🔒 ${u}</span>
+    </div>`
+  }
+  const dark = browser === 'firefox'
+  const bg   = dark ? 'background:#2B2A33' : browser==='edge' ? 'background:#D8E3EE' : 'background:#DEE1E6'
+  const pill = dark ? 'background:#1C1B22;color:#F9F9FA;border:1px solid #52525E' : 'background:#fff;color:#475569;border:1px solid #cbd5e1'
+  const nav  = dark ? 'color:#CCCCD6' : 'color:#5F6368'
+  const btns = dark ? 'color:#F9F9FA' : 'color:#334155'
+  return `<div class="flex items-center gap-2 px-3 py-1.5 border-b border-slate-200" style="${bg}">
+    <span class="text-xs shrink-0" style="${nav}">←&ensp;→&ensp;⟳</span>
+    <span class="flex-1 rounded-full px-3 py-0.5 text-xs truncate" style="${pill}">🔒 ${u}</span>
+    <span class="text-xs shrink-0 tracking-widest" style="${btns}">─&ensp;□&ensp;✕</span>
+  </div>`
+}
+
+// ── 결과 누적 렌더링 (URL별 섹션)
+function appendResult(data, seq, total) {
+  const s = data.summary || {}
+  totals.normal += s.normal||0; totals.warning += s.warning||0; totals.failed += s.failed||0
+  document.getElementById('summaryBar').classList.remove('hidden')
+  document.getElementById('sumNormal').textContent = totals.normal
+  document.getElementById('sumWarn').textContent   = totals.warning
+  document.getElementById('sumFail').textContent   = totals.failed
+
+  const cards = (data.results||[]).map(r => {
+    const errCnt = (r.consoleErrors||[]).length + (r.pageErrors||[]).length
+    const vb = r.verdict==='정상' ? 'bg-green-100 text-green-700'
+             : r.verdict==='오류 감지' ? 'bg-amber-100 text-amber-700'
+             : 'bg-red-100 text-red-700'
+    const errList = [...(r.pageErrors||[]), ...(r.consoleErrors||[])].slice(0,5)
+      .map(e => `<div class="text-xs text-red-500 truncate">· ${esc(e)}</div>`).join('')
+    return `
+    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div class="flex items-center justify-between px-4 py-2 bg-slate-800 text-white">
+        <span class="text-sm font-semibold"><i class="${BROWSER_ICON[r.browser]||'fas fa-globe'} mr-2"></i>${BROWSER_LABEL[r.browser]||r.browser}
+          <span class="text-xs text-slate-400 ml-1">${esc(r.engine||'')}</span></span>
+        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold ${vb}">${r.verdict}</span>
+      </div>
+      ${browserBar(r.browser, data.url)}
+      ${r.screenshot
+        ? `<img src="data:image/jpeg;base64,${r.screenshot}" class="w-full border-b border-slate-100" alt="${BROWSER_LABEL[r.browser]} 렌더링">`
+        : `<div class="h-40 flex items-center justify-center text-xs text-slate-400 bg-slate-50 border-b border-slate-100">${esc(r.error||'스크린샷 없음')}</div>`}
+      <div class="px-4 py-2.5 text-xs text-slate-600 flex items-center gap-4">
+        <span><i class="fas fa-clock text-slate-400 mr-1"></i>${r.loadMs?(r.loadMs/1000).toFixed(1)+'s':'-'}</span>
+        <span><i class="fas fa-server text-slate-400 mr-1"></i>HTTP ${r.httpStatus||'-'}</span>
+        <span class="${errCnt?'text-red-500 font-semibold':''}"><i class="fas fa-bug text-slate-400 mr-1"></i>JS오류 ${errCnt}건</span>
+      </div>
+      ${errList ? `<div class="px-4 pb-3">${errList}</div>` : ''}
+    </div>`
+  }).join('')
+
+  document.getElementById('resultContainer').insertAdjacentHTML('beforeend', `
+    <section class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-bold bg-indigo-600 text-white rounded-full px-2.5 py-0.5">${seq}/${total}</span>
+        <span class="text-sm font-semibold text-slate-700 truncate">${esc(data.url)}</span>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">${cards}</div>
+    </section>`)
+
+  document.getElementById('downloadBar').classList.remove('hidden')
+  document.getElementById('cntScans').textContent = scanIds.length
+}
+
+function appendError(url, msg, seq) {
+  document.getElementById('resultContainer').insertAdjacentHTML('beforeend', `
+    <section class="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-600">
+      <b>${seq}. ${esc(url)}</b> — 검사 실패: ${esc(msg)}
+    </section>`)
+}
+
+// ── PPTX 다운로드
+async function downloadPptx() {
+  if (!scanIds.length) { alert('검사 결과가 없습니다'); return }
+  const btn = event?.target?.closest('button')
+  const orig = btn ? btn.innerHTML : ''
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch spin mr-1"></i>생성 중… (다량은 수 분 소요)' }
+  try {
+    const res = await fetch('/api/compat-pptx', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ids: scanIds })
+    })
+    if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.error||'HTTP '+res.status) }
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `호환성점검결과서_${new Date().toISOString().slice(0,10)}.pptx`
+    a.click()
+  } catch(e) { alert('PPTX 생성 실패: ' + e.message) }
+  if (btn) { btn.disabled = false; btn.innerHTML = orig }
+}
+
+function clearScans() { scanIds = []; totals = {normal:0,warning:0,failed:0}; document.getElementById('cntScans').textContent = 0; document.getElementById('resultContainer').innerHTML = ''; document.getElementById('summaryBar').classList.add('hidden'); document.getElementById('downloadBar').classList.add('hidden') }
+
+loadEngines()
+
+// ── 로그인 세션 (아이디/비밀번호만 입력하면 자동 로그인) ──
+async function refreshLoginStatus() {
+  try {
+    const d = await fetch('/api/login-status').then(r=>r.json())
+    const btn = document.getElementById('btnLogin')
+    const lbl = document.getElementById('loginLabel')
+    if (d.active) {
+      lbl.innerHTML = `로그인됨: ${d.username} <span class="opacity-70">(해제)</span>`
+      btn.className = 'text-xs bg-emerald-700 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-semibold'
+      btn.dataset.active = '1'
+    } else {
+      lbl.textContent = '로그인 설정'
+      btn.className = 'text-xs bg-indigo-800 hover:bg-indigo-900 text-white px-3 py-1.5 rounded-lg font-semibold'
+      btn.dataset.active = ''
+    }
+  } catch(_) {}
+}
+
+async function setupLogin() {
+  const btn = document.getElementById('btnLogin')
+  if (btn.dataset.active) {
+    if (!confirm('로그인 세션을 해제할까요?')) return
+    await fetch('/api/login-clear', { method:'POST' })
+    refreshLoginStatus()
+    return
+  }
+  const loginUrl = prompt('① 로그인 페이지 URL을 입력하세요\n(아이디/비밀번호 입력칸이 있는 페이지)', 'https://')
+  if (!loginUrl || loginUrl === 'https://') return
+  const username = prompt('② 아이디를 입력하세요')
+  if (!username) return
+  const password = prompt('③ 비밀번호를 입력하세요\n(서버 메모리에만 세션이 저장되며, 프로그램 종료 시 사라집니다)')
+  if (!password) return
+
+  const orig = btn.innerHTML
+  btn.disabled = true
+  btn.innerHTML = '<i class="fas fa-circle-notch spin mr-1"></i>로그인 중…'
+  try {
+    const r = await fetch('/api/login-setup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ loginUrl, username, password })
+    })
+    const d = await r.json()
+    if (!r.ok || !d.ok) throw new Error(d.error || 'HTTP ' + r.status)
+    alert(`✅ 로그인 성공! (쿠키 ${d.cookies}개 저장)\n이제 모든 검사가 로그인된 상태로 진행됩니다.`)
+  } catch(e) {
+    alert('❌ ' + e.message)
+  }
+  btn.disabled = false
+  btn.innerHTML = orig
+  refreshLoginStatus()
+}
+refreshLoginStatus()
+
+</script>
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>

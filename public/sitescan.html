@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사이트 전체 검사 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/tailwind.css">
+<link rel="stylesheet" href="/lib/fa/all.min.css">
+<style>
+  @import url('/lib/pretendard.css');
+  :root {
+    --primary:#222; --primary-dark:#000; --accent:#222;
+    --bg:#eef0f5; --card:#ffffff; --border:#e2e6ef;
+    --text:#1e2a3a; --sub:#6b7280; --header-sub:#a8b8d8; --mint:#5de2a0;
+  }
+  body { font-family:'Pretendard','Apple SD Gothic Neo',sans-serif; background:var(--bg); color:var(--text); }
+  .card { background:white; border-radius:12px; border:1px solid var(--border); box-shadow:0 2px 12px rgba(44,54,116,0.06); }
+  .method-btn { display:flex; align-items:center; gap:8px; padding:10px 18px; border:1.5px solid var(--border);
+    border-radius:8px; background:white; font-size:0.85rem; font-weight:600; color:var(--sub); cursor:pointer;
+    transition:all .15s; font-family:inherit; }
+  .method-btn:hover { border-color:var(--accent); color:var(--accent); background:#f0f4ff; }
+  .method-btn.active { border-color:var(--accent); background:#eff6ff; color:var(--accent); }
+  .tag-input-wrap { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; border:1px solid var(--border);
+    border-radius:8px; background:white; min-height:42px; cursor:text; }
+  .tag { display:inline-flex; align-items:center; gap:5px; background:#eff6ff; color:var(--accent);
+    padding:2px 10px; border-radius:99px; font-size:0.78rem; font-weight:600; }
+  .tag button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.9rem; padding:0; line-height:1; }
+  .tag-input { border:none; outline:none; font-family:inherit; font-size:0.83rem; flex:1; min-width:120px; color:var(--text); background:transparent; }
+  .url-row { display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid #f3f4f6;
+    font-size:0.82rem; transition:background .1s; }
+  .url-row:hover { background:#f9fafb; }
+  .url-row:last-child { border-bottom:none; }
+  .url-checkbox { accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; }
+  .progress-bar-wrap { background:#f3f4f6; border-radius:99px; height:8px; overflow:hidden; }
+  .progress-bar { background:var(--accent); height:100%; border-radius:99px; transition:width .3s; }
+  .status-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; }
+  .input-tab-btn { display:inline-flex; align-items:center; gap:7px; padding:7px 15px; border-radius:8px;
+    border:1px solid var(--border); background:white; color:var(--sub); font-size:0.83rem; font-weight:600;
+    cursor:pointer; font-family:inherit; transition:all .15s; }
+  .input-tab-btn:hover:not(.active) { background:#f0f4ff; border-color:var(--accent); color:var(--accent); }
+  .input-tab-btn.active { background:#2563eb; color:white; border-color:#2563eb; }
+</style>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="g-top">
+  <div class="g-top-in">
+    <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+    <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+  </div>
+</header>
+<div class="g-title"><h1>전문가 모드 › 사이트 전체 검사</h1><p>URL을 자동으로 모아 여러 페이지를 한 번에 검사합니다.</p></div>
+
+
+<main style="max-width:1180px;margin:24px auto;padding:0 40px;box-sizing:border-box;">
+
+  <!-- 상단 설정 (2열 그리드) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin-bottom:20px;">
+
+    <!-- URL 수집 방식 -->
+    <div class="card p-4 mb-4">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;">
+        <i class="fas fa-globe" style="color:var(--accent);font-size:0.8rem;"></i>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text);">URL 수집 방식</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="method-btn active" id="btn-crawl" onclick="switchMethod('crawl')">
+          <i class="fas fa-spider" style="color:#8b5cf6;"></i> 사이트 자동 크롤링
+        </button>
+        <button class="method-btn" id="btn-sitemap" onclick="switchMethod('sitemap')">
+          <i class="fas fa-map" style="color:#f59e0b;"></i> sitemap.xml 파싱
+        </button>
+        <button class="method-btn" id="btn-file" onclick="switchMethod('file')">
+          <i class="fas fa-file-upload" style="color:#3b82f6;"></i> 파일 업로드 (Excel/CSV/TXT)
+        </button>
+      </div>
+
+      <!-- 크롤링 설정 -->
+      <div id="panel-crawl" style="margin-top:14px;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:4px;">기준 URL</label>
+        <input id="crawlUrl" placeholder="https://www.gov.kr/mw/AA020InfoCappView.do (경로 직접 입력 권장)"
+          style="width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:0.83rem;font-family:inherit;box-sizing:border-box;margin-bottom:10px;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:4px;">최대 수집 페이지 수</label>
+        <select id="crawlMax" style="width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:0.83rem;font-family:inherit;background:white;box-sizing:border-box;">
+          <option value="50">50 페이지</option>
+          <option value="100" selected>100 페이지</option>
+          <option value="200">200 페이지</option>
+          <option value="500">500 페이지</option>
+        </select>
+      </div>
+
+      <!-- sitemap 설정 -->
+      <div id="panel-sitemap" style="margin-top:14px;display:none;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:4px;">sitemap.xml URL</label>
+        <input id="sitemapUrl" placeholder="https://www.example.go.kr/sitemap.xml"
+          style="width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:0.83rem;font-family:inherit;box-sizing:border-box;">
+        <p style="font-size:0.7rem;color:var(--sub);margin-top:5px;">sitemap index도 자동으로 재귀 파싱합니다.</p>
+      </div>
+
+      <!-- 파일 업로드 설정 -->
+      <div id="panel-file" style="margin-top:14px;display:none;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:6px;">URL 목록 파일</label>
+        <div id="dropzone" onclick="document.getElementById('fileInput').click()"
+          style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;background:#fafafa;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.background='#f0f4ff'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.background='#fafafa'"
+          ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+          ondrop="handleFileDrop(event)">
+          <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--accent);margin-bottom:6px;display:block;"></i>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">클릭 또는 파일 드래그</div>
+          <div style="font-size:0.72rem;color:var(--sub);margin-top:3px;">xlsx, csv, txt 지원</div>
+        </div>
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.txt" style="display:none;" onchange="handleFileSelect(this)">
+        <div id="fileNameDisplay" style="font-size:0.78rem;color:var(--accent);margin-top:6px;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- 필터 설정 -->
+    <div class="card p-4 mb-4">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;">
+        <i class="fas fa-filter" style="color:var(--accent);font-size:0.8rem;"></i>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text);">URL 필터</span>
+        <span style="font-size:0.7rem;color:var(--sub);font-weight:400;">Enter로 추가</span>
+      </div>
+
+      <!-- 경로 필터 -->
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:5px;">
+          <i class="fas fa-folder" style="color:#f59e0b;"></i> 경로 필터
+          <span style="font-weight:400;color:#9ca3af;"> — 포함된 경로만 검사</span>
+        </label>
+        <div class="tag-input-wrap" id="pathFilterWrap" onclick="document.getElementById('pathInput').focus()">
+          <input id="pathInput" class="tag-input" placeholder="/board/, /notice/, /news/" onkeydown="addTag(event,'path')">
+        </div>
+        <div id="pathTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;"></div>
+        <p style="font-size:0.7rem;color:var(--sub);margin-top:4px;">비워두면 전체 URL 수집</p>
+      </div>
+
+      <!-- 키워드 필터 -->
+      <div>
+        <label style="font-size:0.72rem;font-weight:600;color:var(--sub);display:block;margin-bottom:5px;">
+          <i class="fas fa-search" style="color:#8b5cf6;"></i> 키워드 필터
+          <span style="font-weight:400;color:#9ca3af;"> — URL에 포함된 것만</span>
+        </label>
+        <div class="tag-input-wrap" id="kwFilterWrap" onclick="document.getElementById('kwInput').focus()">
+          <input id="kwInput" class="tag-input" placeholder="공지, 민원, notice" onkeydown="addTag(event,'kw')">
+        </div>
+        <div id="kwTags" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;"></div>
+      </div>
+    </div>
+
+    <!-- 검사 옵션 -->
+    <div class="card p-4 mb-4">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;">
+        <i class="fas fa-sliders-h" style="color:var(--accent);font-size:0.8rem;"></i>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text);">검사 옵션</span>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.72rem;font-weight:600;color:#16a34a;display:block;margin-bottom:5px;">WCAG 레벨 <span style="background:#dcfce7;color:#16a34a;padding:1px 6px;border-radius:99px;font-size:0.62rem;">기본</span></label>
+        <select id="levelSelect" style="width:100%;border:1px solid #bbf7d0;border-radius:7px;padding:7px 32px 7px 10px;font-size:0.82rem;background:#f0fdf4;font-family:inherit;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%23666%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;">
+          <option value="wcag2a">Level A</option>
+          <option value="wcag2aa" selected>Level AA (권장)</option>
+          <option value="wcag2aaa">Level AAA</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+        <label onclick="toggleOpt(this,'chkLinks')" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;background:white;font-size:0.8rem;font-weight:500;user-select:none;transition:all .15s;">
+          <input type="checkbox" id="chkLinks" style="accent-color:var(--accent);pointer-events:none;">
+          <i class="fas fa-link" style="color:#f59e0b;font-size:0.72rem;"></i> 링크 검사
+        </label>
+        <label onclick="toggleOpt(this,'chkSpell')" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;background:white;font-size:0.8rem;font-weight:500;user-select:none;transition:all .15s;">
+          <input type="checkbox" id="chkSpell" style="accent-color:var(--accent);pointer-events:none;">
+          <i class="fas fa-spell-check" style="color:#8b5cf6;font-size:0.72rem;"></i> 오탈자
+        </label>
+        <label onclick="toggleOpt(this,'chkW3C')" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;background:white;font-size:0.8rem;font-weight:500;user-select:none;transition:all .15s;">
+          <input type="checkbox" id="chkW3C" style="accent-color:var(--accent);pointer-events:none;">
+          <i class="fas fa-code" style="color:#3b82f6;font-size:0.72rem;"></i> W3C
+        </label>
+        <label onclick="toggleOpt(this,'chkKRDS')" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;background:white;font-size:0.8rem;font-weight:500;user-select:none;transition:all .15s;">
+          <input type="checkbox" id="chkKRDS" style="accent-color:var(--accent);pointer-events:none;">
+          <i class="fas fa-flag" style="color:#f43f5e;font-size:0.72rem;"></i> KRDS
+        </label>
+        <label onclick="toggleOpt(this,'chkMainOnly')" title="헤더·푸터·네비게이션을 제외하고 본문만 검사 — 공통영역 오류가 모든 페이지에 중복 집계되는 것을 방지" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;background:white;font-size:0.8rem;font-weight:500;user-select:none;transition:all .15s;">
+          <input type="checkbox" id="chkMainOnly" style="accent-color:var(--accent);pointer-events:none;">
+          <i class="fas fa-compress-alt" style="color:#d97706;font-size:0.72rem;"></i> 컨테이너만
+        </label>
+      </div>
+    </div>
+
+    <!-- URL 수집 버튼 -->
+    <button id="collectBtn" onclick="collectUrls()"
+      style="grid-column:1 / -1;width:100%;background:#6d28d9;color:white;border:none;padding:13px;border-radius:10px;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;transition:background .2s;"
+      onmouseover="this.style.background='#5b21b6'" onmouseout="this.style.background='#6d28d9'">
+      <i class="fas fa-search-location" style="margin-right:7px;"></i>URL 수집 시작
+    </button>
+  </div>
+
+  <!-- 결과 패널 (전체 폭) -->
+  <div>
+
+    <!-- URL 목록 미리보기 -->
+    <div class="card mb-4" id="urlListCard" style="display:none;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.88rem;font-weight:700;color:var(--text);">수집된 URL 목록</span>
+          <span id="urlCount" style="background:#eff6ff;color:var(--accent);padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:700;">0개</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="selectAll(true)"  style="font-size:0.75rem;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;">전체선택</button>
+          <span style="color:var(--border);">|</span>
+          <button onclick="selectAll(false)" style="font-size:0.75rem;color:var(--sub);background:none;border:none;cursor:pointer;font-family:inherit;">전체해제</button>
+          <span style="color:var(--border);">|</span>
+          <span id="selectedCount" style="font-size:0.75rem;color:var(--sub);">0개 선택</span>
+        </div>
+      </div>
+      <!-- 수집 중 로딩 -->
+      <div id="collectingMsg" style="padding:32px;text-align:center;display:none;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size:1.5rem;color:var(--accent);margin-bottom:10px;display:block;"></i>
+        <div style="font-size:0.85rem;color:var(--sub);" id="collectingText">URL 수집 중...</div>
+      </div>
+      <!-- URL 목록 -->
+      <div id="urlList" style="max-height:380px;overflow-y:auto;"></div>
+      <!-- 검사 실행 버튼 -->
+      <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;" id="startBtnWrap" style="display:none;">
+        <button id="startScanBtn" onclick="startBatchScan()"
+          style="flex:1;background:var(--primary);color:white;border:none;padding:12px;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.04em;transition:background .2s;"
+          onmouseover="this.style.background='var(--primary-dark)'" onmouseout="this.style.background='var(--primary)'">
+          <i class="fas fa-play" style="margin-right:7px;"></i>선택된 URL 일괄 검사 시작
+        </button>
+      </div>
+    </div>
+
+    <!-- 검사 진행 상황 -->
+    <div class="card p-5 mb-4" id="progressCard" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span style="font-size:0.9rem;font-weight:700;color:var(--text);">검사 진행 중...</span>
+        <span id="progressPct" style="font-size:1.1rem;font-weight:800;color:var(--accent);">0%</span>
+      </div>
+      <div class="progress-bar-wrap mb-3">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div style="display:flex;gap:20px;font-size:0.8rem;color:var(--sub);">
+        <span>✅ 완료 <strong id="pDone" style="color:var(--text);">0</strong></span>
+        <span>❌ 오류 <strong id="pFail" style="color:#dc2626;">0</strong></span>
+        <span>📄 전체 <strong id="pTotal" style="color:var(--text);">0</strong></span>
+      </div>
+    </div>
+
+    <!-- 검사 완료 결과 -->
+    <div class="card" id="resultCard" style="display:none;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:0.88rem;font-weight:700;color:var(--text);">검사 결과</span>
+        <div style="display:flex;gap:8px;">
+          <button id="dlExcelBtn" onclick="downloadExcel()"
+            style="font-size:0.78rem;background:#dcfce7;color:#16a34a;border:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-weight:600;font-family:inherit;">
+            <i class="fas fa-file-excel" style="margin-right:4px;"></i>Excel
+          </button>
+          <button id="dlPptxBtn" onclick="downloadPptx()"
+            style="font-size:0.78rem;background:#fce7f3;color:#be185d;border:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-weight:600;font-family:inherit;">
+            <i class="fas fa-file-powerpoint" style="margin-right:4px;"></i>PPTX 결과서
+          </button>
+        </div>
+      </div>
+      <!-- 요약 카드 -->
+      <div style="padding:18px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="resultSummary"></div>
+      <!-- 결과 테이블 -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+          <thead>
+            <tr style="background:#f7f8fc;">
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">페이지</th>
+              <th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">점수</th>
+              <th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">접근성</th>
+              <th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">오탈자</th>
+              <th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">링크</th>
+              <th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">상태</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 산출물 정보 (접힘 — 엑셀 결과서 메타) -->
+  <details class="card" style="margin-top:20px;padding:0;overflow:hidden;">
+    <summary style="padding:14px 18px;cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--sub);display:flex;align-items:center;justify-content:space-between;">
+      <span><i class="fas fa-file-alt" style="color:var(--accent);margin-right:7px;"></i>산출물 정보 <span style="font-weight:400;font-size:0.72rem;">— 엑셀 결과서에 기록되는 기관·담당자 정보 (선택)</span></span>
+      <span style="font-size:0.7rem;font-weight:400;">클릭하여 펼치기 ▼</span>
+    </summary>
+    <div style="padding:0 18px 16px;">
+<div style="padding-top:4px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;">
+        <i class="fas fa-file-alt" style="color:var(--accent);font-size:0.8rem;"></i>
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text);">산출물 정보</span>
+      </div>
+      <div style="display:grid;gap:8px;">
+        <div>
+          <label style="font-size:0.7rem;font-weight:600;color:var(--sub);display:block;margin-bottom:3px;">기관명</label>
+          <input id="metaOrg" placeholder="예: 행정안전부" style="width:100%;border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:0.7rem;font-weight:600;color:var(--sub);display:block;margin-bottom:3px;">담당부서</label>
+            <input id="metaDept" placeholder="예: 디지털정책과" style="width:100%;border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:0.7rem;font-weight:600;color:var(--sub);display:block;margin-bottom:3px;">담당자</label>
+            <input id="metaInspector" placeholder="예: 홍길동" style="width:100%;border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:0.7rem;font-weight:600;color:var(--sub);display:block;margin-bottom:3px;">프로젝트명</label>
+          <input id="metaProject" placeholder="예: 2025 웹 접근성 점검" style="width:100%;border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;">
+        </div>
+      </div>
+    </div>
+    </div>
+  </details>
+
+</main>
+
+<script>
+// ═══ 상태 변수 ═══
+let currentMethod  = 'crawl'
+let collectedUrls  = []
+let pathTags       = []
+let kwTags         = []
+let batchSession   = null
+let pollTimer      = null
+
+// ═══ 서버 상태 ═══
+async function checkServer() {
+  try {
+    const r = await fetch('/api/batch/status-check').catch(() => null)
+    const ok = r && r.ok
+    const el = document.getElementById('serverStatus')
+  if (!el) return
+    const tx = document.getElementById('serverStatusText')
+    el.style.background = ok ? 'rgba(74,222,128,0.15)' : 'rgba(250,204,21,0.15)'
+    el.style.color = ok ? '#86efac' : '#fde68a'
+    el.querySelector('span').style.background = ok ? '#4ade80' : '#facc15'
+    el.querySelector('span').style.animation = ok ? 'none' : 'pulse 1.5s infinite'
+    tx.textContent = ok ? '서버 연결됨' : '서버 확인 중...'
+  } catch(_) {}
+}
+checkServer()
+setInterval(checkServer, 10000)
+
+// ═══ 수집 방식 탭 전환 ═══
+function switchMethod(method) {
+  currentMethod = method
+  ;['crawl','sitemap','file'].forEach(m => {
+    document.getElementById('btn-' + m).classList.toggle('active', m === method)
+    document.getElementById('panel-' + m).style.display = m === method ? 'block' : 'none'
+  })
+}
+
+// ═══ 태그 입력 ═══
+function addTag(e, type) {
+  if (e.key !== 'Enter' && e.key !== ',') return
+  e.preventDefault()
+  const input = document.getElementById(type === 'path' ? 'pathInput' : 'kwInput')
+  const val   = input.value.trim().replace(/,$/, '')
+  if (!val) return
+  const arr = type === 'path' ? pathTags : kwTags
+  if (!arr.includes(val)) {
+    arr.push(val)
+    renderTags(type)
+  }
+  input.value = ''
+}
+
+function removeTag(type, idx) {
+  const arr = type === 'path' ? pathTags : kwTags
+  arr.splice(idx, 1)
+  renderTags(type)
+}
+
+function renderTags(type) {
+  const arr = type === 'path' ? pathTags : kwTags
+  const el  = document.getElementById(type === 'path' ? 'pathTags' : 'kwTags')
+  el.innerHTML = arr.map((t, i) =>
+    `<span class="tag">${t}<button onclick="removeTag('${type}',${i})">&times;</button></span>`
+  ).join('')
+}
+
+// ═══ 파일 업로드 ═══
+function handleFileSelect(input) {
+  if (input.files[0]) setFile(input.files[0])
+}
+function handleFileDrop(e) {
+  e.preventDefault()
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0])
+}
+function setFile(file) {
+  window._uploadedFile = file
+  const el = document.getElementById('fileNameDisplay')
+  el.textContent = '📎 ' + file.name
+  el.style.display = 'block'
+}
+
+// ═══ URL 수집 ═══
+async function collectUrls() {
+  const btn = document.getElementById('collectBtn')
+  btn.disabled = true; btn.textContent = '수집 중...'
+
+  document.getElementById('urlListCard').style.display = 'block'
+  document.getElementById('collectingMsg').style.display = 'block'
+  document.getElementById('urlList').innerHTML = ''
+  document.getElementById('startBtnWrap') && (document.getElementById('startBtnWrap').style.display = 'none')
+
+  try {
+    let resp, data
+    if (currentMethod === 'crawl') {
+      const baseUrl = document.getElementById('crawlUrl').value.trim()
+      if (!baseUrl) { alert('기준 URL을 입력하세요.'); return }
+      // https:// 없으면 자동 보완
+      const baseUrlNorm = baseUrl.startsWith('http') ? baseUrl : 'https://' + baseUrl
+      document.getElementById('crawlUrl').value = baseUrlNorm
+      document.getElementById('collectingText').textContent = '사이트 크롤링 중... (시간이 걸릴 수 있습니다)'
+      resp = await fetch('/api/sitescan/crawl', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ baseUrl: baseUrlNorm, maxPages: parseInt(document.getElementById('crawlMax').value), pathFilter: pathTags, keywordFilter: kwTags })
+      })
+    } else if (currentMethod === 'sitemap') {
+      const sitemapUrl = document.getElementById('sitemapUrl').value.trim()
+      if (!sitemapUrl) { alert('sitemap.xml URL을 입력하세요.'); return }
+      document.getElementById('collectingText').textContent = 'sitemap.xml 파싱 중...'
+      resp = await fetch('/api/sitescan/sitemap', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ sitemapUrl, pathFilter: pathTags, keywordFilter: kwTags })
+      })
+    } else {
+      if (!window._uploadedFile) { alert('파일을 선택하세요.'); return }
+      document.getElementById('collectingText').textContent = '파일에서 URL 추출 중...'
+      const fd = new FormData()
+      fd.append('file', window._uploadedFile)
+      fd.append('pathFilter', JSON.stringify(pathTags))
+      fd.append('keywordFilter', JSON.stringify(kwTags))
+      resp = await fetch('/api/sitescan/parse-file', { method:'POST', body: fd })
+    }
+
+    data = await resp.json()
+    if (!resp.ok) throw new Error(data.error || '수집 실패')
+    collectedUrls = data.urls || []
+    renderUrlList()
+  } catch(e) {
+    alert('URL 수집 오류: ' + e.message)
+  } finally {
+    document.getElementById('collectingMsg').style.display = 'none'
+    btn.disabled = false
+    btn.innerHTML = '<i class="fas fa-search-location" style="margin-right:7px;"></i>URL 수집 시작'
+  }
+}
+
+// ═══ URL 목록 렌더 ═══
+function renderUrlList() {
+  const list = document.getElementById('urlList')
+  const cnt  = document.getElementById('urlCount')
+  cnt.textContent = collectedUrls.length + '개'
+
+  if (collectedUrls.length === 0) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--sub);font-size:0.85rem;">수집된 URL이 없습니다.<br>필터 조건을 확인해 주세요.</div>'
+    return
+  }
+
+  list.innerHTML = collectedUrls.map((url, i) => `
+    <div class="url-row">
+      <input type="checkbox" class="url-checkbox" checked onchange="updateSelectedCount()" data-idx="${i}">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);"
+            title="${url}">${url}</span>
+    </div>
+  `).join('')
+
+  document.getElementById('startBtnWrap').style.display = 'flex'
+  updateSelectedCount()
+}
+
+function updateSelectedCount() {
+  const total = document.querySelectorAll('.url-checkbox:checked').length
+  document.getElementById('selectedCount').textContent = total + '개 선택'
+}
+
+function selectAll(v) {
+  document.querySelectorAll('.url-checkbox').forEach(cb => cb.checked = v)
+  updateSelectedCount()
+}
+
+// ═══ 일괄 검사 시작 ═══
+async function startBatchScan() {
+  const selected = [...document.querySelectorAll('.url-checkbox:checked')]
+    .map(cb => collectedUrls[parseInt(cb.dataset.idx)])
+    .filter(Boolean)
+
+  if (selected.length === 0) { alert('검사할 URL을 선택하세요.'); return }
+  if (!confirm(`선택된 ${selected.length}개 URL을 검사하시겠습니까?\n(페이지당 약 5~15초 소요)`)) return
+
+  const options = {
+    level:            document.getElementById('levelSelect').value,
+    checkLinks:       document.getElementById('chkLinks').checked,
+    checkSpelling:    document.getElementById('chkSpell').checked,
+    checkW3C:         document.getElementById('chkW3C').checked,
+    checkKRDS:        document.getElementById('chkKRDS').checked,
+    excludeCommon:    document.getElementById('chkMainOnly').checked,
+    includeScreenshot: true,
+    scanMode:         'professional',  // 일괄검사는 전문가 모드 기본
+  }
+
+  document.getElementById('progressCard').style.display = 'block'
+  document.getElementById('resultCard').style.display = 'none'
+  document.getElementById('pTotal').textContent = selected.length
+  document.getElementById('startScanBtn').disabled = true
+
+  try {
+    const resp = await fetch('/api/batch/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ urls: selected, options })
+    })
+    const data = await resp.json()
+    batchSession = data.sessionId
+    pollProgress()
+  } catch(e) {
+    alert('검사 시작 오류: ' + e.message)
+    document.getElementById('startScanBtn').disabled = false
+  }
+}
+
+// ═══ 진행 폴링 ═══
+function pollProgress() {
+  if (pollTimer) clearInterval(pollTimer)
+  pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch('/api/batch/' + batchSession + '/status')
+      const d = await r.json()
+      // 서버 응답: completed = 성공+실패 합산, succeeded = 성공만, failed = 실패만
+      const done = d.completed || 0
+      const pct  = d.total > 0 ? Math.round(done / d.total * 100) : 0
+      document.getElementById('progressPct').textContent = pct + '%'
+      document.getElementById('progressBar').style.width = pct + '%'
+      document.getElementById('pDone').textContent = d.succeeded || d.completed || 0
+      document.getElementById('pFail').textContent = d.failed || 0
+
+      if (d.status === 'completed') {
+        clearInterval(pollTimer)
+        document.getElementById('progressCard').style.display = 'none'
+        document.getElementById('startScanBtn').disabled = false
+        loadResults()
+      }
+    } catch(_) {}
+  }, 1500)
+}
+
+// ═══ 결과 표시 ═══
+async function loadResults() {
+  try {
+    const r    = await fetch('/api/batch/' + batchSession + '/results')
+    const data = await r.json()
+    // API 응답: { results: [...], status, total, ... }
+    const results = Array.isArray(data) ? data : (data.results || [])
+    renderResults(results)
+  } catch(e) {
+    console.error('결과 로드 오류:', e)
+  }
+}
+
+function renderResults(results) {
+  document.getElementById('resultCard').style.display = 'block'
+
+  const totalViol  = results.reduce((s,r) => s + (r.summary?.violations||0), 0)
+  const totalSpell = results.reduce((s,r) => s + (r.spelling?.totalIssues||0), 0)
+  const totalDead  = results.reduce((s,r) => s + (Array.isArray(r.links?.dead)?r.links.dead.length:(r.links?.dead||0)), 0)
+  const avgScore   = results.length ? Math.round(results.reduce((s,r)=>s+(r.score||0),0)/results.length) : 0
+
+  document.getElementById('resultSummary').innerHTML = `
+    <div style="text-align:center;padding:14px;background:#f8fafc;border-radius:10px;">
+      <div style="font-size:2rem;font-weight:800;color:${avgScore>=80?'#16a34a':avgScore>=60?'#d97706':'#dc2626'}">${avgScore}</div>
+      <div style="font-size:0.72rem;color:var(--sub);margin-top:2px;">평균 점수</div>
+    </div>
+    <div style="text-align:center;padding:14px;background:#fef2f2;border-radius:10px;">
+      <div style="font-size:2rem;font-weight:800;color:#dc2626">${totalViol}</div>
+      <div style="font-size:0.72rem;color:var(--sub);margin-top:2px;">접근성 위반</div>
+    </div>
+    <div style="text-align:center;padding:14px;background:#faf5ff;border-radius:10px;">
+      <div style="font-size:2rem;font-weight:800;color:#8b5cf6">${totalSpell}</div>
+      <div style="font-size:0.72rem;color:var(--sub);margin-top:2px;">오탈자</div>
+    </div>
+    <div style="text-align:center;padding:14px;background:#fff7ed;border-radius:10px;">
+      <div style="font-size:2rem;font-weight:800;color:#f59e0b">${totalDead}</div>
+      <div style="font-size:0.72rem;color:var(--sub);margin-top:2px;">데드링크</div>
+    </div>
+  `
+
+  document.getElementById('resultBody').innerHTML = results.map(r => {
+    const score = r.score || 0
+    const grade = score>=90?'A':score>=75?'B':score>=60?'C':'D'
+    const gc    = {A:'#16a34a',B:'#2563eb',C:'#d97706',D:'#dc2626'}
+    const viol  = r.summary?.violations || 0
+    const spell = r.spelling?.totalIssues || 0
+    const dead  = Array.isArray(r.links?.dead)?r.links.dead.length:(r.links?.dead||0)
+    const isErr = r.status === 'error'
+    return `
+    <tr style="border-bottom:1px solid #f3f4f6;${isErr?'background:#fff5f5':''}">
+      <td style="padding:10px 14px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        <a href="${r.url||''}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:0.8rem;"
+           title="${r.url||''}">${r.url||r.fileName||'-'}</a>
+        ${r.pageTitle?`<div style="font-size:0.72rem;color:var(--sub);margin-top:2px;">${r.pageTitle}</div>`:''}
+      </td>
+      <td style="padding:10px;text-align:center;">
+        <span style="font-weight:800;color:${gc[grade]};">${score}</span>
+        <span style="font-size:0.65rem;background:${gc[grade]}20;color:${gc[grade]};padding:1px 5px;border-radius:99px;margin-left:3px;font-weight:700;">${grade}</span>
+      </td>
+      <td style="padding:10px;text-align:center;font-weight:700;color:${viol>0?'#dc2626':'#16a34a'}">${viol}</td>
+      <td style="padding:10px;text-align:center;font-weight:700;color:${spell>0?'#8b5cf6':'#16a34a'}">${spell}</td>
+      <td style="padding:10px;text-align:center;font-weight:700;color:${dead>0?'#f59e0b':'#16a34a'}">${dead}</td>
+      <td style="padding:10px;text-align:center;">
+        ${isErr
+          ? `<span class="status-badge" style="background:#fee2e2;color:#dc2626;">오류</span>`
+          : `<span class="status-badge" style="background:#dcfce7;color:#16a34a;">완료</span>`}
+      </td>
+    </tr>`
+  }).join('')
+}
+
+// ═══ 다운로드 ═══
+function getMeta() {
+  return {
+    org:       document.getElementById('metaOrg').value.trim(),
+    dept:      document.getElementById('metaDept').value.trim(),
+    inspector: document.getElementById('metaInspector').value.trim(),
+    project:   document.getElementById('metaProject').value.trim(),
+    generatedAt: new Date().toLocaleString('ko-KR'),
+    toolVersion: 'v6.19',
+  }
+}
+
+async function downloadExcel() {
+  if (!batchSession) return
+  const meta = getMeta()
+  const q = new URLSearchParams({
+    org: meta.org, dept: meta.dept || '',
+    inspector: meta.inspector, project: meta.project
+  }).toString()
+  window.open('/api/batch/' + batchSession + '/excel?' + q, '_blank')
+}
+function downloadPptx() {
+  if (!batchSession) return
+  const meta = getMeta()
+  fetch('/api/batch/' + batchSession + '/pptx', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ meta })
+  }).then(res => {
+    if (!res.ok) { res.json().then(e => alert('PPTX 생성 실패: ' + (e.error||'오류'))); return }
+    return res.blob()
+  }).then(blob => {
+    if (!blob) return
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = '접근성점검결과서_' + new Date().toISOString().slice(0,10) + '.pptx'
+    a.click()
+  }).catch(e => alert('PPTX 생성 오류: ' + e.message))
+}
+
+
+
+function toggleOpt(label, id) {
+  const chk = document.getElementById(id); chk.checked = !chk.checked
+  label.style.borderColor = chk.checked ? 'var(--accent)' : 'var(--border)'
+  label.style.background  = chk.checked ? '#eff6ff' : 'white'
+  label.style.color       = chk.checked ? 'var(--accent)' : 'var(--text)'
+}
+</script>
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개인정보처리방침 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main{max-width:1180px;margin:0 auto;padding:0 40px 120px}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:28px;overflow-x:auto}
+  .tabs button{padding:14px 18px;font-size:15px;color:var(--muted);border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;cursor:pointer;font:inherit}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+  .tabs button:hover{color:var(--ink)}
+  .sec{display:none;padding-top:36px} .sec.on{display:block}
+  .lead{font-size:17px;max-width:760px}
+  .facts{display:grid;grid-template-columns:150px 1fr;gap:12px 24px;margin-top:28px;font-size:14px;max-width:900px}
+  .facts dt{color:var(--muted)} .facts dd{margin:0;color:var(--ink)}
+  .facts dd code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--soft);padding:2px 6px;border-radius:4px}
+  .counts{display:flex;gap:28px;margin-top:36px;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .counts div{display:flex;flex-direction:column} .counts b{font-size:28px;font-weight:800;letter-spacing:-.04em} .counts span{font-size:13px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:28px;font-size:14px}
+  th{text-align:left;padding:12px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
+  td.no{color:var(--muted);width:44px} td.nm{font-weight:600;white-space:nowrap} td.ref{color:var(--muted);white-space:nowrap;font-size:13px}
+  td .note{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+  td .cat{display:block;color:var(--muted);font-size:12px;font-weight:400}
+  .jd{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .jd.auto{background:#f1faf5;color:#2f9a60} .jd.partial{background:#fff8ef;color:#b9771f} .jd.manual{background:var(--soft);color:var(--muted)}
+  .rules{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--muted);display:block;margin-top:4px;word-break:break-all}
+  .limits{margin-top:36px;max-width:900px} .limits h3{font-size:17px;font-weight:700;margin:0 0 10px}
+  .limits li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:#444;list-style:none}
+  .limits li::before{content:"—";color:var(--muted);margin-right:10px}
+  .print{margin-top:36px;display:flex;gap:10px}
+  .print button{height:48px;padding:0 22px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+  .print button:hover{border-color:var(--ink)}
+
+  .selftest{margin-top:28px;border:1px solid var(--line);border-radius:12px;padding:22px 24px}
+  .st-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start} .st-head .sub{font-size:13px;color:var(--muted);margin:6px 0 0;max-width:760px}
+  .st-btn{height:44px;padding:0 20px;border:0;border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap} .st-btn:disabled{background:var(--line);color:#bdbdbd}
+  .st-tbl{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px} .st-tbl th{text-align:left;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line)} .st-tbl td{padding:9px 8px;border-bottom:1px solid var(--line)}
+  .st-ok{color:var(--good);font-weight:700} .st-ng{color:var(--bad);font-weight:700}
+  .st-sum{margin-top:14px;font-size:15px;font-weight:700} .st-sum small{font-weight:400;color:var(--muted);margin-left:8px}
+  @media print{.g-top,.tabs,.print,.g-foot{display:none!important}.sec{display:block!important;page-break-after:always}}
+  @media (max-width:760px){main{padding:0 20px 80px}.facts{grid-template-columns:1fr}.counts{gap:16px}td.nm{white-space:normal}}
+</style>
+</head>
+<body>
+<header class="g-top"><div class="g-top-in">
+  <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+  <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more on"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html" class="on">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+</div></header>
+<main style="max-width:860px;margin:0 auto;padding:0 40px 120px">
+<div class="g-title" style="padding:48px 0 8px"><h1 style="font-size:36px;margin:0">개인정보처리방침</h1><p style="color:var(--muted)">가디언즈 웹 서비스(guardians.ai.kr) · 시행일 <b>[공개일 입력]</b></p></div>
+<section style="line-height:1.75;font-size:15.5px">
+<h2 style="font-size:20px;margin-top:36px">1. 수집하는 정보</h2>
+<p>가디언즈는 회원가입이 없으며 이름 · 연락처 등 개인정보를 직접 수집하지 않습니다. 검사를 위해 입력한 <b>웹사이트 주소</b>와 검사 결과는 결과 화면 · 결과서 생성을 위해 서버에서 처리되며, 예약 검사에 등록한 항목은 등록을 해제할 때까지 보관됩니다.</p>
+<h2 style="font-size:20px;margin-top:36px">2. 응원하기(후원)</h2>
+<p>"응원하기"는 카카오페이 송금 화면으로 연결만 하며, 가디언즈는 송금자 이름 · 금액 · 결제 정보를 받거나 저장하지 않습니다. 송금 과정의 정보 처리는 카카오페이의 개인정보처리방침을 따릅니다. 응원 창을 다시 띄우지 않기 위한 기록(날짜)만 사용자 브라우저에 저장됩니다. 보내 주신 응원은 서버 운영비에만 사용합니다.</p>
+<p style="font-size:14px;color:var(--muted)">광고를 게재하는 경우: Google 애드센스 등 제3자 공급업체가 쿠키를 사용해 광고를 게재할 수 있으며, 맞춤 광고는 <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google 광고 설정</a>에서 끌 수 있습니다.</p>
+<h2 style="font-size:20px;margin-top:36px">3. 외부 서비스 전송</h2>
+<p>사용자가 켜는 경우에만 다음 외부 서비스로 정보가 전송됩니다: 오탈자 검사(검사 대상 페이지의 글자 → 맞춤법 검사 서비스), HTML 표준 검사(페이지 HTML → W3C 검증 서비스), AI 보조(위반 요소 조각 → Anthropic Claude API, 사용자 개인 키 사용 · 키는 서버에 저장하지 않음).</p>
+<h2 style="font-size:20px;margin-top:36px">4. 설치형</h2>
+<p>설치형(EXE · ZIP)은 사용자 PC 안에서만 동작하며 광고를 표시하지 않고, 위 3번에서 켠 기능 외에는 외부로 정보를 보내지 않습니다.</p>
+<h2 style="font-size:20px;margin-top:36px">5. 문의</h2>
+<p><b>[운영 주체 · 담당자 · 연락처 입력]</b></p>
+</section></main>
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>

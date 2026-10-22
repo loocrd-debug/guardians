@@ -1,0 +1,2753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>전문가 모드 — 가디언즈</title>
+  <link rel="stylesheet" href="/lib/tailwind.css">
+  <link rel="stylesheet" href="/lib/fa/all.min.css">
+  <script src="/lib/chart.min.js"></script>
+  <style>
+    @import url('/lib/pretendard.css');
+    body { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    :root {
+      --color-primary:      #222;
+      --color-primary-dark: #1e2654;
+      --color-accent:       #222;
+      --color-bg:           #eef0f5;
+      --color-card:         #ffffff;
+      --color-border:       #e2e6ef;
+      --color-text:         #1e2a3a;
+      --color-text-sub:     #6b7280;
+      --color-header-sub:   #9aa3c8;
+      --color-label:        #494b62;
+      --color-footer:       #a3a4a8;
+      --color-btn:          #33317c;
+    }
+    .gradient-bg { background: #fff; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05); }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.35s ease-in-out; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .main-tab-btn { transition: all 0.2s; border-bottom: 3px solid transparent; }
+    .main-tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: 700; }
+    .input-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid #e2e6ef;
+      background: white;
+      color: #58616a;
+      transition: all 0.15s;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .input-tab-btn:hover:not(.active) {
+      background: #f0f4ff;
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+    .input-tab-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+    .input-tab-btn.active i { color: white; }
+
+    /* 검사 모드 토글 */
+    .mode-toggle { display:flex; gap:0; border:1.5px solid var(--color-border,#e2e6ef); border-radius:9px; overflow:hidden; }
+    .mode-btn { flex:1; padding:8px 0; font-size:0.82rem; font-weight:700; border:none; cursor:pointer;
+      font-family:inherit; transition:all .15s; background:white; color:#6b7280; }
+    .mode-btn.simple.active   { background:#5de2a0; color:#005b37; }
+    .mode-btn.pro.active      { background:#222; color:white; }
+    .mode-btn:not(.active):hover { background:#f3f4f6; }
+
+    /* 프로젝트 패널 */
+    .proj-session-row { display:flex; align-items:center; gap:10px; padding:8px 12px;
+      border-bottom:1px solid #f3f4f6; font-size:0.8rem; }
+    .proj-session-row:last-child { border-bottom:none; }
+    .node-html { font-family: 'Fira Code', 'Courier New', monospace; font-size: 11px; }
+    .score-ring { transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1s ease-in-out; }
+    input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }
+    .impact-critical { border-left-color: #dc2626 !important; }
+    .impact-serious  { border-left-color: #ea580c !important; }
+    .impact-moderate { border-left-color: #d97706 !important; }
+    .impact-minor    { border-left-color: #65a30d !important; }
+    details > summary { cursor: pointer; user-select: none; list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] summary .chev { transform: rotate(180deg); }
+    .chev { transition: transform 0.2s; }
+    .link-dead { border-left-color: #ef4444 !important; }
+    .link-redirect { border-left-color: #f59e0b !important; }
+    .spell-ko { border-left-color: #8b5cf6 !important; }
+    .badge-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+    /* 옵션 카드 */
+    .opt-card { border:2px solid #e2e8f0; border-radius:12px; padding:12px 16px; transition:border-color 0.2s, background 0.2s; cursor:pointer; }
+    .opt-card:hover { border-color:#93c5fd; background:#f0f7ff; }
+    .opt-card.active { border-color:#2563eb; background:#eff6ff; }
+    /* 드롭존 */
+    .dropzone { border:2.5px dashed #cbd5e1; border-radius:14px; transition:all 0.2s; }
+    .dropzone.over { border-color:#2563eb; background:#eff6ff; }
+    /* URL 리스트 */
+    .url-tag { display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:4px 10px; font-size:12px; }
+    /* 진행바 애니메이션 */
+    .progress-bar { transition: width 0.5s ease-in-out; }
+    /* 배치 결과 행 */
+    .batch-row:hover { background:#f8fafc; }
+    .batch-row.error-row { background:#fff5f5; }
+  </style>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body class="min-h-screen" >
+
+<!-- ═══ HEADER ═══ -->
+<header class="g-top">
+  <div class="g-top-in">
+    <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+    <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more on"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html" class="on">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+  </div>
+</header>
+<div class="g-title"><h1>전문가 모드</h1><p>여러 주소 · 로컬 파일 · 폴더 · 로그인 페이지 · 표지 편집기 등 모든 옵션을 한 화면에서 다룹니다.</p></div>
+
+
+<!-- ═══ MAIN ═══ -->
+<main class="max-w-6xl mx-auto px-4 py-6">
+
+  <!-- ─── 검사 폼 ─── -->
+  <div class="card p-6 mb-5">
+
+    <!-- 입력 소스 탭 -->
+    <div class="flex flex-wrap gap-2 mb-5 border-b border-slate-100 pb-4">
+      <button id="tab-url-btn" onclick="switchInputTab('url')" class="input-tab-btn active">
+        <i class="fas fa-globe"></i> URL 입력
+      </button>
+      <button id="tab-multi-btn" onclick="switchInputTab('multi')" class="input-tab-btn">
+        <i class="fas fa-list-ul"></i> URL 다중입력
+      </button>
+      <button id="tab-file-btn" onclick="switchInputTab('file')" class="input-tab-btn">
+        <i class="fas fa-file-code"></i> 로컬 파일
+      </button>
+      <button id="tab-folder-btn" onclick="switchInputTab('folder')" class="input-tab-btn">
+        <i class="fas fa-folder-open"></i> 폴더 업로드
+      </button>
+      <a href="/sitescan.html" class="input-tab-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-left:auto" title="URL을 자동 수집해 여러 페이지를 한 번에 검사">
+        <i class="fas fa-sitemap"></i> 사이트 전체 검사
+      </a>
+    </div>
+
+    <!-- URL 단일 입력 -->
+    <div id="panel-url" class="mb-4">
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;font-weight:600;color:#494b62;margin-bottom:10px;">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <circle cx="7.5" cy="7.5" r="6.5" stroke="#3666e4" stroke-width="1.3"/>
+          <ellipse cx="7.5" cy="7.5" rx="2.8" ry="6.5" stroke="#3666e4" stroke-width="1.1"/>
+          <line x1="1.2" y1="5.2" x2="13.8" y2="5.2" stroke="#3666e4" stroke-width="1.1"/>
+          <line x1="1.2" y1="9.8" x2="13.8" y2="9.8" stroke="#3666e4" stroke-width="1.1"/>
+        </svg>
+        검사할 URL
+      </label>
+      <input id="urlInput" type="url" placeholder="https://example.com"
+        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-800 bg-slate-50 focus:bg-white transition text-base"
+        onkeydown="if(event.key==='Enter') startScan()" />
+    </div>
+
+    <!-- URL 다중 입력 -->
+    <div id="panel-multi" class="mb-4 hidden">
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        <i class="fas fa-list mr-1 text-blue-400"></i> URL 목록 (한 줄에 하나씩, 최대 100,000개)
+      </label>
+      <textarea id="multiUrls" rows="6" placeholder="https://example.com/page1&#10;https://example.com/page2&#10;https://example.com/page3"
+        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-800 bg-slate-50 focus:bg-white transition text-sm font-mono resize-y"></textarea>
+      <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+        <span id="multiUrlCount" class="text-blue-600 font-semibold">0개 URL</span>
+        <button onclick="clearMultiUrls()" class="text-red-400 hover:text-red-600 transition"><i class="fas fa-times mr-1"></i>초기화</button>
+        <label class="cursor-pointer text-blue-500 hover:text-blue-700 transition">
+          <i class="fas fa-file-import mr-1"></i>텍스트 파일 불러오기
+          <input type="file" accept=".txt,.csv" class="hidden" onchange="loadUrlFile(this)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- 로컬 파일 입력 -->
+    <div id="panel-file" class="mb-4 hidden">
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        <i class="fas fa-file-code mr-1 text-orange-400"></i> HTML/JSP 파일 선택 (다중 선택 가능)
+      </label>
+      <div id="fileDropzone" class="dropzone p-8 text-center cursor-pointer"
+        onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="handleFileDrop(event)">
+        <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3 block"></i>
+        <p class="text-slate-600 font-semibold mb-1">파일을 여기에 드래그하거나 클릭하여 선택</p>
+        <p class="text-slate-400 text-xs">지원 형식: .html .htm .jsp .asp .php (최대 500개)</p>
+        <input type="file" id="fileInput" multiple accept=".html,.htm,.jsp,.asp,.php" class="hidden" onchange="handleFileSelect(this)" />
+      </div>
+      <div id="fileList" class="mt-3 flex flex-wrap gap-2 max-h-32 overflow-y-auto"></div>
+    </div>
+
+    <!-- 폴더 업로드 -->
+    <div id="panel-folder" class="mb-4 hidden">
+      <label class="block text-sm font-semibold text-slate-700 mb-2">
+        <i class="fas fa-folder-open mr-1 text-yellow-500"></i> 폴더 업로드 (폴더 내 HTML/JSP 파일 전체 검사)
+      </label>
+      <div id="folderDropzone" class="dropzone p-8 text-center cursor-pointer"
+        onclick="document.getElementById('folderInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="handleFolderDrop(event)">
+        <i class="fas fa-folder-open text-3xl text-yellow-400 mb-3 block"></i>
+        <p class="text-slate-600 font-semibold mb-1">폴더를 여기에 드래그하거나 클릭하여 선택</p>
+        <p class="text-slate-400 text-xs">폴더 내 .html .htm .jsp .asp .php 파일을 재귀적으로 검사합니다 · <b>한 번에 최대 500개</b></p>
+        <input type="file" id="folderInput" webkitdirectory multiple class="hidden" onchange="handleFolderSelect(this)" />
+      </div>
+      <div id="folderInfo" class="mt-2 text-xs text-slate-500 hidden">
+        <i class="fas fa-folder text-yellow-500 mr-1"></i>
+        <span id="folderFileCount">0</span>개 파일 인식됨
+      </div>
+    </div>
+
+    <!-- ─── 검사 옵션 (시안 100% 재현) ─── -->
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;margin-top:4px;">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="flex-shrink:0;">
+        <line x1="1.5" y1="4.5" x2="13.5" y2="4.5" stroke="#494b62" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="1.5" y1="7.5" x2="13.5" y2="7.5" stroke="#494b62" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="1.5" y1="10.5" x2="13.5" y2="10.5" stroke="#494b62" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="4.5" cy="4.5" r="1.8" fill="white" stroke="#494b62" stroke-width="1.1"/>
+        <circle cx="9.5" cy="7.5" r="1.8" fill="white" stroke="#494b62" stroke-width="1.1"/>
+        <circle cx="5.5" cy="10.5" r="1.8" fill="white" stroke="#494b62" stroke-width="1.1"/>
+      </svg>
+      <span style="font-size:0.85rem;font-weight:600;color:#494b62;">검사옵션</span>
+    </div>
+
+    <div style="border:1px solid #e2e6ef;border-radius:10px;background:#ffffff;padding:18px 20px;margin-bottom:14px;">
+      <div class="rg" style="display:grid;grid-template-columns:180px 1fr;gap:0;align-items:start;">
+
+        <!-- 좌: 검사모드 + WCAG 레벨 + 스크린샷 -->
+        <div style="padding-right:24px;border-right:1px solid #e6e8f0;">
+          <!-- 검사 모드 토글 -->
+          <div style="margin-bottom:12px;">
+            <div style="font-size:0.68rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">검사 모드</div>
+            <div style="display:flex;border:1.5px solid #e2e6ef;border-radius:8px;overflow:hidden;">
+              <button id="modeSimpleBtn" class="mode-btn simple active" onclick="setMode('simple')"
+                style="flex:1;padding:7px 4px;font-size:0.75rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:#5de2a0;color:#005b37;transition:all .15s;">
+                ⚡ 간편
+              </button>
+              <button id="modeProBtn" class="mode-btn pro" onclick="setMode('professional')"
+                style="flex:1;padding:7px 4px;font-size:0.75rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:white;color:#6b7280;transition:all .15s;">
+                🔬 전문가
+              </button>
+            </div>
+            <div id="modeDesc" style="font-size:0.67rem;color:#6b7280;margin-top:5px;line-height:1.5;">핵심 15개 항목만 — 쉽게 이해하고 조치</div>
+          </div>
+          <div style="font-size:0.72rem;font-weight:600;color:#58616a;margin-bottom:7px;">WCAG 레벨</div>
+          <select id="levelSelect" style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:7px 32px 7px 10px;font-size:0.82rem;background:#fff url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20width%3D'12'%20height%3D'8'%20viewBox%3D'0%200%2012%208'%3E%3Cpath%20d%3D'M1%201l5%205%205-5'%20stroke%3D'%23666'%20stroke-width%3D'1.5'%20fill%3D'none'%20stroke-linecap%3D'round'/%3E%3C/svg%3E") no-repeat right 10px center;color:#1e2a3a;font-family:inherit;appearance:none;-webkit-appearance:none;cursor:pointer;">
+            <option value="wcag2a">Level A</option>
+            <option value="wcag2aa" selected>Level AA (권장)</option>
+            <option value="wcag2aaa">Level AAA</option>
+          </select>
+          <div style="margin-top:10px;font-size:0.75rem;color:#58616a;display:flex;align-items:center;gap:10px;">
+            <span>스크린샷</span>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="radio" name="screenshot" value="true" checked style="accent-color:#256df3;width:14px;height:14px;" /> <span style="color:#1e2a3a;">포함</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="radio" name="screenshot" value="false" style="accent-color:#256df3;width:14px;height:14px;" /> <span style="color:#1e2a3a;">제외</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 우: 체크박스 4개 한 줄 + W3C Link Checker 2번째 줄 -->
+        <div style="padding-left:24px;">
+          <!-- 1줄: 4개 체크박스 -->
+          <div class="rg4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:10px;">
+            <label onclick="toggleScanOpt(this,'chkLinks')"
+              style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:2px 0;">
+              <span id="chk-box-links" style="width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:3px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;">
+                <svg id="chk-icon-links" width="10" height="8" viewBox="0 0 10 8" fill="none" style="display:none;">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input type="checkbox" id="chkLinks" style="display:none;" />
+              <span style="font-size:0.83rem;color:#1e2a3a;">링크 검사</span>
+            </label>
+            <label onclick="toggleScanOpt(this,'chkSpell')"
+              style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:2px 0;">
+              <span id="chk-box-spell" style="width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:3px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;">
+                <svg id="chk-icon-spell" width="10" height="8" viewBox="0 0 10 8" fill="none" style="display:none;">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input type="checkbox" id="chkSpell" style="display:none;" />
+              <span style="font-size:0.83rem;color:#1e2a3a;">오탈자 검사</span>
+            </label>
+            <label onclick="toggleScanOpt(this,'chkW3C')"
+              style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:2px 0;">
+              <span id="chk-box-w3c" style="width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:3px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;">
+                <svg id="chk-icon-w3c" width="10" height="8" viewBox="0 0 10 8" fill="none" style="display:none;">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input type="checkbox" id="chkW3C" style="display:none;" />
+              <span style="font-size:0.83rem;color:#1e2a3a;">W3C 마크업 검사</span>
+            </label>
+            <label onclick="toggleScanOpt(this,'chkKRDS')"
+              style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:2px 0;">
+              <span id="chk-box-krds" style="width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:3px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;">
+                <svg id="chk-icon-krds" width="10" height="8" viewBox="0 0 10 8" fill="none" style="display:none;">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input type="checkbox" id="chkKRDS" style="display:none;" />
+              <span style="font-size:0.83rem;color:#1e2a3a;">KRDS 검사</span>
+            </label>
+          </div>
+          <!-- 2번째 줄: W3C Link Checker (링크검사 선택 시 표시) -->
+          <div id="w3cLinksWrap" style="display:none;">
+            <label onclick="toggleScanOpt(this,'chkW3CLinks')"
+              style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:2px 0;">
+              <span id="chk-box-w3clinks" style="width:16px;height:16px;border:1.5px solid #d1d5db;border-radius:3px;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s;">
+                <svg id="chk-icon-w3clinks" width="10" height="8" viewBox="0 0 10 8" fill="none" style="display:none;">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input type="checkbox" id="chkW3CLinks" style="display:none;" />
+              <span style="font-size:0.83rem;color:#1e2a3a;">W3C Link Checker</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── 로그인 페이지 지원 (쿠키/헤더) ─── -->
+    <details id="loginSection" style="border:1px solid #e2e6ef;border-radius:10px;background:#fbfcfe;margin-bottom:14px;">
+      <summary style="padding:12px 16px;cursor:pointer;font-size:0.85rem;font-weight:700;color:#334155;display:flex;align-items:center;justify-content:space-between;">
+        <span>🔐 로그인 페이지 검사 <span style="font-weight:400;color:#94a3b8;font-size:0.75rem;">— 로그인해야 보이는 페이지도 검사할 수 있습니다</span></span>
+        <span style="font-size:0.72rem;color:#94a3b8;font-weight:400;">클릭하여 펼치기 ▼</span>
+      </summary>
+      <div style="padding:4px 16px 16px;">
+
+        <!-- ── 간편 로그인 (기본 방법) ── -->
+        <div style="background:#eef2ff;border:1px solid #dfe4ff;border-radius:10px;padding:14px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:#3730a3;">✨ 간편 로그인 <span style="font-weight:400;color:#6366f1;font-size:0.73rem;">— 아이디·비밀번호만 입력하면 자동 로그인</span></div>
+              <div style="font-size:0.73rem;color:#6b7280;margin-top:3px;">
+                버튼을 누르고 ① 로그인 페이지 주소 → ② 아이디 → ③ 비밀번호 순서로 입력하면 끝!<br>
+                이후 모든 검사(접근성·일괄·KRDS·호환성)가 로그인된 상태로 진행됩니다.
+              </div>
+            </div>
+            <button type="button" id="btnLogin" onclick="setupLogin()"
+              style="background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+              <span id="loginLabel">🔐 간편 로그인 설정</span>
+            </button>
+          </div>
+          <div style="font-size:0.7rem;color:#94a3b8;margin-top:8px;">
+            ※ 비밀번호는 저장되지 않으며 로그인 세션만 유지됩니다 (프로그램 종료 시 소멸) · CAPTCHA/2단계 인증 사이트는 지원 불가
+          </div>
+        </div>
+
+        <!-- ── 고급: 쿠키/헤더 직접 입력 (특수한 경우) ── -->
+        <details style="border:1px solid #edf0f6;border-radius:8px;background:#fff;">
+          <summary style="padding:9px 14px;cursor:pointer;font-size:0.75rem;font-weight:600;color:#94a3b8;">
+            ⚙️ 고급 설정 — 쿠키/HTTP 헤더 직접 입력 <span style="font-weight:400;">(API 토큰 등 특수한 인증 방식용, 일반 사용자는 위의 간편 로그인을 쓰세요)</span>
+          </summary>
+          <div style="padding:4px 14px 12px;">
+      <div style="padding:4px 16px 16px;">
+        <!-- 쿠키 입력 -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:0.72rem;font-weight:600;color:#494b62;margin-bottom:6px;">
+            쿠키 (한 줄에 하나: name=value 또는 JSON)
+          </label>
+          <textarea id="loginCookies" rows="3"
+            placeholder="JSESSIONID=abc123&#10;또는: {&quot;name&quot;:&quot;token&quot;,&quot;value&quot;:&quot;xyz&quot;,&quot;domain&quot;:&quot;example.com&quot;}"
+            style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:8px 10px;font-size:0.78rem;font-family:monospace;background:white;color:#1e2a3a;resize:vertical;box-sizing:border-box;"></textarea>
+          <p style="font-size:0.7rem;color:#9ca3af;margin-top:4px;">예: <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">SESSION=abc123</code> 또는 JSON 배열 형식</p>
+        </div>
+        <!-- 커스텀 헤더 입력 -->
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-size:0.72rem;font-weight:600;color:#494b62;margin-bottom:6px;">
+            커스텀 HTTP 헤더 (한 줄에 하나: Header-Name: value)
+          </label>
+          <textarea id="loginHeaders" rows="2"
+            placeholder="Authorization: Bearer eyJhbGci...&#10;X-Custom-Token: mytoken123"
+            style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:8px 10px;font-size:0.78rem;font-family:monospace;background:white;color:#1e2a3a;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+        <p style="font-size:0.72rem;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin:0;">
+          ⚠️ 쿠키/헤더 정보는 서버에 저장되지 않으며, 검사가 완료되면 즉시 폐기됩니다.
+        </p>
+      </div>
+    </div>
+        </details>
+
+      </div>
+    </details>
+
+    <!-- 실행 버튼 -->
+    <button id="scanBtn" onclick="startScan()"
+      style="width:100%;background:#33317c;color:white;font-weight:700;padding:14px;border-radius:12px;font-size:0.95rem;border:none;cursor:pointer;letter-spacing:0.06em;transition:background .2s;font-family:inherit;"
+      onmouseover="this.style.background='#27255e'" onmouseout="this.style.background='#33317c'">
+      종합검사시작
+    </button>
+  </div>
+
+  <!-- ─── 프로젝트(산출물 묶음) 관리 패널 ─── -->
+  <div id="projectPanel" class="card p-5 mb-5" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-folder-open" style="color:#222;"></i>
+        <span style="font-size:0.9rem;font-weight:700;color:#1e2a3a;">프로젝트 관리</span>
+        <span style="font-size:0.72rem;color:#9ca3af;">여러 검사를 하나의 산출물로 묶어 보고서 생성</span>
+      </div>
+      <button onclick="document.getElementById('projectPanel').style.display='none'"
+        style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:1.1rem;line-height:1;">✕</button>
+    </div>
+    <div class="rg" style="display:grid;grid-template-columns:280px 1fr;gap:14px;">
+      <!-- 좌: 새 프로젝트 -->
+      <div style="border:1px solid #e2e6ef;border-radius:10px;padding:14px;">
+        <div style="font-size:0.78rem;font-weight:700;color:#494b62;margin-bottom:10px;">새 프로젝트 만들기</div>
+        <input id="projName" placeholder="프로젝트명"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;margin-bottom:7px;">
+        <input id="projOrg" placeholder="기관명"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;margin-bottom:7px;">
+        <input id="projInspector" placeholder="담당자명"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;box-sizing:border-box;margin-bottom:10px;">
+        <button onclick="createProject()"
+          style="width:100%;background:#222;color:white;border:none;padding:9px;border-radius:7px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;">
+          + 프로젝트 생성
+        </button>
+      </div>
+      <!-- 우: 프로젝트 목록 -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:0.78rem;font-weight:700;color:#494b62;">프로젝트 목록</span>
+          <button onclick="loadProjects()" style="font-size:0.72rem;color:#2563eb;background:none;border:none;cursor:pointer;font-family:inherit;">새로고침</button>
+        </div>
+        <div id="projectList" style="max-height:200px;overflow-y:auto;border:1px solid #e2e6ef;border-radius:8px;">
+          <div style="text-align:center;padding:20px;color:#9ca3af;font-size:0.82rem;">프로젝트가 없습니다.</div>
+        </div>
+        <!-- 현재 결과 → 프로젝트 추가 -->
+        <div id="addToProjectWrap" style="margin-top:10px;display:none;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:0.78rem;color:#494b62;font-weight:600;">현재 검사 결과 추가:</span>
+            <select id="targetProjectSelect"
+              style="border:1px solid #e2e6ef;border-radius:7px;padding:5px 10px;font-size:0.8rem;font-family:inherit;background:white;flex:1;min-width:150px;">
+              <option value="">— 프로젝트 선택 —</option>
+            </select>
+            <button onclick="addCurrentToProject()"
+              style="background:#5de2a0;color:#005b37;border:none;padding:6px 14px;border-radius:7px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">추가</button>
+          </div>
+        </div>
+        <!-- 선택 합산 다운로드 -->
+        <div id="mergeWrap" style="margin-top:10px;padding:10px 12px;background:#f7f8fc;border-radius:8px;display:none;">
+          <div style="font-size:0.75rem;font-weight:700;color:#494b62;margin-bottom:7px;">선택 세션 합산 다운로드</div>
+          <div id="mergeSessionList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:7px;">
+            <button onclick="mergeDownload('excel')"
+              style="background:#dcfce7;color:#16a34a;border:none;padding:6px 14px;border-radius:7px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;">
+              <i class="fas fa-file-excel" style="margin-right:4px;"></i>합산 Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 로딩 ─── -->
+  <div id="loadingBox" class="card p-8 mb-5 hidden text-center">
+    <i class="fas fa-circle-notch spinner text-blue-500 text-4xl mb-4"></i>
+    <div id="loadingStep" class="text-slate-600 font-semibold mb-3">검사 준비 중...</div>
+    <div class="w-full bg-slate-100 rounded-full h-2 max-w-sm mx-auto">
+      <div id="progressBar" class="progress-bar bg-blue-500 h-2 rounded-full" style="width:0%"></div>
+    </div>
+    <div id="batchProgress" class="mt-4 text-xs text-slate-400 hidden">
+      <span id="batchDone">0</span> / <span id="batchTotal">0</span> 페이지 완료
+      &nbsp;·&nbsp; 예상 잔여: <span id="batchEta">-</span>
+    </div>
+  </div>
+
+  <!-- ─── 오류 ─── -->
+  <div id="errorBox" class="card p-6 mb-5 hidden bg-red-50 border border-red-200">
+    <div class="flex items-start gap-3">
+      <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+      <div>
+        <p class="font-bold text-red-700 mb-1">검사 오류</p>
+        <p id="errorMsg" class="text-sm text-red-600"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 단일 결과 영역 ─── -->
+  <div id="resultArea" class="hidden fade-in">
+
+    <!-- 헤더 카드 -->
+    <div class="card p-5 mb-4" id="resultHeader"></div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="card mb-4 overflow-hidden">
+      <div class="flex overflow-x-auto" id="mainTabBar">
+        <button id="tab-btn-a11y" class="main-tab-btn active flex-1 py-3.5 px-3 text-sm font-semibold flex items-center justify-center gap-2 min-w-max"
+          onclick="switchMainTab('a11y', this)">
+          <i class="fas fa-universal-access"></i>
+          <span class="hidden sm:inline">접근성</span>
+          <span id="badge-a11y" class="badge-pill bg-red-100 text-red-600"></span>
+        </button>
+        <button id="tab-btn-spell" class="main-tab-btn flex-1 py-3.5 px-3 text-sm font-semibold text-slate-500 flex items-center justify-center gap-2 min-w-max hidden"
+          onclick="switchMainTab('spell', this)">
+          <i class="fas fa-spell-check"></i>
+          <span class="hidden sm:inline">오탈자</span>
+          <span id="badge-spell" class="badge-pill bg-purple-100 text-purple-600"></span>
+        </button>
+        <button id="tab-btn-links" class="main-tab-btn flex-1 py-3.5 px-3 text-sm font-semibold text-slate-500 flex items-center justify-center gap-2 min-w-max hidden"
+          onclick="switchMainTab('links', this)">
+          <i class="fas fa-link"></i>
+          <span class="hidden sm:inline">링크</span>
+          <span id="badge-links" class="badge-pill bg-amber-100 text-amber-600"></span>
+        </button>
+        <button id="tab-btn-chart" class="main-tab-btn flex-1 py-3.5 px-3 text-sm font-semibold text-slate-500 flex items-center justify-center gap-2 min-w-max"
+          onclick="switchMainTab('chart', this)">
+          <i class="fas fa-chart-bar"></i>
+          <span class="hidden sm:inline">차트</span>
+        </button>
+        <button id="tab-btn-w3c" class="main-tab-btn flex-1 py-3.5 px-3 text-sm font-semibold text-slate-500 flex items-center justify-center gap-2 min-w-max hidden"
+          onclick="switchMainTab('w3c', this)">
+          <i class="fas fa-code"></i>
+          <span class="hidden sm:inline">W3C</span>
+          <span id="badge-w3c-warn" class="badge-pill bg-blue-100 text-blue-600"></span>
+        </button>
+        <button id="tab-btn-krds" class="main-tab-btn flex-1 py-3.5 px-3 text-sm font-semibold text-slate-500 flex items-center justify-center gap-2 min-w-max hidden"
+          onclick="switchMainTab('krds', this)">
+          <i class="fas fa-flag"></i>
+          <span class="hidden sm:inline">KRDS</span>
+          <span id="badge-krds" class="badge-pill bg-purple-100 text-purple-600"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 탭 패널들 -->
+    <div id="tab-panels" class="card p-6">
+
+      <!-- 접근성 탭 -->
+      <div id="tab-a11y">
+        <div class="flex flex-wrap gap-3 mb-5" id="topSummaryCards"></div>
+        <div id="screenshotCard" class="hidden mb-5">
+          <details>
+            <summary class="flex items-center gap-2 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition">
+              <i class="fas fa-camera text-slate-400"></i>
+              <span class="font-semibold text-sm text-slate-700">스크린샷</span>
+              <i class="fas fa-chevron-down text-slate-400 text-xs chev ml-auto"></i>
+            </summary>
+            <div class="mt-2 rounded-xl overflow-hidden border border-slate-200">
+              <img id="screenshotImg" class="w-full" alt="페이지 스크린샷" />
+            </div>
+          </details>
+        </div>
+        <!-- 위반 목록 -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-slate-800 text-sm">접근성 위반 목록</h3>
+          <div class="flex gap-1.5" id="filterBtns">
+            <button onclick="filterViolations('all')" data-filter="all"
+              class="filter-btn active text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-white transition">전체</button>
+            <button onclick="filterViolations('critical')" data-filter="critical"
+              class="filter-btn text-xs px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition">치명</button>
+            <button onclick="filterViolations('serious')" data-filter="serious"
+              class="filter-btn text-xs px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition">심각</button>
+          </div>
+        </div>
+        <div id="violationList" class="space-y-2"></div>
+      </div>
+
+      <!-- 오탈자 탭 -->
+      <div id="tab-spell" class="hidden">
+        <div id="spellNotRun" class="text-center py-12 text-slate-400">
+          <i class="fas fa-spell-check text-4xl mb-3 block"></i>
+          <p>오탈자 검사가 비활성화되었습니다.</p>
+          <p class="text-xs mt-1">검사 옵션에서 '오탈자 검사'를 활성화하세요.</p>
+        </div>
+        <div id="spellResult" class="hidden"></div>
+      </div>
+
+      <!-- 링크 탭 -->
+      <div id="tab-links" class="hidden">
+        <div id="linksNotRun" class="text-center py-12 text-slate-400">
+          <i class="fas fa-link text-4xl mb-3 block"></i>
+          <p>링크 검사가 비활성화되었습니다.</p>
+        </div>
+        <div id="linksResult" class="hidden"></div>
+      </div>
+
+      <!-- 차트 탭 -->
+      <div id="tab-chart" class="hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div><canvas id="chartViolations" height="220"></canvas></div>
+          <div><canvas id="chartSpelling" height="220"></canvas></div>
+        </div>
+      </div>
+
+      <!-- W3C 탭 -->
+      <div id="tab-w3c" class="hidden">
+        <div id="w3cNotRun" class="text-center py-12 text-slate-400">
+          <i class="fas fa-code text-4xl mb-3 block"></i>
+          <p>W3C 마크업 검사가 비활성화되었습니다.</p>
+        </div>
+        <div id="w3cSummaryBars" class="flex flex-wrap gap-3 mb-5 hidden"></div>
+        <div id="w3cNotRun2" class="hidden"></div>
+        <div id="noW3CErrors" class="hidden text-center py-8">
+          <i class="fas fa-check-circle text-3xl text-green-500 mb-3 block"></i>
+          <p class="text-green-700 font-semibold">W3C 마크업 오류 없음</p>
+        </div>
+        <div id="w3cErrorsList" class="space-y-2"></div>
+        <div id="w3cWarningSection" class="hidden mt-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="font-semibold text-sm text-slate-700">경고</span>
+            <span id="badge-w3c-warn2" class="badge-pill bg-yellow-100 text-yellow-700"></span>
+          </div>
+          <div id="w3cWarningList" class="space-y-1"></div>
+        </div>
+        <div id="w3cInfo" class="hidden text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100">
+          <i class="fas fa-info-circle mr-1"></i>
+          검사 엔진: <a href="https://validator.w3.org/nu/" target="_blank" class="text-blue-500 hover:underline">validator.w3.org/nu</a> ·
+          검사 일시: <span id="w3cCheckedAt">-</span>
+        </div>
+      </div>
+
+      <!-- KRDS 탭 -->
+      <div id="tab-krds" class="hidden">
+        <div id="krdsNotRun" class="text-center py-12 text-slate-400">
+          <i class="fas fa-flag text-4xl mb-3 block"></i>
+          <p>KRDS 검사가 비활성화되었습니다.</p>
+          <p class="text-xs mt-1">검사 옵션에서 'KRDS 검사'를 활성화하세요.</p>
+        </div>
+        <div class="hidden" id="krdsRunResult">
+          <div class="flex flex-wrap gap-3 mb-5" id="krdsSummaryBars"></div>
+          <div id="krdsItemList"></div>
+          <div class="text-xs text-slate-400 mt-4 pt-4 border-t border-slate-100">
+            <i class="fas fa-info-circle mr-1"></i>
+            검사 기준: <a href="https://www.krds.go.kr" target="_blank" class="text-blue-500 hover:underline">KRDS UI/UX 가이드라인</a> ·
+            검사 일시: <span id="krdsCheckedAt">-</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── 배치(다중) 결과 영역 ─── -->
+  <div id="batchResultArea" class="hidden fade-in">
+    <!-- KPI 카드 -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4" id="batchKpiCards"></div>
+    <!-- 결과 테이블 -->
+    <div class="card overflow-hidden mb-4">
+      <div class="flex items-center justify-between p-4 border-b border-slate-100">
+        <h3 class="font-bold text-slate-800">검사 결과 목록</h3>
+        <div class="flex gap-2">
+          <button onclick="openProjectPanel()" 
+            style="font-size:0.75rem;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:5px 12px;border-radius:7px;cursor:pointer;font-weight:600;font-family:inherit;">
+            <i class="fas fa-folder-open" style="margin-right:4px;"></i>프로젝트
+          </button>
+          <button id="batchDlBtn" onclick="downloadBatchReport()" disabled
+            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition disabled:opacity-40">
+            <i class="fas fa-file-alt mr-1"></i>HTML 보고서
+          </button>
+          <button id="batchExcelBtn" onclick="downloadBatchExcel()" disabled
+            class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg transition disabled:opacity-40">
+            <i class="fas fa-file-excel mr-1"></i>Excel
+          </button>
+          <button id="batchPptxBtn" onclick="downloadBatchPptx()" disabled
+            class="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1.5 rounded-lg transition disabled:opacity-40">
+            <i class="fas fa-file-powerpoint mr-1"></i>PPTX
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-50 text-slate-500 uppercase tracking-wide">
+            <tr>
+              <th class="px-3 py-3 text-left w-8">#</th>
+              <th class="px-3 py-3 text-left">페이지</th>
+              <th class="px-3 py-3 text-center w-14">위반</th>
+              <th class="px-3 py-3 text-center w-14 th-spell hidden">오탈자</th>
+              <th class="px-3 py-3 text-center w-14 th-links hidden">링크오류</th>
+              <th class="px-3 py-3 text-center w-14 th-w3c hidden">W3C</th>
+              <th class="px-3 py-3 text-center w-14 th-krds hidden">KRDS</th>
+              <th class="px-3 py-3 text-center w-16">상태</th>
+              <th class="px-3 py-3 text-center w-16">증적</th>
+            </tr>
+          </thead>
+          <tbody id="batchTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+
+<!-- ─── PPTX 설정 패널 ─── -->
+<section class="max-w-2xl mx-auto px-4 mb-6" id="pptxConfigSection"><a id="pptx-config"></a>
+  <details class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <summary class="flex items-center justify-between px-6 py-4 cursor-pointer select-none hover:bg-slate-50 transition">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">🖼️</span>
+        <div>
+          <div class="font-bold text-sm text-slate-800">PPTX 결과서 설정</div>
+          <div class="text-xs text-slate-500 mt-0.5">기관 정보 · 로고 · 산출물 정보(엑셀)</div>
+        </div>
+      </div>
+      <span class="text-slate-400 text-xs">클릭하여 펼치기 ▼</span>
+    </summary>
+    <!-- 탭 -->
+    <div class="flex gap-1 px-6 pt-4">
+      <button type="button" onclick="switchCfgTab(0)" id="cfgTab0"
+        class="text-xs font-bold px-4 py-2 rounded-t-lg bg-slate-800 text-white">🖼️ PPTX 로고·기관</button>
+      <button type="button" onclick="switchCfgTab(1)" id="cfgTab1"
+        class="text-xs font-bold px-4 py-2 rounded-t-lg bg-slate-100 text-slate-500 hover:bg-slate-200">📊 산출물 정보 <span class="font-normal">(엑셀)</span></button>
+      <button type="button" onclick="switchCfgTab(2)" id="cfgTab2"
+        class="text-xs font-bold px-4 py-2 rounded-t-lg bg-slate-100 text-slate-500 hover:bg-slate-200">🎨 표지 편집기</button>
+    </div>
+    <div id="cfgPane0">
+
+    <div class="px-6 pb-6 pt-2 border-t border-slate-100">
+
+      <!-- 기관 정보 -->
+      <div class="mb-5">
+        <div class="text-xs font-bold text-slate-600 mb-3 uppercase tracking-wide">기관 정보 (기본값)</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">발주기관</label>
+            <input id="cfg-org" type="text" placeholder="예: 행정안전부"
+              class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">수행기관/부서</label>
+            <input id="cfg-dept" type="text" placeholder="예: 솔리데오 컨소시엄"
+              class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">점검자</label>
+            <input id="cfg-inspector" type="text" placeholder="예: 홍길동"
+              class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">사업명</label>
+            <input id="cfg-project" type="text" placeholder="예: 2025 클라우드 네이티브 전환 사업"
+              class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400">
+          </div>
+        </div>
+        <button onclick="savePptxConfig()"
+          class="mt-3 text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition font-semibold">
+          💾 기본값 저장
+        </button>
+        <span id="cfg-save-msg" class="text-xs text-green-600 ml-2 hidden">저장됐습니다!</span>
+      </div>
+
+      <!-- 로고 업로드 -->
+      <div>
+        <div class="text-xs font-bold text-slate-600 mb-3 uppercase tracking-wide">로고 이미지 (PPTX 헤더에 표시)</div>
+        <div class="grid grid-cols-3 gap-4">
+          <!-- 로고 1 (왼쪽) -->
+          <div class="text-center">
+            <div class="text-xs text-slate-500 mb-2">로고 1 (왼쪽)</div>
+            <div id="logo-hj-preview" class="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 mb-2 overflow-hidden cursor-pointer hover:border-blue-400 transition"
+                 onclick="document.getElementById('logo-hj-input').click()">
+              <span class="text-slate-400 text-xs">클릭하여 업로드</span>
+            </div>
+            <input type="file" id="logo-hj-input" accept="image/*" class="hidden" onchange="uploadLogo('hj', this)">
+            <button onclick="document.getElementById('logo-hj-input').click()"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition w-full">
+              📁 행안부 로고
+            </button>
+          </div>
+          <!-- 로고 2 (중앙) -->
+          <div class="text-center">
+            <div class="text-xs text-slate-500 mb-2">로고 2 (중앙)</div>
+            <div id="logo-nia-preview" class="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 mb-2 overflow-hidden cursor-pointer hover:border-blue-400 transition"
+                 onclick="document.getElementById('logo-nia-input').click()">
+              <span class="text-slate-400 text-xs">클릭하여 업로드</span>
+            </div>
+            <input type="file" id="logo-nia-input" accept="image/*" class="hidden" onchange="uploadLogo('nia', this)">
+            <button onclick="document.getElementById('logo-nia-input').click()"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition w-full">
+              📁 NIA 로고
+            </button>
+          </div>
+          <!-- 로고 3 (우측 하단) -->
+          <div class="text-center">
+            <div class="text-xs text-slate-500 mb-2">로고 3 (하단 우측)</div>
+            <div id="logo-solideo-preview" class="w-full h-16 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 mb-2 overflow-hidden cursor-pointer hover:border-blue-400 transition"
+                 onclick="document.getElementById('logo-solideo-input').click()">
+              <span class="text-slate-400 text-xs">클릭하여 업로드</span>
+            </div>
+            <input type="file" id="logo-solideo-input" accept="image/*" class="hidden" onchange="uploadLogo('solideo', this)">
+            <button onclick="document.getElementById('logo-solideo-input').click()"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition w-full">
+              📁 수행사 로고
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">※ PNG/JPG, 최대 5MB · 업로드 즉시 PPTX에 반영됩니다</p>
+      </div>
+    </div>
+  </div>
+    <div id="cfgPane1" class="hidden p-6">
+      <p class="text-xs text-slate-400 mb-3">엑셀 결과서의 메타 정보에 사용됩니다.</p>
+      <div class="rg4" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:600;color:#6b7280;margin-bottom:4px;">기관명</label>
+        <input id="metaOrg" type="text" placeholder="예: 행정안전부"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;color:#1e2a3a;background:white;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:600;color:#6b7280;margin-bottom:4px;">담당부서</label>
+        <input id="metaDept" type="text" placeholder="예: 디지털정책과"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;color:#1e2a3a;background:white;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:600;color:#6b7280;margin-bottom:4px;">담당자명</label>
+        <input id="metaInspector" type="text" placeholder="예: 홍길동"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;color:#1e2a3a;background:white;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:0.72rem;font-weight:600;color:#6b7280;margin-bottom:4px;">프로젝트명</label>
+        <input id="metaProject" type="text" placeholder="예: 2025 웹 접근성 점검"
+          style="width:100%;border:1px solid #e2e6ef;border-radius:7px;padding:7px 10px;font-size:0.82rem;font-family:inherit;color:#1e2a3a;background:white;box-sizing:border-box;" />
+      </div>
+    
+    </div>
+    <script>
+      function switchCfgTab(n) {
+        for (let i=0;i<3;i++) {
+          document.getElementById('cfgPane'+i).classList.toggle('hidden', i!==n)
+          const t = document.getElementById('cfgTab'+i)
+          t.className = 'text-xs font-bold px-4 py-2 rounded-t-lg ' + (i===n ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')
+        }
+      }
+    </script>
+</div>
+    <div id="cfgPane2" class="hidden p-6">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="text-xs text-slate-500">
+          캔버스는 실제 PPTX 표지와 <b>1:1 비율(72dpi)</b> — 여기 보이는 그대로 출력됩니다.
+          텍스트에 <code class="bg-slate-100 px-1 rounded">{TITLE}</code> <code class="bg-slate-100 px-1 rounded">{DATE}</code> <code class="bg-slate-100 px-1 rounded">{PROJECT}</code> <code class="bg-slate-100 px-1 rounded">{DEPT}</code> <code class="bg-slate-100 px-1 rounded">{VERSION}</code> 을 쓰면 출력 시 자동 치환됩니다.
+        </div>
+        <label class="flex items-center gap-2 text-xs font-bold text-slate-700">
+          <input type="checkbox" id="coverEnabled" class="accent-indigo-600"> 커스텀 표지 사용
+        </label>
+      </div>
+
+      <!-- 툴바 -->
+      <div class="flex items-center gap-2 mb-2 flex-wrap">
+        <button type="button" onclick="covAddText()" class="text-xs bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold">＋ 텍스트</button>
+        <label class="text-xs bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold cursor-pointer">＋ 로고 이미지
+          <input type="file" accept="image/png,image/jpeg" onchange="covAddImage(this)" class="hidden">
+        </label>
+        <button type="button" onclick="covLoadDefault()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg font-semibold">기본 배치 불러오기</button>
+        <span class="flex-1"></span>
+        <button type="button" onclick="covSave()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-bold">💾 표지 저장</button>
+      </div>
+
+      <!-- 선택 요소 속성바 -->
+      <div id="covProps" class="hidden items-center gap-2 mb-2 flex-wrap bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        <span class="text-xs font-bold text-slate-500">선택 요소:</span>
+        <span id="covPropText" class="hidden items-center gap-2 flex-wrap">
+          <input id="covTxt" type="text" class="text-xs border border-slate-300 rounded px-2 py-1 w-64" oninput="covApply()">
+          <input id="covSize" type="number" min="6" max="80" class="text-xs border border-slate-300 rounded px-2 py-1 w-16" oninput="covApply()" title="크기(pt)">
+          <label class="text-xs"><input type="checkbox" id="covBold" onchange="covApply()"> 굵게</label>
+          <input id="covColor" type="color" class="w-8 h-7 border border-slate-300 rounded" oninput="covApply()">
+          <select id="covAlign" class="text-xs border border-slate-300 rounded px-1 py-1" onchange="covApply()">
+            <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+          </select>
+        </span>
+        <button type="button" onclick="covDelete()" class="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded font-semibold">삭제</button>
+      </div>
+
+      <!-- 캔버스 (960x540 = PPTX 1:1 @72dpi) -->
+      <div style="display:flex;justify-content:center;overflow-x:auto;padding:4px 0;">
+        <div id="covCanvas"
+          style="position:relative;width:960px;min-width:960px;height:540px;background:white;border:1px solid #cbd5e1;box-shadow:0 2px 10px rgba(0,0,0,.08);overflow:hidden;user-select:none;">
+        </div>
+      </div>
+      <div class="text-xs text-slate-400 mt-2 text-center">드래그로 이동 · 우하단 ◢ 핸들로 크기 조절(이미지는 비율 고정) · 클릭으로 선택</div>
+    </div>
+  </details>
+</section>
+
+<!-- ─── 실행 방법 안내 섹션 ─── -->
+<section class="max-w-2xl mx-auto px-4 py-8 mb-6" style="display:none" data-hidden="windows-guide">
+  <div class="bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+    <h2 class="text-base font-bold text-slate-700 mb-1 flex items-center gap-2">
+      <span>🪟</span> Windows 실행 방법
+      <span class="text-xs font-normal text-slate-400 ml-1">v6.19</span>
+    </h2>
+    <p class="text-xs text-slate-500 mb-5">Node.js 설치 불필요 · 내장 런타임 포함 · 더블클릭으로 실행</p>
+
+    <ol class="space-y-3 mb-5">
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xs">1</span>
+        <div>
+          <div class="text-sm font-semibold text-slate-800">ZIP 파일 차단 해제 <span class="text-red-500 font-bold">← 가장 중요!</span></div>
+          <div class="text-xs text-slate-500 mt-0.5">ZIP 우클릭 → <strong>속성</strong> → 하단 <strong class="text-blue-600">[차단 해제]</strong> 체크 → 확인</div>
+          <div class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 mt-1">⚠ 이 단계를 건너뛰면 START.bat이 즉시 닫힙니다</div>
+        </div>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">2</span>
+        <div>
+          <div class="text-sm font-semibold text-slate-800">압축 해제</div>
+          <div class="text-xs text-slate-500 mt-0.5">ZIP 우클릭 → <strong>모두 압축 풀기</strong> · 영문 경로 권장 (예: C:	ools\)</div>
+        </div>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">3</span>
+        <div>
+          <div class="text-sm font-semibold text-slate-800">START.bat 더블클릭</div>
+          <div class="text-xs text-slate-500 mt-0.5">최초 실행 시 Chromium 자동 설치 (~300MB · 약 5분) · 이후 즉시 실행</div>
+        </div>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-xs">✓</span>
+        <div>
+          <div class="text-sm font-semibold text-slate-800">브라우저 자동 접속</div>
+          <div class="text-xs text-slate-500 mt-0.5"><strong class="text-blue-600">http://localhost:3000</strong> 으로 자동 열립니다</div>
+        </div>
+      </li>
+    </ol>
+
+    <div class="bg-white border border-slate-200 rounded-xl p-4 mb-3">
+      <div class="text-xs font-bold text-slate-600 mb-2">💡 START.bat이 안 열릴 때 대안</div>
+      <div class="space-y-1.5 text-xs text-slate-600">
+        <div>① START.bat 우클릭 → <strong>속성</strong> → [차단 해제] 체크 후 실행</div>
+        <div>② START.bat 우클릭 → <strong>관리자 권한으로 실행</strong></div>
+        <div>③ cmd 창: <code class="bg-slate-100 px-1 rounded">Guardians-v34 폴더</code> 주소창에 <code class="bg-slate-100 px-1 rounded">cmd</code> 입력 → <code class="bg-slate-100 px-1 rounded">START.bat</code></div>
+        <div>③ cmd 창 직접 실행: 탐색기 폴더 주소창에 <code class="bg-slate-100 px-1 rounded">cmd</code> 입력 → <code class="bg-slate-100 px-1 rounded">START.bat</code></div>
+      </div>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+      <div class="text-xs font-bold text-blue-700 mb-1">📋 PPTX 결과서 로고/기관 정보</div>
+      <div class="text-xs text-blue-600">
+        페이지 상단 <strong>🖼️ PPTX 결과서 설정</strong> 패널에서 로고와 기관 정보를 한 번 등록하면<br>
+        단일·일괄·민원 검사의 모든 PPTX 결과서에 자동 반영됩니다.
+      </div>
+    </div>
+
+    <div class="mt-3 text-xs text-slate-400 text-center">
+      종료: STOP.bat 또는 창 닫기 · 검사 결과는 PC에 저장됨
+    </div>
+  </div>
+</section>
+
+<!-- ─── 증적 모달 ─── -->
+<div id="evidenceModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this)closeEvidenceModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between p-5 border-b border-slate-100">
+      <h3 class="font-bold text-slate-800"><i class="fas fa-file-alt mr-2 text-blue-500"></i>검사 증적</h3>
+      <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="evidenceContent" class="overflow-y-auto p-5 flex-1"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  전역 상태
+// ══════════════════════════════════════════════════════
+let scanResult   = null
+let batchSession = null   // 배치 스캔 세션
+let charts       = {}
+let progressInterval = null
+let batchPollTimer   = null
+let currentInputTab  = 'url'
+let selectedFiles    = []   // 로컬 파일 목록 (File 객체)
+let currentLinkFilter = 'dead'
+let currentBatchOptions = {}
+
+const IMPACT_CFG = {
+  critical: { label:'치명적', color:'#dc2626', bg:'bg-red-100',    text:'text-red-700',    border:'border-red-200',    icon:'fa-skull' },
+  serious:  { label:'심각',   color:'#ea580c', bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', icon:'fa-exclamation-circle' },
+  moderate: { label:'보통',   color:'#d97706', bg:'bg-amber-100',  text:'text-amber-700',  border:'border-amber-200',  icon:'fa-exclamation-triangle' },
+  minor:    { label:'경미',   color:'#65a30d', bg:'bg-lime-100',   text:'text-lime-700',   border:'border-lime-200',   icon:'fa-info-circle' }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+// ══════════════════════════════════════════════════════
+//  입력 소스 탭 전환
+// ══════════════════════════════════════════════════════
+function switchInputTab(tab) {
+  currentInputTab = tab
+  ;['url','multi','file','folder'].forEach(t => {
+    const btn = document.getElementById(`tab-${t}-btn`)
+    const panel = document.getElementById(`panel-${t}`)
+    if (t === tab) {
+      btn.classList.add('active')
+      panel.classList.remove('hidden')
+    } else {
+      btn.classList.remove('active')
+      panel.classList.add('hidden')
+    }
+  })
+}
+
+// 옵션 카드 토글
+function toggleOptCard(card, chkId) {
+  const chk = document.getElementById(chkId)
+  if (!chk) return
+  chk.checked = !chk.checked
+  card.classList.toggle('active', chk.checked)
+  if (chkId === 'chkLinks') {
+    const w = document.getElementById('w3cLinksWrap')
+    if (w) w.style.display = chk.checked ? 'block' : 'none'
+  }
+}
+
+// 커스텀 체크박스 토글 (시안 스타일)
+function toggleScanOpt(labelEl, id) {
+  const chk = document.getElementById(id)
+  if (!chk) return
+  chk.checked = !chk.checked
+  const idMap = { chkLinks:'links', chkSpell:'spell', chkW3C:'w3c', chkKRDS:'krds', chkW3CLinks:'w3clinks' }
+  const key = idMap[id]
+  if (key) {
+    const box  = document.getElementById('chk-box-'  + key)
+    const icon = document.getElementById('chk-icon-' + key)
+    if (box && icon) {
+      box.style.background  = chk.checked ? '#256df3' : 'white'
+      box.style.borderColor = chk.checked ? '#256df3' : '#d1d5db'
+      icon.style.display    = chk.checked ? 'block'   : 'none'
+    }
+  }
+  if (id === 'chkLinks') {
+    const w = document.getElementById('w3cLinksWrap')
+    if (w) w.style.display = chk.checked ? 'block' : 'none'
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  URL 다중입력
+// ══════════════════════════════════════════════════════
+document.getElementById('multiUrls').addEventListener('input', () => {
+  const urls = getMultiUrls()
+  document.getElementById('multiUrlCount').textContent = `${urls.length.toLocaleString()}개 URL`
+})
+
+function getMultiUrls() {
+  return document.getElementById('multiUrls').value
+    .split('\n')
+    .map(s => s.trim())
+    .filter(s => s && (s.startsWith('http://') || s.startsWith('https://')))
+}
+
+function clearMultiUrls() {
+  document.getElementById('multiUrls').value = ''
+  document.getElementById('multiUrlCount').textContent = '0개 URL'
+}
+
+function loadUrlFile(input) {
+  const f = input.files[0]; if (!f) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    document.getElementById('multiUrls').value = e.target.result
+    document.getElementById('multiUrls').dispatchEvent(new Event('input'))
+  }
+  reader.readAsText(f, 'UTF-8')
+  input.value = ''
+}
+
+// ══════════════════════════════════════════════════════
+//  로컬 파일 처리
+// ══════════════════════════════════════════════════════
+function handleFileSelect(input) {
+  const files = Array.from(input.files).filter(f => /\.(html?|jsp|asp|php)$/i.test(f.name))
+  const r = addSelectedFiles(files)
+  if (r.dropped > 0) alert(`⚠️ 한 번에 최대 500개까지 검사할 수 있어요.\n${r.dropped.toLocaleString()}개가 제외되었습니다. 나눠서 검사해주세요.`)
+}
+
+function handleFileDrop(e) {
+  e.preventDefault()
+  document.getElementById('fileDropzone').classList.remove('over')
+  const files = Array.from(e.dataTransfer.files).filter(f => /\.(html?|jsp|asp|php)$/i.test(f.name))
+  const r = addSelectedFiles(files)
+  if (r.dropped > 0) alert(`⚠️ 한 번에 최대 500개까지 검사할 수 있어요.\n${r.dropped.toLocaleString()}개가 제외되었습니다. 나눠서 검사해주세요.`)
+}
+
+function handleFolderSelect(input) {
+  const all = Array.from(input.files)
+  const files = all.filter(f => /\.(html?|jsp|asp|php)$/i.test(f.name))
+  const r = addSelectedFiles(files)
+  showFolderSummary(all.length, files.length, r)
+}
+
+// 폴더 분석 결과 상세 표시: 전체 → 검사대상 → 최종 선택 (제외 사유 포함)
+function showFolderSummary(total, eligible, r) {
+  const el = document.getElementById('folderInfo')
+  el.classList.remove('hidden')
+  const notEligible = total - eligible
+  const rows = [
+    `<div><i class="fas fa-folder-open text-yellow-500 mr-1"></i><b>폴더 분석 결과</b></div>`,
+    `<div class="ml-4 mt-1">· 전체 파일: <b>${total.toLocaleString()}개</b></div>`,
+    `<div class="ml-4">· 검사 대상(.html .htm .jsp .asp .php): <b class="text-blue-600">${eligible.toLocaleString()}개</b>` +
+      (notEligible > 0 ? ` <span class="text-slate-400">(대상 아닌 파일 ${notEligible.toLocaleString()}개 제외)</span>` : '') + `</div>`,
+    `<div class="ml-4">· 최종 선택: <b class="text-emerald-600">${r.added.toLocaleString()}개</b>` +
+      (r.dropped > 0 ? ` <span class="text-red-500 font-semibold">⚠️ 최대 500개 제한으로 ${r.dropped.toLocaleString()}개 제외됨</span>` : '') + `</div>`,
+  ]
+  if (r.dropped > 0) rows.push(`<div class="ml-4 mt-1 text-amber-600"><i class="fas fa-lightbulb mr-1"></i>500개가 넘는 폴더는 나눠서 검사해주세요 (한 번에 최대 500개)</div>`)
+  el.innerHTML = rows.join('')
+}
+
+function handleFolderDrop(e) {
+  e.preventDefault()
+  document.getElementById('folderDropzone').classList.remove('over')
+  // webkitGetAsEntry를 이용한 재귀 폴더 처리
+  const items = Array.from(e.dataTransfer.items)
+  const filePromises = []
+  items.forEach(item => {
+    const entry = item.webkitGetAsEntry?.()
+    if (entry) filePromises.push(traverseEntry(entry))
+  })
+  Promise.all(filePromises).then(fileLists => {
+    const all = fileLists.flat()
+    const files = all.filter(f => /\.(html?|jsp|asp|php)$/i.test(f.name))
+    const r = addSelectedFiles(files)
+    showFolderSummary(all.length, files.length, r)
+  })
+}
+
+function traverseEntry(entry) {
+  return new Promise(resolve => {
+    if (entry.isFile) {
+      entry.file(f => resolve([f]))
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader()
+      const readAll = (results=[]) => {
+        reader.readEntries(entries => {
+          if (!entries.length) {
+            Promise.all(results.map(traverseEntry)).then(lists => resolve(lists.flat()))
+          } else {
+            readAll([...results, ...entries])
+          }
+        })
+      }
+      readAll()
+    } else resolve([])
+  })
+}
+
+function addSelectedFiles(files) {
+  const MAX = 500
+  const before = selectedFiles.length
+  selectedFiles = [...selectedFiles, ...files].slice(0, MAX)
+  renderFileList()
+  const added = selectedFiles.length - before
+  return { added, dropped: files.length - added }   // dropped: 500개 제한으로 제외된 수
+}
+
+function removeFile(idx) {
+  selectedFiles.splice(idx, 1)
+  renderFileList()
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList')
+  el.innerHTML = selectedFiles.map((f, i) => `
+    <div class="url-tag">
+      <i class="fas fa-file-code text-orange-400 text-xs"></i>
+      <span class="max-w-[140px] truncate" title="${esc(f.name)}">${esc(f.name)}</span>
+      <button onclick="removeFile(${i})" class="text-red-400 hover:text-red-600 ml-1"><i class="fas fa-times"></i></button>
+    </div>`).join('')
+  if (selectedFiles.length > 0) {
+    document.getElementById('fileDropzone').querySelector('p').textContent = `${selectedFiles.length}개 파일 선택됨`
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  검사 시작 (단일 / 배치 분기)
+// ══════════════════════════════════════════════════════
+async function startScan() {
+  const opts = getOptions()
+
+  // 입력 소스별 분기
+  if (currentInputTab === 'url') {
+    let url = document.getElementById('urlInput').value.trim()
+    if (!url) { alert('URL을 입력해주세요.'); return }
+    // https:// 없으면 자동 보완
+    if (!url.startsWith('http')) url = 'https://' + url
+    document.getElementById('urlInput').value = url
+    await runSingleScan(url, opts)
+
+  } else if (currentInputTab === 'multi') {
+    const rawUrls = getMultiUrls()
+    const urls = rawUrls.map(u => u.startsWith('http') ? u : 'https://' + u)
+    if (!urls.length) { alert('URL을 입력해주세요.'); return }
+    if (urls.length === 1) {
+      await runSingleScan(urls[0], opts)
+    } else {
+      await runBatchScan(urls, opts)
+    }
+
+  } else if (currentInputTab === 'file' || currentInputTab === 'folder') {
+    if (!selectedFiles.length) { alert('파일을 선택해주세요.'); return }
+    await runLocalFileScan(selectedFiles, opts)
+  }
+}
+
+function getOptions() {
+  return {
+    level: document.getElementById('levelSelect').value,
+    includeScreenshot: document.querySelector('input[name="screenshot"]:checked').value === 'true',
+    checkSpelling: document.getElementById('chkSpell').checked,
+    checkLinks:    document.getElementById('chkLinks').checked,
+    useW3CLinks:   document.getElementById('chkLinks').checked && document.getElementById('chkW3CLinks').checked,
+    checkW3C:      document.getElementById('chkW3C').checked,
+    checkKRDS:     document.getElementById('chkKRDS').checked,
+    scanMode:      typeof currentScanMode !== 'undefined' ? currentScanMode : 'simple',
+    reportMeta:    {
+      org:       document.getElementById('metaOrg')?.value?.trim()       || '',
+      dept:      document.getElementById('metaDept')?.value?.trim()      || '',
+      inspector: document.getElementById('metaInspector')?.value?.trim() || '',
+      project:   document.getElementById('metaProject')?.value?.trim()   || '',
+      generatedAt: new Date().toLocaleString('ko-KR'),
+      toolVersion: 'v6.19',
+    }
+  }
+}
+
+// ─── 단일 URL 스캔 ───
+async function runSingleScan(url, opts) {
+  showLoading(true)
+  showError(false)
+  hideResults()
+  document.getElementById('scanBtn').disabled = true
+  document.getElementById('scanBtn').innerHTML = '<i class="fas fa-circle-notch spinner mr-2"></i>검사 중...'
+
+  const steps = [
+    'WCAG 접근성 검사 중...',
+    opts.checkSpelling ? '오탈자 검사 중...' : null,
+    opts.checkLinks    ? '링크 검사 중...'   : null,
+    opts.checkW3C      ? 'W3C 마크업 검사 중...' : null,
+    opts.checkKRDS     ? 'KRDS 준수 검사 중...'  : null,
+  ].filter(Boolean)
+
+  let stepIdx = 0
+  const stepTimer = setInterval(() => {
+    document.getElementById('loadingStep').textContent = steps[stepIdx % steps.length]
+    setProgress(Math.min(90, 15 + stepIdx * 20))
+    stepIdx++
+  }, 2000)
+
+  try {
+    const res = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, ...opts })
+    })
+    const data = await res.json()
+    clearInterval(stepTimer)
+    if (data.error) throw new Error(data.error)
+    setProgress(100)
+    setTimeout(() => {
+      showLoading(false)
+      renderSingle(data)
+      resetScanBtn()
+    }, 400)
+  } catch(e) {
+    clearInterval(stepTimer)
+    showLoading(false)
+    showError(true, e.message)
+    resetScanBtn()
+  }
+}
+
+// ─── 로컬 파일 스캔 ───
+async function runLocalFileScan(files, opts) {
+  showLoading(true)
+  showError(false)
+  hideResults()
+  document.getElementById('scanBtn').disabled = true
+  document.getElementById('scanBtn').innerHTML = '<i class="fas fa-circle-notch spinner mr-2"></i>파일 업로드 중...'
+
+  try {
+    // 파일을 FormData로 업로드
+    const formData = new FormData()
+    files.forEach(f => formData.append('files', f))
+    formData.append('options', JSON.stringify(opts))
+
+    const res = await fetch('/api/scan/local', { method: 'POST', body: formData })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+
+    showLoading(false)
+
+    if (data.sessionId) batchSession = data.sessionId   // PPTX/보고서 버튼 연결 (v5.6)
+    if (data.results && data.results.length > 1) {
+      // 다중 파일 → 배치 결과로 표시
+      batchResults = data.results
+      renderBatchInline(data.results, opts)
+    } else if (data.results && data.results.length === 1) {
+      // 단일 파일 → 단일 결과로 표시
+      scanResult = data.results[0]
+      renderSingle(data.results[0])
+    }
+    resetScanBtn()
+  } catch(e) {
+    showLoading(false)
+    showError(true, e.message)
+    resetScanBtn()
+  }
+}
+
+// ─── 배치(다중 URL) 스캔 ───
+async function runBatchScan(urls, opts) {
+  showLoading(true)
+  showError(false)
+  hideResults()
+  document.getElementById('scanBtn').disabled = true
+  document.getElementById('scanBtn').innerHTML = '<i class="fas fa-circle-notch spinner mr-2"></i>배치 시작 중...'
+  document.getElementById('batchProgress').classList.remove('hidden')
+  document.getElementById('batchTotal').textContent = urls.length
+  currentBatchOptions = opts
+
+  try {
+    const res = await fetch('/api/batch/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls, options: opts })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+
+    batchSession = data.sessionId
+    pollBatchStatus(batchSession, urls.length)
+  } catch(e) {
+    showLoading(false)
+    showError(true, e.message)
+    resetScanBtn()
+  }
+}
+
+// ─── 배치 폴링 ───
+let batchStartTime = Date.now()
+function pollBatchStatus(sessionId, total) {
+  batchStartTime = Date.now()
+  let pollInterval = 1000  // 처음엔 빠른 폴링
+  let consecutiveErrors = 0
+
+  const poll = async () => {
+    try {
+      const res  = await fetch(`/api/batch/${sessionId}/status`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const done = (data.completed||0) + (data.failed||0)
+      const pct  = total > 0 ? Math.round(done / total * 100) : 0
+      setProgress(pct)
+      document.getElementById('batchDone').textContent  = (data.completed||0)
+      const failStr = data.failed > 0 ? ` (오류 ${data.failed})` : ''
+      document.getElementById('loadingStep').textContent = `${done}/${total} 페이지 완료${failStr} (${pct}%)`
+      // ETA 계산
+      if (done > 0) {
+        const elapsed = (Date.now() - batchStartTime) / 1000
+        const eta = Math.round((elapsed / done) * (total - done))
+        document.getElementById('batchEta').textContent = eta > 60 ? `${Math.floor(eta/60)}분 ${eta%60}초` : `${eta}초`
+      }
+      consecutiveErrors = 0
+      if (data.status === 'completed') {
+        clearInterval(batchPollTimer)
+        try {
+          const res2  = await fetch(`/api/batch/${sessionId}/results`)
+          const data2 = await res2.json()
+          showLoading(false)
+          renderBatchInline(data2.results || [], currentBatchOptions)
+        } catch(e2) {
+          showLoading(false)
+          showError(true, '결과 로드 실패: ' + e2.message)
+        }
+        resetScanBtn()
+      } else {
+        // 진행 속도에 따라 폴링 인터벌 조정 (빠르면 자주, 느리면 느리게)
+        const speed = done / ((Date.now() - batchStartTime) / 1000)  // 초당 처리 수
+        pollInterval = speed > 5 ? 500 : speed > 1 ? 1000 : 2000
+        batchPollTimer = setTimeout(poll, pollInterval)
+      }
+    } catch(e) {
+      consecutiveErrors++
+      if (consecutiveErrors < 5) {
+        batchPollTimer = setTimeout(poll, 2000)
+      } else {
+        clearInterval(batchPollTimer)
+        showError(true, '폴링 오류: 연결이 끊어졌습니다.')
+        resetScanBtn()
+      }
+    }
+  }
+  batchPollTimer = setTimeout(poll, 500)
+}
+
+// ══════════════════════════════════════════════════════
+//  단일 결과 렌더링
+// ══════════════════════════════════════════════════════
+function renderSingle(data) {
+  scanResult = data
+  document.getElementById('resultArea').classList.remove('hidden')
+
+  renderHeader(data)
+  renderA11y(data)
+  renderSpelling(data.spelling)
+  renderLinks(data.links)
+  renderW3C(data.w3c)
+  renderKRDS(data.krds)
+  renderCharts(data)
+  updateTabBadges(data)
+}
+
+function renderHeader(data) {
+  const ts   = data.scannedAt ? new Date(data.scannedAt).toLocaleString('ko-KR') : '-'
+  const sum  = data.summary || {}
+  const ic   = sum.impactCounts || {}
+  const violCount = sum.violations || 0
+  const incompleteCount = sum.incomplete || 0
+  const passesCount = sum.passes || 0
+
+  // 위반 심각도 요약 배지
+  const badges = []
+  if (ic.critical) badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700"><i class="fas fa-exclamation-circle"></i>치명 ${ic.critical}</span>`)
+  if (ic.serious)  badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700"><i class="fas fa-exclamation-triangle"></i>심각 ${ic.serious}</span>`)
+  if (ic.moderate) badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700"><i class="fas fa-exclamation"></i>보통 ${ic.moderate}</span>`)
+  if (ic.minor)    badges.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-lime-100 text-lime-700"><i class="fas fa-info-circle"></i>경미 ${ic.minor}</span>`)
+
+  const extra = []
+  if (data.spelling?.checkedAt)
+    extra.push(`<div class="rounded-xl p-4 border border-purple-200 bg-purple-50 text-center cursor-pointer hover:opacity-80 transition" onclick="switchMainTabByName('spell')">
+      <div class="text-xs font-bold text-purple-700 mb-1"><i class="fas fa-spell-check mr-1"></i>오탈자</div>
+      <div class="text-2xl font-black text-purple-600">${data.spelling.totalIssues||0}</div>
+      <div class="text-xs text-purple-500">건</div></div>`)
+  if (data.links?.checkedAt)
+    extra.push(`<div class="rounded-xl p-4 border ${(data.links.dead?.length||0)>0?'border-red-200 bg-red-50':'border-green-200 bg-green-50'} text-center cursor-pointer hover:opacity-80 transition" onclick="switchMainTabByName('links')">
+      <div class="text-xs font-bold ${(data.links.dead?.length||0)>0?'text-red-700':'text-green-700'} mb-1"><i class="fas fa-link mr-1"></i>데드링크</div>
+      <div class="text-2xl font-black ${(data.links.dead?.length||0)>0?'text-red-600':'text-green-600'}">${data.links.dead?.length||0}</div>
+      <div class="text-xs ${(data.links.dead?.length||0)>0?'text-red-500':'text-green-500'}">건</div></div>`)
+  if (data.w3c?.checkedAt)
+    extra.push(`<div class="rounded-xl p-4 border ${(data.w3c.errorCount||0)>0?'border-red-200 bg-red-50':'border-green-200 bg-green-50'} text-center cursor-pointer hover:opacity-80 transition" onclick="switchMainTabByName('w3c')">
+      <div class="text-xs font-bold text-blue-700 mb-1"><i class="fas fa-code mr-1"></i>W3C</div>
+      <div class="text-2xl font-black ${(data.w3c.errorCount||0)>0?'text-red-600':'text-green-600'}">${data.w3c.errorCount||0}</div>
+      <div class="text-xs text-blue-500">${data.w3c.valid===false?'무효':'오류'}</div></div>`)
+  if (data.krds?.checkedAt)
+    extra.push(`<div class="rounded-xl p-4 border ${(data.krds.failed||0)===0?'border-green-200 bg-green-50':'border-yellow-200 bg-yellow-50'} text-center cursor-pointer hover:opacity-80 transition" onclick="switchMainTabByName('krds')">
+      <div class="text-xs font-bold text-rose-700 mb-1"><i class="fas fa-flag mr-1"></i>KRDS</div>
+      <div class="text-2xl font-black ${(data.krds.failed||0)===0?'text-green-600':'text-yellow-600'}">${data.krds.failed||0}</div>
+      <div class="text-xs text-rose-500">미준수 ${data.krds.passed||0}/${data.krds.total||0}</div></div>`)
+
+  document.getElementById('resultHeader').innerHTML = `
+    <div class="flex flex-wrap gap-4 items-start">
+      <div class="flex items-start gap-4 flex-1 min-w-0">
+        <div class="rounded-2xl border-2 ${violCount>0?'border-red-300 bg-red-50':'border-green-300 bg-green-50'} px-5 py-4 text-center flex-shrink-0">
+          <div class="text-4xl font-black ${violCount>0?'text-red-600':'text-green-600'}">${violCount}</div>
+          <div class="text-xs font-bold ${violCount>0?'text-red-500':'text-green-500'} mt-1">접근성 위반</div>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-slate-500 text-xs mb-1 truncate" title="${esc(data.url)}">
+            <a href="${esc(data.url)}" target="_blank" class="hover:text-blue-500 transition">${esc(data.url)}</a>
+          </div>
+          <div class="font-bold text-slate-800 text-base mb-2 truncate">${esc(data.pageTitle||'(제목없음)')}</div>
+          <div class="flex flex-wrap gap-1 mb-2">${badges.join('')}</div>
+          <div class="flex flex-wrap gap-3 text-xs text-slate-500">
+            <span><i class="fas fa-check-circle text-green-500 mr-1"></i>통과 ${passesCount}건</span>
+            <span><i class="fas fa-question-circle text-amber-500 mr-1"></i>검토필요 ${incompleteCount}건</span>
+            <span class="text-slate-400"><i class="fas fa-clock mr-1"></i>${ts}</span>
+          </div>
+        </div>
+      </div>
+      ${extra.length ? `<div class="flex flex-wrap gap-3">${extra.join('')}</div>` : ''}
+    </div>
+    <div class="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+      <button onclick="downloadReport()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg transition">
+        <i class="fas fa-file-alt mr-1"></i>HTML 보고서
+      </button>
+      <button onclick="downloadExcelReport()" class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded-lg transition">
+        <i class="fas fa-file-excel mr-1"></i>Excel 보고서
+      </button>
+
+      <button onclick="downloadPptxReport()" class="text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-2 rounded-lg transition">
+        <i class="fas fa-file-powerpoint mr-1"></i>PPTX 결과서
+      </button>
+    </div>`
+}
+
+function renderA11y(data) {
+  const sum = data.summary || {}
+  const ic  = sum.impactCounts || {}
+  const cards = [
+    { label:'치명적', val:ic.critical||0, color:'text-red-600', bg:'bg-red-50', border:'border-red-200' },
+    { label:'심각',   val:ic.serious||0,  color:'text-orange-600', bg:'bg-orange-50', border:'border-orange-200' },
+    { label:'보통',   val:ic.moderate||0, color:'text-amber-600', bg:'bg-amber-50', border:'border-amber-200' },
+    { label:'경미',   val:ic.minor||0,    color:'text-lime-600', bg:'bg-lime-50', border:'border-lime-200' },
+  ]
+  document.getElementById('topSummaryCards').innerHTML = cards.map(c => `
+    <div class="rounded-xl p-3 ${c.bg} border ${c.border} text-center min-w-[70px]">
+      <div class="text-2xl font-black ${c.color}">${c.val}</div>
+      <div class="text-xs font-semibold ${c.color}">${c.label}</div>
+    </div>`).join('')
+
+  // 스크린샷
+  const sc = document.getElementById('screenshotCard')
+  if (data.screenshot) {
+    document.getElementById('screenshotImg').src = `data:image/png;base64,${data.screenshot}`
+    sc.classList.remove('hidden')
+  } else sc.classList.add('hidden')
+
+  renderViolations(data.violations || [], 'all')
+}
+
+function renderViolations(violations, filter) {
+  const filtered = filter === 'all' ? violations : violations.filter(v => v.impact === filter)
+  const el = document.getElementById('violationList')
+  if (!filtered.length) {
+    el.innerHTML = `<div class="text-center py-8 text-green-600"><i class="fas fa-check-circle text-3xl mb-2 block"></i><p class="font-semibold">위반 항목 없음 ✓</p></div>`
+    return
+  }
+  el.innerHTML = filtered.map(v => {
+    const cfg = IMPACT_CFG[v.impact] || IMPACT_CFG.minor
+    const nodes = (v.nodes||[]).slice(0, 3).map(n => `
+      <div class="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-200">
+        <code class="node-html text-xs text-slate-700 break-all">${esc(n.html||'')}</code>
+        ${n.failureSummary ? `<p class="text-xs text-red-600 mt-1">${esc(n.failureSummary)}</p>` : ''}
+        ${n.line ? `<span class="text-xs text-slate-400">Line ${n.line}</span>` : ''}
+      </div>`).join('')
+    return `
+      <details class="border-l-4 impact-${v.impact} bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <summary class="flex items-center gap-2 p-3 hover:bg-slate-50 transition">
+          <span class="badge-pill ${cfg.bg} ${cfg.text} shrink-0">${cfg.label}</span>
+          <span class="font-semibold text-sm text-slate-800 flex-1 min-w-0 truncate">${esc(v.help||v.id)}</span>
+          <span class="text-xs text-slate-400 shrink-0">${v.nodes?.length||0}건</span>
+          <i class="fas fa-chevron-down text-slate-400 text-xs chev shrink-0"></i>
+        </summary>
+        <div class="p-3 pt-0 border-t border-slate-100">
+          <p class="text-xs text-slate-600 mb-2">${esc(v.description||'')}</p>
+          ${v.helpEn?`<p class="text-xs text-slate-400 italic mb-2">${esc(v.helpEn)}</p>`:''}
+          <a href="${esc(v.helpUrl||'')}" target="_blank" class="text-xs text-blue-500 hover:underline mb-2 inline-block">
+            <i class="fas fa-external-link-alt mr-1"></i>${esc(v.id)}
+          </a>
+          ${nodes}
+        </div>
+      </details>`
+  }).join('')
+}
+
+function filterViolations(filter) {
+  document.querySelectorAll('#filterBtns .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter)
+    if (b.dataset.filter === filter) {
+      b.classList.add('bg-slate-800', 'text-white')
+      b.classList.remove('bg-red-100','text-red-700','bg-orange-100','text-orange-700')
+    } else {
+      b.classList.remove('bg-slate-800', 'text-white')
+    }
+  })
+  if (scanResult) renderViolations(scanResult.violations || [], filter)
+}
+
+function renderSpelling(sp) {
+  const notRun = document.getElementById('spellNotRun')
+  const res    = document.getElementById('spellResult')
+  if (!sp?.checkedAt) { notRun.classList.remove('hidden'); res.classList.add('hidden'); return }
+  notRun.classList.add('hidden'); res.classList.remove('hidden')
+  const issues = sp.issues || []
+  if (!issues.length) {
+    res.innerHTML = `<div class="text-center py-8 text-green-600"><i class="fas fa-check-circle text-3xl mb-2 block"></i><p class="font-semibold">오탈자 없음</p></div>`
+    return
+  }
+  res.innerHTML = issues.map(iss => `
+    <div class="spell-ko border-l-4 border border-slate-200 rounded-lg p-3 mb-2 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="badge-pill bg-purple-100 text-purple-700">${esc(iss.type||'오탈자')}</span>
+        <span class="font-bold text-red-600">${esc(iss.token||iss.original||'')}</span>
+        ${iss.suggestions?.length ? `<span class="text-slate-400 text-xs">→</span><span class="text-green-600 font-semibold text-sm">${esc(iss.suggestions[0])}</span>` : ''}
+      </div>
+      ${iss.context ? `<p class="text-xs text-slate-500 truncate">${esc(iss.context)}</p>` : ''}
+    </div>`).join('')
+}
+
+function renderLinks(lk) {
+  const notRun = document.getElementById('linksNotRun')
+  const res    = document.getElementById('linksResult')
+  if (!lk?.checkedAt) { notRun.classList.remove('hidden'); res.classList.add('hidden'); return }
+  notRun.classList.add('hidden'); res.classList.remove('hidden')
+  const dead = lk.dead || []
+  const redirects = lk.redirects || []
+  if (!dead.length && !redirects.length) {
+    res.innerHTML = `<div class="text-center py-8 text-green-600"><i class="fas fa-check-circle text-3xl mb-2 block"></i><p class="font-semibold">데드링크 없음</p></div>`
+    return
+  }
+  const deadHtml = dead.map(l => `
+    <div class="link-dead border-l-4 border border-slate-200 rounded-lg p-3 mb-2 bg-white">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="badge-pill bg-red-100 text-red-700">데드링크 ${l.status||'?'}</span>
+        <span class="text-xs text-slate-600 truncate flex-1">${esc(l.url||'')}</span>
+      </div>
+      ${l.error ? `<p class="text-xs text-red-500">${esc(l.error)}</p>` : ''}
+    </div>`).join('')
+  const redHtml = redirects.slice(0,20).map(l => `
+    <div class="link-redirect border-l-4 border border-slate-200 rounded-lg p-3 mb-2 bg-white">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="badge-pill bg-yellow-100 text-yellow-700">리다이렉트 ${l.status||''}</span>
+        <span class="text-xs text-slate-600 truncate flex-1">${esc(l.url||'')}</span>
+      </div>
+    </div>`).join('')
+  res.innerHTML = `
+    <div class="flex gap-3 mb-4 text-xs">
+      <span class="bg-red-100 text-red-700 px-2 py-1 rounded-lg font-semibold">데드링크 ${dead.length}건</span>
+      <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg font-semibold">리다이렉트 ${redirects.length}건</span>
+      <span class="bg-green-100 text-green-700 px-2 py-1 rounded-lg font-semibold">정상 ${lk.live||0}건</span>
+    </div>
+    ${deadHtml}${redHtml}`
+}
+
+function renderW3C(w3c) {
+  const notRun = document.getElementById('w3cNotRun')
+  const bars   = document.getElementById('w3cSummaryBars')
+  const noErr  = document.getElementById('noW3CErrors')
+  const errList= document.getElementById('w3cErrorsList')
+  const warnSec= document.getElementById('w3cWarningSection')
+  const info   = document.getElementById('w3cInfo')
+
+  if (!w3c?.checkedAt) {
+    notRun.classList.remove('hidden')
+    bars.classList.add('hidden'); noErr.classList.add('hidden')
+    errList.innerHTML = ''; warnSec.classList.add('hidden'); info.classList.add('hidden')
+    return
+  }
+  notRun.classList.add('hidden'); bars.classList.remove('hidden'); info.classList.remove('hidden')
+  document.getElementById('w3cCheckedAt').textContent = new Date(w3c.checkedAt).toLocaleString('ko-KR')
+
+  const ec = w3c.errorCount || 0
+  const wc = w3c.warningCount || 0
+  bars.innerHTML = `
+    <div class="rounded-xl p-3 ${ec>0?'bg-red-50 border-red-200':'bg-green-50 border-green-200'} border flex items-center gap-2">
+      <i class="fas fa-times-circle ${ec>0?'text-red-500':'text-green-500'}"></i>
+      <div><div class="text-xl font-black ${ec>0?'text-red-600':'text-green-600'}">${ec}</div><div class="text-xs ${ec>0?'text-red-700':'text-green-700'}">오류</div></div>
+    </div>
+    <div class="rounded-xl p-3 ${wc>0?'bg-yellow-50 border-yellow-200':'bg-green-50 border-green-200'} border flex items-center gap-2">
+      <i class="fas fa-exclamation-triangle ${wc>0?'text-yellow-500':'text-green-500'}"></i>
+      <div><div class="text-xl font-black ${wc>0?'text-yellow-600':'text-green-600'}">${wc}</div><div class="text-xs ${wc>0?'text-yellow-700':'text-green-700'}">경고</div></div>
+    </div>
+    <div class="rounded-xl p-3 ${w3c.valid===false?'bg-red-50 border-red-200':'bg-green-50 border-green-200'} border flex items-center gap-2">
+      <i class="fas fa-${w3c.valid===false?'times':'check'}-circle ${w3c.valid===false?'text-red-500':'text-green-500'}"></i>
+      <div><div class="text-sm font-black ${w3c.valid===false?'text-red-600':'text-green-600'}">${w3c.valid===false?'무효':'유효'}</div><div class="text-xs text-slate-500">마크업</div></div>
+    </div>`
+
+  if (!ec) { noErr.classList.remove('hidden'); errList.innerHTML = '' }
+  else {
+    noErr.classList.add('hidden')
+    errList.innerHTML = (w3c.errors||[]).slice(0,30).map(e => `
+      <div class="border-l-4 border-red-400 border border-slate-200 rounded-lg p-3 mb-2 bg-white text-xs">
+        <span class="badge-pill bg-red-100 text-red-700 mr-2">${esc(e.type||'오류')}</span>
+        ${e.line ? `<span class="text-slate-400 mr-2">Line ${e.line}</span>` : ''}
+        <span class="text-slate-700">${esc(e.message||'')}</span>
+        ${e.messageEn?`<div class="text-slate-400 italic mt-1">${esc(e.messageEn)}</div>`:''}
+      </div>`).join('')
+  }
+  if (wc > 0) {
+    warnSec.classList.remove('hidden')
+    document.getElementById('badge-w3c-warn2').textContent = wc
+    document.getElementById('w3cWarningList').innerHTML = (w3c.warnings||[]).slice(0,20).map(w => `
+      <div class="border-l-4 border-yellow-400 border border-slate-200 rounded-lg p-3 mb-1 bg-white text-xs">
+        <span class="text-slate-700">${esc(w.message||'')}</span>
+        ${w.messageEn?`<div class="text-slate-400 italic mt-1">${esc(w.messageEn)}</div>`:''}
+      </div>`).join('')
+  } else warnSec.classList.add('hidden')
+}
+
+function renderKRDS(krds) {
+  const notRun = document.getElementById('krdsNotRun')
+  const runRes = document.getElementById('krdsRunResult')
+  if (!krds?.checkedAt) { notRun.classList.remove('hidden'); runRes.classList.add('hidden'); return }
+  notRun.classList.add('hidden'); runRes.classList.remove('hidden')
+  document.getElementById('krdsCheckedAt').textContent = new Date(krds.checkedAt).toLocaleString('ko-KR')
+
+  const sc = krds.score || 0
+  const scCol = sc>=80?'text-green-600':sc>=60?'text-yellow-600':'text-red-600'
+  const scBg  = sc>=80?'bg-green-50 border-green-200':sc>=60?'bg-yellow-50 border-yellow-200':'bg-red-50 border-red-200'
+  const mp=krds.mandatory?.passed||0, mt=krds.mandatory?.total||0
+  const rp=krds.recommended?.passed||0, rt=krds.recommended?.total||0
+  const failed=krds.failed||0
+
+  document.getElementById('krdsSummaryBars').innerHTML = `
+    <div class="rounded-xl p-3.5 ${scBg} border flex items-center gap-3">
+      <i class="fas fa-flag ${scCol} text-lg"></i>
+      <div><div class="text-3xl font-extrabold ${scCol}">${sc}%</div><div class="text-xs font-semibold ${scCol}">KRDS 준수율</div></div>
+    </div>
+    <div class="rounded-xl p-3.5 ${mp===mt?'bg-green-50 border-green-200':'bg-red-50 border-red-200'} border flex items-center gap-3">
+      <i class="fas fa-exclamation-circle ${mp===mt?'text-green-500':'text-red-500'} text-lg"></i>
+      <div><div class="text-2xl font-extrabold ${mp===mt?'text-green-600':'text-red-600'}">${mp}/${mt}</div><div class="text-xs font-semibold ${mp===mt?'text-green-700':'text-red-700'}">필수 항목</div></div>
+    </div>
+    <div class="rounded-xl p-3.5 ${rp===rt?'bg-green-50 border-green-200':'bg-blue-50 border-blue-200'} border flex items-center gap-3">
+      <i class="fas fa-check-circle ${rp===rt?'text-green-500':'text-blue-500'} text-lg"></i>
+      <div><div class="text-2xl font-extrabold ${rp===rt?'text-green-600':'text-blue-600'}">${rp}/${rt}</div><div class="text-xs font-semibold ${rp===rt?'text-green-700':'text-blue-700'}">권장 항목</div></div>
+    </div>`
+
+  const byCategory = {}
+  for (const item of krds.items||[]) {
+    if (!byCategory[item.category]) byCategory[item.category]=[]
+    byCategory[item.category].push(item)
+  }
+  document.getElementById('krdsItemList').innerHTML = Object.entries(byCategory).map(([cat,items]) => {
+    const catFailed = items.filter(i=>!i.passed)
+    return `
+      <details class="mb-3 rounded-xl border border-slate-200 overflow-hidden shadow-sm" ${catFailed.length>0?'open':''}>
+        <summary class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-slate-700 text-sm">${esc(cat)}</span>
+            <span class="badge-pill bg-slate-200 text-slate-600">${items.length}개</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="${catFailed.length>0?'text-red-500':'text-green-600'} font-bold text-sm">
+              ${catFailed.length>0?'✗':'✓'} ${items.length-catFailed.length}/${items.length}
+            </span>
+            <i class="fas fa-chevron-down text-slate-400 text-xs chev"></i>
+          </div>
+        </summary>
+        <div class="p-3">
+          ${items.map(item => `
+            <div class="${item.passed?'border-l-4 border-green-300 bg-green-50':item.level==='필수'?'border-l-4 border-red-400 bg-red-50':'border-l-4 border-yellow-400 bg-yellow-50'} mb-1.5 p-2.5 rounded-r-lg text-xs flex items-start gap-2">
+              <span class="shrink-0 ${item.passed?'text-green-600':'text-red-600'} font-bold">${item.passed?'✓':'✗'}</span>
+              <span class="shrink-0 text-xs ${item.level==='필수'?'bg-red-100 text-red-700':'bg-blue-100 text-blue-700'} px-1.5 py-0.5 rounded font-semibold">${esc(item.level)}</span>
+              <div class="flex-1 min-w-0">
+                <span class="font-semibold text-slate-800">${esc(item.name)}</span>
+                <span class="text-slate-500 ml-1">— ${esc(item.detail)}</span>
+                ${!item.passed&&item.recommend?`<div class="text-blue-600 mt-0.5 italic">💡 ${esc(item.recommend)}</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
+      </details>`
+  }).join('')
+}
+
+function renderCharts(data) {
+  Object.values(charts).forEach(c => c?.destroy())
+  charts = {}
+  const ic = data.summary?.impactCounts || {}
+  const sp = data.spelling || {}
+  const lk = data.links || {}
+
+  const ctx1 = document.getElementById('chartViolations')?.getContext('2d')
+  if (ctx1) charts.v = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['치명적','심각','보통','경미'],
+      datasets: [{ data: [ic.critical||0,ic.serious||0,ic.moderate||0,ic.minor||0], backgroundColor:['#dc2626','#ea580c','#d97706','#65a30d'], borderWidth:2 }]
+    },
+    options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11} } }, title: { display:true, text:'접근성 위반 분포' } } }
+  })
+
+  const ctx2 = document.getElementById('chartSpelling')?.getContext('2d')
+  if (ctx2) {
+    const types = {}
+    ;(sp.issues||[]).forEach(i => { types[i.type||'기타']=(types[i.type||'기타']||0)+1 })
+    charts.s = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(types).length ? Object.keys(types) : ['데이터 없음'],
+        datasets: [{ label:'오탈자 유형', data: Object.values(types).length ? Object.values(types) : [0], backgroundColor:'#8b5cf6', borderRadius:6 }]
+      },
+      options: { plugins: { legend: { display:false }, title: { display:true, text:'오탈자 유형별 분포' } }, scales: { y: { beginAtZero:true } } }
+    })
+  }
+}
+
+function updateTabBadges(data) {
+  const sum = data.summary || {}
+  document.getElementById('badge-a11y').textContent = sum.violations || 0
+
+  // 탭 표시/숨김
+  const spellTab = document.getElementById('tab-btn-spell')
+  if (data.spelling?.checkedAt) {
+    spellTab.classList.remove('hidden')
+    document.getElementById('badge-spell').textContent = data.spelling.totalIssues || 0
+  }
+  const linksTab = document.getElementById('tab-btn-links')
+  if (data.links?.checkedAt) {
+    linksTab.classList.remove('hidden')
+    const deadCnt = typeof data.links.dead === 'number' ? data.links.dead : (data.links.dead?.length || 0)
+    document.getElementById('badge-links').textContent = deadCnt
+  }
+  const w3cTab = document.getElementById('tab-btn-w3c')
+  if (data.w3c?.checkedAt) {
+    w3cTab.classList.remove('hidden')
+    document.getElementById('badge-w3c-warn').textContent = data.w3c.errorCount || 0
+  }
+  const krdsTab = document.getElementById('tab-btn-krds')
+  if (data.krds?.checkedAt) {
+    krdsTab.classList.remove('hidden')
+    document.getElementById('badge-krds').textContent = data.krds.failed || 0
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  배치(다중) 결과 렌더링 (인라인)
+// ══════════════════════════════════════════════════════
+function renderBatchInline(results, opts) {
+  document.getElementById('batchResultArea').classList.remove('hidden')
+
+  // KPI
+  const total   = results.length
+  const errCnt  = results.filter(r=>r.status==='error').length
+  const totalVio= results.reduce((s,r)=>s+(r.summary?.violations||0),0)
+  const totalInc= results.reduce((s,r)=>s+(r.summary?.incomplete||0),0)
+  // lightResult: links.dead가 숫자, 일반 결과: links.dead가 배열
+  const getDeadCount = r => typeof r.links?.dead === 'number' ? r.links.dead : (r.links?.dead?.length||0)
+  const totalDead=results.reduce((s,r)=>s+getDeadCount(r),0)
+
+  document.getElementById('batchKpiCards').innerHTML = `
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-black text-blue-600">${total}</div>
+      <div class="text-xs text-slate-500 mt-1">검사 페이지</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-black ${totalVio>0?'text-red-600':'text-green-600'}">${totalVio}</div>
+      <div class="text-xs text-slate-500 mt-1">총 위반</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-black ${totalInc>0?'text-amber-600':'text-green-600'}">${totalInc}</div>
+      <div class="text-xs text-slate-500 mt-1">검토 필요</div>
+    </div>
+    <div class="card p-4 text-center">
+      <div class="text-2xl font-black ${errCnt>0?'text-red-600':'text-green-600'}">${errCnt}</div>
+      <div class="text-xs text-slate-500 mt-1">오류 페이지</div>
+    </div>`
+
+  // 컬럼 표시/숨김
+  const spellChecked = results.some(r=>r.spelling?.checkedAt)
+  const linksChecked = results.some(r=>r.links?.checkedAt)
+  const w3cChecked   = results.some(r=>r.w3c?.checkedAt)
+  const krdsChecked  = results.some(r=>r.krds?.checkedAt)
+  ;[['th-spell',spellChecked],['th-links',linksChecked],['th-w3c',w3cChecked],['th-krds',krdsChecked]]
+    .forEach(([cls,show]) => document.querySelectorAll('.'+cls).forEach(el => show?el.classList.remove('hidden'):el.classList.add('hidden')))
+
+  // 버튼 활성화
+  document.getElementById('batchDlBtn').disabled = false
+  document.getElementById('batchExcelBtn').disabled = false
+  document.getElementById('batchPptxBtn').disabled = false
+
+  // batchResults 전역 저장 (상세보기용)
+  batchResults = results
+
+  // 테이블
+  document.getElementById('batchTbody').innerHTML = results.map((r,i) => {
+    const viols   = r.violations || []
+    const violCnt = r.summary?.violations || viols.length || 0
+    const hasDetail = violCnt > 0 || r.status === 'error'
+
+    const statusBadge = r.status==='error'
+      ? `<span class="badge-pill bg-red-100 text-red-700 cursor-help" title="${esc(r.error||'오류')}">${esc(truncErr(r.error))}</span>`
+      : `<span class="badge-pill bg-green-100 text-green-700">완료</span>`
+
+    // 위반 항목 인라인 목록
+    const IMPACT_COLOR = {critical:'text-red-700 bg-red-50 border-red-200', serious:'text-orange-700 bg-orange-50 border-orange-200', moderate:'text-amber-700 bg-amber-50 border-amber-200', minor:'text-slate-600 bg-slate-50 border-slate-200'}
+    const IMPACT_KR    = {critical:'치명적', serious:'심각', moderate:'보통', minor:'경미'}
+
+    let detailHtml = ''
+    if (r.status === 'error') {
+      detailHtml = `<div class="p-3 bg-red-50 text-red-600 text-xs rounded-lg"><i class="fas fa-exclamation-triangle mr-1"></i>${esc(r.error||'스캔 오류')}</div>`
+    } else if (viols.length > 0) {
+      detailHtml = viols.map(v => {
+        const ic = IMPACT_COLOR[v.impact] || IMPACT_COLOR.minor
+        const ik = IMPACT_KR[v.impact]   || v.impact || '-'
+        const nodes = (v.nodes || []).slice(0, 3)
+        const nodeHtml = nodes.map(n => {
+          const html_ = esc((n.html||n.target||'').toString().slice(0,120))
+          const fix_  = esc(n.failureSummary||n.any?.[0]?.message||'')
+          return `<div class="mt-1 pl-2 border-l-2 border-slate-200 text-slate-500">
+            <code class="text-xs bg-slate-100 px-1 rounded">${html_}</code>
+            ${fix_?`<div class="text-xs text-slate-500 mt-0.5">💡 ${fix_.slice(0,100)}</div>`:''}
+          </div>`
+        }).join('')
+        return `<div class="border rounded-lg p-2 mb-2 ${ic}">
+          <div class="flex items-start gap-2">
+            <span class="text-xs font-bold px-1.5 py-0.5 rounded border ${ic}">${ik}</span>
+            <div class="flex-1">
+              <div class="text-xs font-semibold">${esc(v.help||v.id||'')}</div>
+              <div class="text-xs opacity-70">${esc(v.id||'')} ${v.tags?'· '+v.tags.filter(t=>t.startsWith('wcag')).join(' '):''}</div>
+            </div>
+            <span class="text-xs opacity-60">${nodes.length}곳</span>
+          </div>
+          ${nodeHtml}
+        </div>`
+      }).join('')
+    } else if (violCnt === 0) {
+      detailHtml = `<div class="p-3 bg-green-50 text-green-700 text-xs rounded-lg"><i class="fas fa-check-circle mr-1"></i>접근성 위반 없음</div>`
+    }
+
+    return `
+      <tr class="batch-row border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${r.status==='error'?'error-row':''}"
+          onclick="toggleBatchDetail(${i})">
+        <td class="px-3 py-2.5 text-center text-xs text-slate-400">${i+1}</td>
+        <td class="px-3 py-2.5">
+          <div class="font-semibold text-slate-800 text-xs" title="${esc(r.url||'')}">
+            ${esc(r.pageTitle || r.fileName || '(제목없음)')}
+          </div>
+          <div class="text-xs text-blue-400 truncate max-w-xs">${esc(r.url||r.originalUrl||'')}</div>
+        </td>
+        <td class="px-3 py-2.5 text-center">
+          <span class="font-bold text-sm ${violCnt>0?'text-red-600':'text-green-600'}">${violCnt}</span>
+        </td>
+        ${spellChecked?`<td class="px-3 py-2.5 text-center th-spell">
+          <span class="text-sm font-bold ${(r.spelling?.totalIssues||0)>0?'text-purple-600':'text-green-600'}">${r.spelling?.totalIssues??'-'}</span>
+        </td>`:''}
+        ${linksChecked?`<td class="px-3 py-2.5 text-center th-links">
+          <span class="text-sm font-bold ${getDeadCount(r)>0?'text-red-600':'text-green-600'}">${getDeadCount(r)}</span>
+        </td>`:''}
+        ${w3cChecked?`<td class="px-3 py-2.5 text-center th-w3c">
+          ${r.w3c?.checkedAt?`<span class="text-xs font-bold ${(r.w3c?.errorCount||0)>0?'text-red-600':'text-green-600'}">${r.w3c?.errorCount||0}</span>`:'<span class="text-slate-300">-</span>'}
+        </td>`:''}
+        ${krdsChecked?`<td class="px-3 py-2.5 text-center th-krds">
+          ${r.krds?`<span class="text-xs font-bold ${(r.krds.failed||0)===0?'text-green-600':'text-yellow-600'}">${r.krds.failed||0}미준수</span>`:'<span class="text-slate-300">-</span>'}
+        </td>`:''}
+        <td class="px-3 py-2.5 text-center">${statusBadge}</td>
+        <td class="px-3 py-2.5 text-center">
+          <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform" id="batch-chevron-${i}"></i>
+        </td>
+      </tr>
+      <tr id="batch-detail-${i}" class="hidden bg-slate-50">
+        <td colspan="9" class="px-4 py-3">
+          <div class="text-xs text-slate-500 mb-2">
+            <strong>${esc(r.pageTitle||'')}</strong>
+            <a href="${esc(r.url||'')}" target="_blank" class="text-blue-400 hover:underline ml-2 truncate">${esc((r.url||'').slice(0,80))}</a>
+            <span class="ml-2 text-slate-400">${r.scannedAt ? new Date(r.scannedAt).toLocaleString('ko-KR') : ''}</span>
+          </div>
+          <div id="batch-detail-content-${i}">${detailHtml||'<div class=\"text-xs text-slate-400\">상세 정보 없음</div>'}</div>
+        </td>
+      </tr>`
+  }).join('')
+}
+
+function toggleBatchDetail(i) {
+  const row = document.getElementById('batch-detail-' + i)
+  const chev = document.getElementById('batch-chevron-' + i)
+  if (!row) return
+  const hidden = row.classList.contains('hidden')
+  row.classList.toggle('hidden', !hidden)
+  if (chev) chev.style.transform = hidden ? 'rotate(180deg)' : ''
+}
+
+function truncErr(msg) {
+  if (!msg) return '오류'
+  if (msg.includes('CONNECTION_RESET')) return '연결끊김'
+  if (msg.includes('timeout') || msg.includes('Timeout')) return '시간초과'
+  if (msg.includes('DNS') || msg.includes('NAME_NOT_RESOLVED')) return 'DNS오류'
+  return '오류'
+}
+
+// ══════════════════════════════════════════════════════
+//  증적 모달 (배치 인라인)
+// ══════════════════════════════════════════════════════
+let batchResults = []
+function openBatchEvidence(idx) {
+  // batchResults는 전역에 저장
+  const data = batchResults[idx]
+  if (!data) return
+  const modal = document.getElementById('evidenceModal')
+  modal.classList.remove('hidden')
+  const violCount = data.summary?.violations || 0
+  const incCount = data.summary?.incomplete || 0
+  let html = `
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+      <div class="rounded-xl p-4 text-center border-2 ${violCount>0?'border-red-300 bg-red-50':'border-green-300 bg-green-50'}"><div class="text-3xl font-black ${violCount>0?'text-red-600':'text-green-600'}">${violCount}</div><div class="text-xs text-gray-500 mt-1">접근성 위반</div></div>
+      <div class="bg-amber-50 rounded-xl p-4 text-center"><div class="text-3xl font-black text-amber-600">${incCount}</div><div class="text-xs text-gray-500 mt-1">검토필요</div></div>
+      <div class="bg-purple-50 rounded-xl p-4 text-center"><div class="text-3xl font-black text-purple-600">${data.spelling?.totalIssues||0}</div><div class="text-xs text-gray-500 mt-1">오탈자</div></div>
+      <div class="bg-orange-50 rounded-xl p-4 text-center"><div class="text-3xl font-black text-orange-600">${data.links?.dead?.length||0}</div><div class="text-xs text-gray-500 mt-1">데드링크</div></div>
+    </div>
+    <div class="bg-gray-50 rounded-xl p-4 mb-4 text-xs text-gray-600 space-y-1.5">
+      <div><strong>페이지:</strong> <a href="${esc(data.url||'')}" target="_blank" class="text-blue-500 hover:underline">${esc(data.url||data.fileName||'-')}</a></div>
+      <div><strong>제목:</strong> ${esc(data.pageTitle||data.fileName||'-')}</div>
+      <div><strong>검사 일시:</strong> ${data.scannedAt?new Date(data.scannedAt).toLocaleString('ko-KR'):'-'}</div>
+    </div>`
+
+  if (data.status === 'error') {
+    html += `<div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>${esc(data.error||'스캔 오류')}</div>`
+  }
+
+  document.getElementById('evidenceContent').innerHTML = html
+}
+
+function closeEvidenceModal() {
+  document.getElementById('evidenceModal').classList.add('hidden')
+}
+
+// ══════════════════════════════════════════════════════
+//  다운로드 (배치)
+// ══════════════════════════════════════════════════════
+async function downloadBatchReport() {
+  if (!batchSession) return
+  window.open(`/api/batch/${batchSession}/report`, '_blank')
+}
+
+async function downloadBatchExcel() {
+  if (!batchSession) return
+  const meta = getReportMeta()
+  window.open(`/api/batch/${batchSession}/excel?org=${encodeURIComponent(meta.org)}&dept=${encodeURIComponent(meta.dept)}&inspector=${encodeURIComponent(meta.inspector)}&project=${encodeURIComponent(meta.project)}`, '_blank')
+}
+
+
+async function downloadReport() {
+  if (!scanResult) return
+  const meta = getReportMeta()
+  const res = await fetch('/api/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...scanResult, reportMeta: meta })
+  })
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `report_${Date.now()}.html`
+  a.click()
+}
+
+async function downloadExcelReport() {
+  if (!scanResult) return
+  const meta = getReportMeta()
+  const res = await fetch('/api/report/excel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...scanResult, reportMeta: meta })
+  })
+  if (!res.ok) { alert('Excel 보고서 생성 실패'); return }
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  const d = new Date().toISOString().slice(0,10)
+  a.download = `가디언즈_검사보고서_${d}.xlsx`
+  a.click()
+}
+
+
+function getReportMeta() {
+  return {
+    org:       document.getElementById('metaOrg')?.value?.trim()       || '',
+    dept:      document.getElementById('metaDept')?.value?.trim()      || '',
+    inspector: document.getElementById('metaInspector')?.value?.trim() || '',
+    project:   document.getElementById('metaProject')?.value?.trim()   || '',
+    generatedAt: new Date().toLocaleString('ko-KR'),
+    toolVersion: 'v6.19',
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  탭 전환
+// ══════════════════════════════════════════════════════
+function switchMainTab(name, btn) {
+  document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  ;['a11y','spell','links','chart','w3c','krds'].forEach(t => {
+    const el = document.getElementById(`tab-${t}`)
+    if (el) el.classList.toggle('hidden', t !== name)
+  })
+}
+
+function switchMainTabByName(name) {
+  const btn = document.getElementById(`tab-btn-${name}`)
+  if (btn && !btn.classList.contains('hidden')) switchMainTab(name, btn)
+}
+
+// ══════════════════════════════════════════════════════
+//  UI 헬퍼
+// ══════════════════════════════════════════════════════
+function showLoading(show) {
+  document.getElementById('loadingBox').classList.toggle('hidden', !show)
+  if (!show) document.getElementById('batchProgress').classList.add('hidden')
+}
+
+function showError(show, msg='') {
+  document.getElementById('errorBox').classList.toggle('hidden', !show)
+  if (show) document.getElementById('errorMsg').textContent = msg
+}
+
+function hideResults() {
+  document.getElementById('resultArea').classList.add('hidden')
+  document.getElementById('batchResultArea').classList.add('hidden')
+  // 탭 초기화
+  ;['spell','links','w3c','krds'].forEach(t => document.getElementById(`tab-btn-${t}`)?.classList.add('hidden'))
+  document.getElementById('tab-btn-a11y').click()
+}
+
+function setProgress(pct) {
+  document.getElementById('progressBar').style.width = `${pct}%`
+}
+
+function resetScanBtn() {
+  const btn = document.getElementById('scanBtn')
+  btn.disabled = false
+  btn.innerHTML = '<i class="fas fa-play"></i> 종합 검사 시작'
+}
+
+// renderBatchInline에서 batchResults에 저장
+const _origRenderBatch = renderBatchInline
+window.renderBatchInline = function(results, opts) {
+  batchResults = results
+  _origRenderBatch(results, opts)
+}
+
+// 초기화 시 renderBatchInline을 래핑
+document.addEventListener('DOMContentLoaded', () => {
+  batchResults = []
+})
+function toggleOptCard(el, id) {
+  // 기존 opt-card 방식 (레거시 호환)
+  const chk = document.getElementById(id)
+  if (!chk) return
+  chk.checked = !chk.checked
+  if (id === 'chkLinks') {
+    const w = document.getElementById('w3cLinksWrap')
+    if (w) w.style.display = chk.checked ? 'block' : 'none'
+  }
+}
+
+
+// ─── 검사 기준 안내 모달 ───────────────────────────
+function openGuideModal() {
+  const m = document.getElementById('guideModal')
+  m.style.display = 'flex'
+}
+function closeGuideModal() {
+  const m = document.getElementById('guideModal')
+  m.style.display = 'none'
+}
+// ESC 키로 닫기
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeGuideModal()
+})
+
+// ═══ 검사 모드 (간편/전문가) ═══════════════════════════════
+let currentScanMode = 'simple'
+
+function setMode(mode) {
+  currentScanMode = mode
+  const simpleBtn = document.getElementById('modeSimpleBtn')
+  const proBtn    = document.getElementById('modeProBtn')
+  const desc      = document.getElementById('modeDesc')
+
+  if (mode === 'simple') {
+    simpleBtn.style.background = '#5de2a0'; simpleBtn.style.color = '#005b37'
+    proBtn.style.background    = 'white';   proBtn.style.color    = '#6b7280'
+    desc.textContent = '핵심 15개 항목만 — 누구나 쉽게 이해하고 조치할 수 있습니다.'
+  } else {
+    simpleBtn.style.background = 'white';   simpleBtn.style.color = '#6b7280'
+    proBtn.style.background    = '#2c3674'; proBtn.style.color    = 'white'
+    desc.textContent = 'WCAG 2.1 전체 50개+ 규칙 — 전문적인 정밀 검사를 수행합니다.'
+  }
+}
+
+// scanMode는 원본 getOptions에서 직접 처리
+
+// ═══ 프로젝트 관리 ═════════════════════════════════════════
+let currentProjectId = null
+let checkedSessions  = new Set()
+
+function openProjectPanel() {
+  document.getElementById('projectPanel').style.display = 'block'
+  document.getElementById('projectPanel').scrollIntoView({ behavior: 'smooth', block: 'start' })
+  loadProjects()
+  // 현재 배치 세션이 있으면 추가 버튼 표시
+  if (batchSession) {
+    document.getElementById('addToProjectWrap').style.display = 'block'
+  }
+}
+
+async function createProject() {
+  const name = document.getElementById('projName').value.trim()
+  if (!name) { alert('프로젝트명을 입력하세요.'); return }
+  const meta = {
+    org:       document.getElementById('projOrg').value.trim(),
+    inspector: document.getElementById('projInspector').value.trim(),
+  }
+  const res  = await fetch('/api/project/create', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, meta })
+  })
+  const proj = await res.json()
+  document.getElementById('projName').value = ''
+  alert(`프로젝트 "${proj.name}" 생성 완료!`)
+  loadProjects()
+}
+
+async function loadProjects() {
+  const res  = await fetch('/api/project/list')
+  const list = await res.json()
+  const el   = document.getElementById('projectList')
+  const sel  = document.getElementById('targetProjectSelect')
+
+  // 프로젝트 선택 셀렉트 업데이트
+  sel.innerHTML = '<option value="">— 프로젝트 선택 —</option>' +
+    list.map(p => `<option value="${p.id}">${p.name} (${p.totalPages}페이지)</option>`).join('')
+
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:0.82rem;">프로젝트가 없습니다.</div>'
+    return
+  }
+
+  el.innerHTML = list.map(p => `
+    <div class="proj-session-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;font-size:0.8rem;">
+      <input type="checkbox" style="accent-color:#2563eb;width:14px;height:14px;" onchange="toggleProjectSelect('${p.id}', this.checked)">
+      <div style="flex:1;">
+        <div style="font-weight:700;color:#1e2a3a;">${p.name}</div>
+        <div style="color:#9ca3af;font-size:0.72rem;">${p.meta?.org || ''} | ${p.sessionCount}회 검사 | ${p.totalPages}페이지</div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button onclick="downloadProjectExcel('${p.id}','${p.name}')"
+          style="background:#dcfce7;color:#16a34a;border:none;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;">Excel</button>
+        <button onclick="deleteProject('${p.id}')"
+          style="background:#fee2e2;color:#dc2626;border:none;padding:4px 8px;border-radius:6px;font-size:0.72rem;cursor:pointer;font-family:inherit;">삭제</button>
+      </div>
+    </div>`).join('')
+}
+
+function toggleProjectSelect(projectId, checked) {
+  if (checked) checkedSessions.add(projectId)
+  else checkedSessions.delete(projectId)
+  renderMergeWrap()
+}
+
+function renderMergeWrap() {
+  const mw = document.getElementById('mergeWrap')
+  const ml = document.getElementById('mergeSessionList')
+  if (checkedSessions.size < 2) { mw.style.display = 'none'; return }
+  mw.style.display = 'block'
+  ml.innerHTML = [...checkedSessions].map(id =>
+    `<span style="background:#eff6ff;color:#2563eb;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:600;">${id.slice(-6)}</span>`
+  ).join('')
+}
+
+async function addCurrentToProject() {
+  if (!batchSession) { alert('먼저 검사를 실행하세요.'); return }
+  const projectId = document.getElementById('targetProjectSelect').value
+  if (!projectId) { alert('프로젝트를 선택하세요.'); return }
+  const res = await fetch(`/api/project/${projectId}/add-session`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ sessionId: batchSession })
+  })
+  const data = await res.json()
+  if (data.ok) { alert(`검사 결과가 프로젝트에 추가됐습니다! (총 ${data.sessionCount}회 검사)`); loadProjects() }
+}
+
+async function downloadProjectExcel(projectId, name) {
+  window.open(`/api/project/${projectId}/excel`, '_blank')
+}
+
+
+async function deleteProject(projectId) {
+  if (!confirm('프로젝트를 삭제하시겠습니까?')) return
+  await fetch(`/api/project/${projectId}`, { method:'DELETE' })
+  loadProjects()
+}
+
+async function mergeDownload(format) {
+  const sessionIds = [...checkedSessions]
+  if (sessionIds.length < 2) { alert('2개 이상의 프로젝트를 선택하세요.'); return }
+  const meta = { org: '', generatedAt: new Date().toLocaleString('ko-KR') }
+  const res  = await fetch('/api/project/merge', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ sessionIds, meta, format })
+  })
+  if (!res.ok) { alert('합산 보고서 생성 실패'); return }
+  const blob = await res.blob()
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+  a.download = '합산보고서_' + new Date().toISOString().slice(0,10) + (format==='word'?'.docx':'.xlsx')
+  a.click()
+}
+
+
+async function downloadPptxReport() {
+  if (!scanResult) return
+  const meta = getReportMeta()
+  const res = await fetch('/api/report/pptx', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...scanResult, reportMeta: meta })
+  })
+  if (!res.ok) { alert('PPTX 보고서 생성 실패: ' + await res.text()); return }
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  const d = new Date().toISOString().slice(0,10)
+  a.download = '접근성점검결과서_' + d + '.pptx'
+  a.click()
+}
+
+async function downloadBatchPptx() {
+  if (!batchSession) {
+    alert('검사 세션 정보가 없습니다.\n검사를 다시 실행한 뒤 시도해주세요.')
+    return
+  }
+  const btn = event?.target?.closest('button')
+  const orig = btn ? btn.innerHTML : ''
+  let sec = 0, timer = null
+  if (btn) {
+    btn.disabled = true
+    btn.innerHTML = '<i class="fas fa-circle-notch spinner mr-1"></i>PPTX 생성 중… 0초'
+    timer = setInterval(() => {
+      sec++
+      btn.innerHTML = `<i class="fas fa-circle-notch spinner mr-1"></i>PPTX 생성 중… ${sec}초 <span class="opacity-60">(다량은 1~3분)</span>`
+    }, 1000)
+  }
+  try {
+    const meta = getReportMeta()
+    const res = await fetch('/api/batch/' + batchSession + '/pptx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meta })
+    })
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '')
+      throw new Error(msg || 'HTTP ' + res.status)
+    }
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    const d = new Date().toISOString().slice(0,10)
+    a.download = '접근성점검결과서_' + d + '.pptx'
+    a.click()
+  } catch(e) {
+    alert('PPTX 보고서 생성 실패: ' + e.message)
+  }
+  if (timer) clearInterval(timer)
+  if (btn) { btn.disabled = false; btn.innerHTML = orig }
+}
+
+
+// ── PPTX 설정 ──────────────────────────────────────
+async function loadPptxConfig() {
+  try {
+    const res = await fetch('/api/pptx-config')
+    if (!res.ok) return
+    const cfg = await res.json()
+    if (cfg.org)       document.getElementById('cfg-org').value       = cfg.org
+    if (cfg.dept)      document.getElementById('cfg-dept').value      = cfg.dept
+    if (cfg.inspector) document.getElementById('cfg-inspector').value = cfg.inspector
+    if (cfg.project)   document.getElementById('cfg-project').value   = cfg.project
+  } catch(_) {}
+}
+
+async function savePptxConfig() {
+  const cfg = {
+    org:       document.getElementById('cfg-org').value.trim(),
+    dept:      document.getElementById('cfg-dept').value.trim(),
+    inspector: document.getElementById('cfg-inspector').value.trim(),
+    project:   document.getElementById('cfg-project').value.trim(),
+  }
+  try {
+    await fetch('/api/pptx-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg)
+    })
+    const msg = document.getElementById('cfg-save-msg')
+    msg.classList.remove('hidden')
+    setTimeout(() => msg.classList.add('hidden'), 2000)
+  } catch(e) { alert('저장 실패: ' + e.message) }
+}
+
+async function uploadLogo(type, input) {
+  const file = input.files[0]
+  if (!file) return
+  const fd = new FormData()
+  fd.append('logo', file)
+  try {
+    const res = await fetch('/api/pptx-config/logo/' + type, { method: 'POST', body: fd })
+    const data = await res.json()
+    if (data.ok) {
+      // 미리보기 업데이트
+      const preview = document.getElementById('logo-' + type + '-preview')
+      const reader = new FileReader()
+      reader.onload = e => {
+        preview.innerHTML = '<img src="' + e.target.result + '" style="max-width:100%;max-height:100%;object-fit:contain;padding:4px;">'
+      }
+      reader.readAsDataURL(file)
+    } else {
+      alert('로고 업로드 실패')
+    }
+  } catch(e) { alert('업로드 오류: ' + e.message) }
+}
+
+async function loadLogoPreview(type) {
+  try {
+    const res = await fetch('/api/pptx-config/logo/' + type)
+    const data = await res.json()
+    if (data.ok) {
+      const preview = document.getElementById('logo-' + type + '-preview')
+      if (preview) {
+        preview.innerHTML = '<img src="data:' + data.mime + ';base64,' + data.base64 + '" style="max-width:100%;max-height:100%;object-fit:contain;padding:4px;">'
+      }
+    }
+  } catch(_) {}
+}
+
+// 페이지 로드 시 설정값 불러오기
+window.addEventListener('DOMContentLoaded', () => {
+  loadPptxConfig()
+  for (const t of ['hj','nia','solideo']) loadLogoPreview(t)
+})
+
+
+// ── 간편 로그인 (메인) ──
+async function refreshLoginStatus() {
+  try {
+    const d = await fetch('/api/login-status').then(r=>r.json())
+    const btn = document.getElementById('btnLogin')
+    const lbl = document.getElementById('loginLabel')
+    if (!btn) return
+    if (d.active) {
+      lbl.innerHTML = `🟢 로그인됨: ${d.username} (해제)`
+      btn.style.background = '#059669'
+      btn.dataset.active = '1'
+    } else {
+      lbl.textContent = '🔐 간편 로그인 설정'
+      btn.style.background = '#4f46e5'
+      btn.dataset.active = ''
+    }
+  } catch(_) {}
+}
+
+async function setupLogin() {
+  const btn = document.getElementById('btnLogin')
+  if (btn.dataset.active) {
+    if (!confirm('로그인 세션을 해제할까요?')) return
+    await fetch('/api/login-clear', { method:'POST' })
+    refreshLoginStatus()
+    return
+  }
+  const loginUrl = prompt('① 로그인 페이지 URL을 입력하세요\n(아이디/비밀번호 입력칸이 있는 페이지 주소)', 'https://')
+  if (!loginUrl || loginUrl === 'https://') return
+  const username = prompt('② 아이디를 입력하세요')
+  if (!username) return
+  const password = prompt('③ 비밀번호를 입력하세요\n(저장되지 않으며 로그인에만 사용됩니다)')
+  if (!password) return
+
+  const orig = btn.innerHTML
+  btn.disabled = true
+  btn.innerHTML = '⏳ 로그인 중…'
+  try {
+    const r = await fetch('/api/login-setup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ loginUrl, username, password })
+    })
+    const d = await r.json()
+    if (!r.ok || !d.ok) throw new Error(d.error || 'HTTP ' + r.status)
+    alert('✅ 로그인 성공!\n이제 모든 검사가 로그인된 상태로 진행됩니다.')
+  } catch(e) { alert('❌ ' + e.message) }
+  btn.disabled = false
+  btn.innerHTML = orig
+  refreshLoginStatus()
+}
+document.addEventListener('DOMContentLoaded', refreshLoginStatus)
+
+
+// ═══════════════════════════════════════════════════════════
+//  표지 편집기 — 캔버스 960x540px = PPTX 13.333x7.5in @72dpi
+//  (1px = 1/72인치, 텍스트 1pt = 1px → 편집 그대로 출력)
+// ═══════════════════════════════════════════════════════════
+let covItems = []      // { type:'text'|'image', x,y,w,h, ...}
+let covSel = -1        // 선택 인덱스
+let covDrag = null     // 드래그 상태
+
+function covEsc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ── 렌더링: covItems → 캔버스 DOM ──
+function covRender() {
+  const cv = document.getElementById('covCanvas')
+  if (!cv) return
+  cv.innerHTML = ''
+  covItems.forEach((it, i) => {
+    const el = document.createElement('div')
+    el.dataset.idx = i
+    el.style.cssText = `position:absolute;left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px;cursor:move;box-sizing:border-box;` +
+      (i === covSel ? 'outline:2px solid #4f46e5;outline-offset:1px;z-index:5;' : 'outline:1px dashed rgba(148,163,184,.55);')
+    if (it.type === 'text') {
+      el.innerHTML = `<div style="width:100%;height:100%;overflow:hidden;font-family:'NanumGothic','Malgun Gothic',sans-serif;font-size:${it.fontSize}px;font-weight:${it.bold?'700':'400'};color:${it.color};text-align:${it.align};line-height:1.25;white-space:pre-wrap;">${covEsc(it.text)}</div>`
+    } else {
+      el.innerHTML = `<img src="${it.data}" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false">`
+    }
+    // 리사이즈 핸들 (우하단)
+    const h = document.createElement('div')
+    h.className = 'cov-handle'
+    h.style.cssText = 'position:absolute;right:0;bottom:0;width:14px;height:14px;background:#4f46e5;border:2px solid white;border-radius:3px 0 0 0;cursor:nwse-resize;z-index:6;' + (i === covSel ? '' : 'display:none;')
+    el.appendChild(h)
+    cv.appendChild(el)
+  })
+}
+
+// ── 선택 + 속성바 ──
+function covSelect(i) {
+  covSel = i
+  const props = document.getElementById('covProps')
+  const tprops = document.getElementById('covPropText')
+  if (i < 0 || !covItems[i]) { props.classList.add('hidden'); props.classList.remove('flex'); covRender(); return }
+  props.classList.remove('hidden'); props.classList.add('flex')
+  const it = covItems[i]
+  if (it.type === 'text') {
+    tprops.classList.remove('hidden'); tprops.classList.add('flex')
+    document.getElementById('covTxt').value   = it.text
+    document.getElementById('covSize').value  = it.fontSize
+    document.getElementById('covBold').checked = it.bold
+    document.getElementById('covColor').value = it.color
+    document.getElementById('covAlign').value = it.align
+  } else {
+    tprops.classList.add('hidden'); tprops.classList.remove('flex')
+  }
+  covRender()
+}
+
+function covApply() {
+  const it = covItems[covSel]
+  if (!it || it.type !== 'text') return
+  it.text     = document.getElementById('covTxt').value
+  it.fontSize = Math.min(Math.max(parseInt(document.getElementById('covSize').value)||14, 6), 80)
+  it.bold     = document.getElementById('covBold').checked
+  it.color    = document.getElementById('covColor').value
+  it.align    = document.getElementById('covAlign').value
+  covRender()
+}
+
+function covDelete() {
+  if (covSel < 0) return
+  covItems.splice(covSel, 1)
+  covSelect(-1)
+}
+
+// ── 요소 추가 ──
+function covAddText() {
+  covItems.push({ type:'text', x:280, y:240, w:400, h:40, text:'텍스트를 입력하세요', fontSize:18, bold:false, color:'#1e2a3a', align:'center' })
+  covSelect(covItems.length - 1)
+}
+
+function covAddImage(input) {
+  const f = input.files && input.files[0]
+  input.value = ''
+  if (!f) return
+  if (f.size > 3 * 1024 * 1024) { alert('이미지는 3MB 이하만 가능합니다'); return }
+  const rd = new FileReader()
+  rd.onload = () => {
+    const img = new Image()
+    img.onload = () => {
+      // 비율 유지 초기 크기 (최대 폭 220px)
+      const maxW = 220
+      const w = Math.min(img.width, maxW)
+      const h = Math.round(w * img.height / img.width)
+      covItems.push({ type:'image', x:60, y:40, w, h, _ratio: img.width / img.height, data: rd.result })
+      covSelect(covItems.length - 1)
+    }
+    img.src = rd.result
+  }
+  rd.readAsDataURL(f)
+}
+
+// ── 기본 배치 (기존 표지 스타일 재현) ──
+function covLoadDefault() {
+  if (covItems.length && !confirm('현재 배치를 지우고 기본 배치를 불러올까요?')) return
+  covItems = [
+    { type:'text', x:48,  y:62,  w:864, h:24,  text:'{PROJECT}', fontSize:11, bold:false, color:'#1e2a3a', align:'center' },
+    { type:'text', x:48,  y:100, w:864, h:60,  text:'{TITLE}',   fontSize:36, bold:true,  color:'#1e2a3a', align:'center' },
+    { type:'text', x:48,  y:196, w:864, h:24,  text:'{DEPT}',    fontSize:14, bold:false, color:'#1e2a3a', align:'center' },
+    { type:'text', x:48,  y:274, w:864, h:22,  text:'{VERSION}', fontSize:16, bold:false, color:'#555555', align:'center' },
+    { type:'text', x:48,  y:300, w:864, h:22,  text:'{DATE}',    fontSize:16, bold:false, color:'#555555', align:'center' },
+  ]
+  covSelect(-1)
+  alert('기본 배치를 불러왔습니다.\n좌상단에 [＋ 로고 이미지]로 기관 로고를 추가해보세요!')
+}
+
+// ── 드래그 이동 & 리사이즈 (document 위임 — 캔버스 위치와 무관하게 작동) ──
+document.addEventListener('mousedown', (e) => {
+  const cv = document.getElementById('covCanvas')
+  if (!cv || !cv.contains(e.target)) return
+  const handle = e.target.closest('.cov-handle')
+  const box = e.target.closest('[data-idx]')
+  if (!box) { covSelect(-1); return }
+  const idx = parseInt(box.dataset.idx)
+  if (covSel !== idx) covSelect(idx)
+  const it = covItems[idx]
+  const rect = cv.getBoundingClientRect()
+  covDrag = {
+    idx, mode: handle ? 'resize' : 'move',
+    sx: e.clientX, sy: e.clientY,
+    ox: it.x, oy: it.y, ow: it.w, oh: it.h,
+    scale: rect.width / 960,
+  }
+  e.preventDefault()
+})
+
+document.addEventListener('mousemove', (e) => {
+  if (!covDrag) return
+  const it = covItems[covDrag.idx]
+  if (!it) { covDrag = null; return }
+  const dx = (e.clientX - covDrag.sx) / covDrag.scale
+  const dy = (e.clientY - covDrag.sy) / covDrag.scale
+  if (covDrag.mode === 'move') {
+    it.x = Math.round(Math.min(Math.max(covDrag.ox + dx, -it.w + 20), 940))
+    it.y = Math.round(Math.min(Math.max(covDrag.oy + dy, -it.h + 20), 520))
+  } else {
+    let nw = Math.max(covDrag.ow + dx, 24)
+    let nh = Math.max(covDrag.oh + dy, 14)
+    if (it.type === 'image' && it._ratio) nh = nw / it._ratio
+    it.w = Math.round(nw); it.h = Math.round(nh)
+  }
+  covRender()
+})
+
+document.addEventListener('mouseup', () => { covDrag = null })
+
+// ── 저장 / 불러오기 ──
+async function covSave() {
+  try {
+    const enabled = document.getElementById('coverEnabled').checked
+    const items = covItems.map(({_ratio, ...it}) => it)   // 내부 필드 제외
+    const r = await fetch('/api/cover-layout', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ enabled, items })
+    })
+    const d = await r.json()
+    if (!r.ok || !d.ok) throw new Error(d.error || 'HTTP ' + r.status)
+    alert(`✅ 표지가 저장되었습니다 (요소 ${d.count}개)\n` + (enabled ? '이제 모든 PPTX 결과서가 이 표지로 생성됩니다.' : '※ "커스텀 표지 사용"이 꺼져 있어 기본 표지가 사용됩니다.'))
+  } catch(e) { alert('❌ 저장 실패: ' + e.message) }
+}
+
+async function covLoad() {
+  try {
+    const d = await fetch('/api/cover-layout').then(r => r.json())
+    covItems = (d.items || []).map(it => {
+      if (it.type === 'image') it._ratio = it.w / it.h
+      return it
+    })
+    document.getElementById('coverEnabled').checked = !!d.enabled
+    covRender()
+  } catch(_) {}
+}
+document.addEventListener('DOMContentLoaded', covLoad)
+
+</script>
+
+<!-- ═══ 검사 기준 안내 모달 ═══ -->
+<div id="guideModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;padding:20px;"
+  onclick="if(event.target===this)closeGuideModal()">
+  <div style="background:white;border-radius:16px;max-width:760px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(44,54,116,0.18);">
+    <!-- 모달 헤더 -->
+    <div style="background:#222;color:white;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="white" stroke-width="1.5"/><path d="M10 9v5M10 7v.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span style="font-size:1rem;font-weight:800;">검사 도구 기준 안내</span>
+      </div>
+      <button onclick="closeGuideModal()"
+        style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">&times;</button>
+    </div>
+    <!-- 모달 본문 -->
+    <div style="overflow-y:auto;padding:24px;font-size:0.83rem;color:#374151;line-height:1.7;">
+
+      <!-- WCAG 접근성 -->
+      <div style="margin-bottom:22px;padding:16px;border:1px solid #e2e6ef;border-radius:10px;border-left:4px solid #3666e4;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:#eff6ff;color:#3666e4;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:700;">WCAG 접근성</span>
+          <span style="font-weight:700;color:#1e2a3a;">W3C WCAG 2.1 국제 표준 기반</span>
+        </div>
+        <p>웹 콘텐츠 접근성 지침(WCAG 2.1)은 W3C가 제정한 국제 표준으로, 장애가 있는 사용자도 웹을 동등하게 이용할 수 있도록 보장합니다.</p>
+        <ul style="margin:8px 0 8px 16px;list-style:disc;color:#4b5563;">
+          <li><b>검사 엔진:</b> axe-core v4 (Deque Systems 개발, 업계 표준 오픈소스)</li>
+          <li><b>준수 수준:</b> Level A (최소) / Level AA (권장·법적 기준) / Level AAA (최고)</li>
+          <li><b>주요 항목:</b> 이미지 대체텍스트, 키보드 접근성, 색상 대비, 폼 레이블, 제목 구조, 동영상 자막 등 50여 개 규칙 자동 검사</li>
+          <li><b>검사 방식:</b> Chromium 브라우저로 페이지를 완전 렌더링 후 DOM 분석</li>
+        </ul>
+        <a href="https://www.w3.org/TR/WCAG21/" target="_blank" style="color:#3666e4;font-size:0.75rem;">→ W3C WCAG 2.1 공식 문서</a>
+        &nbsp;
+        <a href="https://www.deque.com/axe/" target="_blank" style="color:#3666e4;font-size:0.75rem;">→ axe-core 공식 사이트</a>
+      </div>
+
+      <!-- 링크 검사 -->
+      <div style="margin-bottom:22px;padding:16px;border:1px solid #e2e6ef;border-radius:10px;border-left:4px solid #f59e0b;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:#fffbeb;color:#b45309;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:700;">링크 검사</span>
+          <span style="font-weight:700;color:#1e2a3a;">HTTP 상태코드 기반 데드링크 탐지</span>
+        </div>
+        <p>페이지 내 모든 <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;">&lt;a href&gt;</code> 링크를 추출하여 실제 요청을 보내 응답 상태를 확인합니다.</p>
+        <ul style="margin:8px 0 8px 16px;list-style:disc;color:#4b5563;">
+          <li><b>데드링크:</b> 404 Not Found, 410 Gone, 500 Server Error 등 오류 응답</li>
+          <li><b>리다이렉트:</b> 301/302 영구·임시 이동 여부 확인</li>
+          <li><b>W3C Link Checker 옵션:</b> W3C 공식 Link Checker API(validator.w3.org/checklink)를 추가 연동하여 더 정밀한 검사 수행</li>
+          <li><b>제외 항목:</b> javascript:, mailto:, tel: 등 비HTTP 링크</li>
+        </ul>
+        <a href="https://validator.w3.org/checklink" target="_blank" style="color:#3666e4;font-size:0.75rem;">→ W3C Link Checker 공식 페이지</a>
+      </div>
+
+      <!-- 오탈자 검사 -->
+      <div style="margin-bottom:22px;padding:16px;border:1px solid #e2e6ef;border-radius:10px;border-left:4px solid #8b5cf6;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:#f5f3ff;color:#7c3aed;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:700;">오탈자 검사</span>
+          <span style="font-weight:700;color:#1e2a3a;">Daum 맞춤법 검사기 API 기반</span>
+        </div>
+        <p>페이지의 텍스트 콘텐츠를 추출하여 Daum 맞춤법 검사기 API에 전송, 한국어 오탈자·맞춤법 오류를 검출합니다.</p>
+        <ul style="margin:8px 0 8px 16px;list-style:disc;color:#4b5563;">
+          <li><b>검사 API:</b> Daum 맞춤법 검사기 (dic.daum.net) — 국내 최대 규모 한국어 사전 기반</li>
+          <li><b>검출 항목:</b> 철자 오류, 띄어쓰기, 문장 부호, 표준어 오류</li>
+          <li><b>오프라인 폴백:</b> Daum 서버 연결 실패 시 내장 패턴(되요→돼요 등 20여 개)으로 자동 전환</li>
+          <li><b>제한:</b> 전문 용어·고유명사·약어 등은 오탐(False Positive) 가능</li>
+        </ul>
+      </div>
+
+      <!-- W3C 마크업 검사 -->
+      <div style="margin-bottom:22px;padding:16px;border:1px solid #e2e6ef;border-radius:10px;border-left:4px solid #3b82f6;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:#eff6ff;color:#1d4ed8;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:700;">W3C 마크업</span>
+          <span style="font-weight:700;color:#1e2a3a;">W3C HTML Validator 공식 API 연동</span>
+        </div>
+        <p>W3C 공식 마크업 검증 서비스(validator.w3.org)에 페이지 HTML을 전송하여 HTML5 표준 준수 여부를 검사합니다.</p>
+        <ul style="margin:8px 0 8px 16px;list-style:disc;color:#4b5563;">
+          <li><b>검사 기준:</b> HTML5 (W3C Recommendation) 명세 준수 여부</li>
+          <li><b>검출 항목:</b> 잘못된 태그 중첩, 필수 속성 누락, 폐기된 요소 사용, 문서 구조 오류</li>
+          <li><b>오류 등급:</b> Error(반드시 수정) / Warning(권장 수정)으로 구분</li>
+          <li><b>검사 서버:</b> validator.w3.org (W3C 공식 서버, 외부 인터넷 연결 필요)</li>
+        </ul>
+        <a href="https://validator.w3.org/" target="_blank" style="color:#3666e4;font-size:0.75rem;">→ W3C Markup Validation Service</a>
+      </div>
+
+      <!-- KRDS 검사 -->
+      <div style="padding:16px;border:1px solid #e2e6ef;border-radius:10px;border-left:4px solid #f43f5e;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="background:#fff1f2;color:#be123c;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:700;">KRDS 검사</span>
+          <span style="font-weight:700;color:#1e2a3a;">한국 디지털 서비스 표준 (행정안전부)</span>
+        </div>
+        <p>행정안전부가 고시한 한국 디지털 서비스 표준(KRDS)에 따라 전자정부 웹사이트의 UI·UX 준수 여부를 자동으로 검사합니다.</p>
+        <ul style="margin:8px 0 8px 16px;list-style:disc;color:#4b5563;">
+          <li><b>검사 기준:</b> 행정안전부 KRDS 가이드라인 (krds.e-gov.go.kr)</li>
+          <li><b>자동 검사 항목 (24개):</b> lang 속성, title 태그, viewport, 건너뛰기 링크, 공식 전자정부 배너, header/footer/main 구조, h1 태그, 이미지 alt, 폼 레이블, 개인정보처리방침 링크, 저작권 표시 등</li>
+          <li><b>검사 방식:</b> Chromium으로 렌더링된 DOM을 JavaScript로 분석</li>
+          <li><b>한계:</b> 시각적 디자인·색상 대비·사용자 테스트가 필요한 항목은 자동화 불가 — 수동 검토 병행 권장</li>
+          <li><b>규칙 커스터마이징:</b> krds-rules.json 파일 수정으로 항목 추가·비활성화 가능</li>
+        </ul>
+        <a href="https://www.krds.go.kr" target="_blank" style="color:#3666e4;font-size:0.75rem;">→ KRDS 공식 사이트 (행정안전부)</a>
+      </div>
+
+    </div>
+    <!-- 모달 하단 -->
+    <div style="padding:14px 24px;border-top:1px solid #e2e6ef;text-align:right;flex-shrink:0;background:#f9fafb;">
+      <button onclick="closeGuideModal()"
+        style="background:#222;color:white;border:none;padding:9px 24px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;">
+        닫기
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="fls"><a href="/criteria.html" class="fl">검사 기준</a><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span><span>가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS</span><span><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span></div></footer>
+<script>/* pptx-config-open */ (function(){ const open = () => { if (location.hash !== "#pptx-config") return; const d = document.querySelector("#pptxConfigSection details"); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({ behavior: "smooth", block: "start" }), 200) } }; open(); window.addEventListener("hashchange", open) })()</script>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>
+
+    

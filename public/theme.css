@@ -1,0 +1,156 @@
+/* ============================================================
+   가디언즈 공통 테마 — KREAM 문법 (흰 배경 · 검정 글자 · 구분선)
+   Tailwind 유틸리티 위에 덮어씌워 6개 화면의 색·형태를 통일합니다.
+   ============================================================ */
+:root{--ink:#222;--paper:#fff;--line:#ebebeb;--muted:#8c8c8c;--soft:#f4f4f4;--bad:#ef6253;--good:#41b979;--warn:#f0a34d}
+
+html{overflow-y:scroll}
+html,body{background:#fff!important;color:var(--ink)!important;
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic","맑은 고딕",sans-serif!important;letter-spacing:-.01em}
+body{min-height:100vh;line-height:1.5;margin:0}
+.g-top-in,.g-brand,.g-brand small,.g-gnb,.g-gnb a,.g-title h1,.g-title p{line-height:1.5}
+
+/* ── 새 상단바 (각 페이지에 삽입됨) ── */
+.g-top{border-bottom:1px solid var(--line);background:#fff}
+.g-top-in,.g-title,.g-foot-in,main,.max-w-6xl,.max-w-7xl{box-sizing:border-box!important}
+.g-top-in{max-width:1180px;margin:0 auto;padding:0 40px;height:68px;display:flex;align-items:center;justify-content:space-between}
+.g-brand{font-size:22px;font-weight:800;letter-spacing:-.04em;color:var(--ink);text-decoration:none}
+.g-brand small{font-size:13px;font-weight:500;color:var(--muted);margin-left:8px;letter-spacing:0}
+.g-gnb{display:flex;gap:28px;font-size:15px}
+.g-gnb a{color:var(--muted);text-decoration:none} .g-gnb a:hover,.g-gnb a.on{color:var(--ink)}
+.g-title{max-width:1180px;margin:0 auto;padding:44px 40px 8px}
+.g-title h1{font-size:38px;font-weight:800;letter-spacing:-.04em;line-height:1.2;color:var(--ink);margin:0}
+.g-title p{margin:12px 0 0;font-size:17px;color:var(--muted)}
+@media (max-width:760px){.g-top-in,.g-title{padding-left:20px;padding-right:20px}.g-gnb{gap:14px;font-size:13px}.g-title h1{font-size:30px}}
+
+/* ── 본문 폭을 상단바와 맞춤 ── */
+.max-w-6xl,.max-w-7xl,.max-w-5xl{max-width:1180px!important;padding-left:40px!important;padding-right:40px!important;box-sizing:border-box}
+@media (max-width:760px){.max-w-6xl,.max-w-7xl,.max-w-5xl{padding-left:20px!important;padding-right:20px!important}}
+
+/* ── 색 배경 박스 → 흰색 + 구분선 ── */
+[class*="bg-emerald-50"],[class*="bg-blue-50"],[class*="bg-indigo-50"],[class*="bg-slate-50"],[class*="bg-teal-50"],
+[class*="bg-sky-50"],[class*="bg-violet-50"],[class*="bg-purple-50"],[class*="bg-orange-50"],[class*="bg-amber-50"],
+[class*="bg-cyan-50"],[class*="bg-rose-50"],[class*="bg-gray-50"],[class*="bg-slate-100"],[class*="bg-gray-100"]{background:#fff!important}
+[class*="bg-emerald-100"],[class*="bg-blue-100"],[class*="bg-indigo-100"],[class*="bg-teal-100"],[class*="bg-sky-100"]{background:var(--soft)!important}
+[class*="border-emerald-"],[class*="border-blue-"],[class*="border-indigo-"],[class*="border-teal-"],[class*="border-sky-"],
+[class*="border-slate-"],[class*="border-gray-"],[class*="border-violet-"],[class*="border-purple-"],[class*="border-orange-"],[class*="border-amber-"],[class*="border-cyan-"]{border-color:var(--line)!important}
+.bg-white{background:#fff!important}
+
+/* ── 둥근 정도·그림자 통일 ── */
+.rounded-2xl,.rounded-xl,.rounded-lg{border-radius:10px!important}
+[class*="shadow"]{box-shadow:none!important}
+
+/* ── 색 글자 → 먹/보조 ── */
+[class*="text-emerald-"],[class*="text-blue-"],[class*="text-indigo-"],[class*="text-teal-"],[class*="text-sky-"],
+[class*="text-violet-"],[class*="text-purple-"],[class*="text-cyan-"]{color:var(--ink)!important}
+[class*="text-slate-4"],[class*="text-slate-5"],[class*="text-gray-4"],[class*="text-gray-5"]{color:var(--muted)!important}
+[class*="text-slate-6"],[class*="text-slate-7"],[class*="text-slate-8"],[class*="text-gray-6"],[class*="text-gray-7"],[class*="text-gray-8"]{color:var(--ink)!important}
+/* 상태색은 KREAM 빨강/초록/주황으로만 */
+[class*="text-red-"],[class*="text-rose-"]{color:var(--bad)!important}
+[class*="text-green-"]{color:var(--good)!important}
+[class*="text-orange-"],[class*="text-amber-"],[class*="text-yellow-"]{color:var(--warn)!important}
+[class*="bg-red-1"],[class*="bg-red-50"],[class*="bg-rose-"]{background:#fff5f4!important;border-color:#f7c9c3!important}
+[class*="bg-green-1"],[class*="bg-green-50"]{background:#f1faf5!important;border-color:#bfe8d0!important}
+[class*="bg-orange-1"],[class*="bg-amber-1"],[class*="bg-yellow-1"],[class*="bg-yellow-50"]{background:#fff8ef!important;border-color:#f6dcb8!important}
+
+/* ── 버튼: 채운 색 버튼은 전부 검정, 나머지는 흰 테두리 ── */
+button[class*="bg-emerald-"],button[class*="bg-blue-"],button[class*="bg-indigo-"],button[class*="bg-teal-"],button[class*="bg-slate-7"],button[class*="bg-slate-8"],
+button[class*="bg-sky-"],button[class*="bg-violet-"],button[class*="bg-purple-"],button[class*="bg-cyan-"],button[class*="bg-gray-7"],button[class*="bg-gray-8"],
+a[class*="bg-emerald-"],a[class*="bg-blue-"],a[class*="bg-indigo-"],a[class*="bg-teal-"],a[class*="bg-slate-7"],a[class*="bg-slate-8"],
+button[class*="bg-orange-"],button[class*="bg-amber-"],button[class*="bg-rose-"],button[class*="bg-red-6"],button[class*="bg-red-7"],button[class*="bg-green-6"],button[class*="bg-green-7"],
+button[style*="background:#"],button[style*="background: #"]{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important;border-radius:10px!important;font-weight:600!important;box-shadow:none!important}
+button[class*="bg-emerald-"]:hover,button[class*="bg-blue-"]:hover,button[class*="bg-indigo-"]:hover,button[class*="bg-teal-"]:hover,button[class*="bg-slate-7"]:hover{background:#000!important}
+button[class*="bg-slate-1"],button[class*="bg-slate-2"],button[class*="bg-gray-1"],button[class*="bg-gray-2"],button[class*="bg-white"],
+button[class*="bg-emerald-50"],button[class*="bg-blue-50"],button[class*="bg-indigo-50"],button[class*="bg-green-50"],button[class*="bg-orange-50"],button[class*="bg-red-50"]{
+  background:#fff!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-radius:10px!important;font-weight:600!important}
+button[class*="bg-slate-1"]:hover,button[class*="bg-white"]:hover{border-color:var(--ink)!important}
+button:disabled{opacity:.45}
+
+/* ── 입력 요소 ── */
+input[type="text"],input[type="url"],input[type="number"],input[type="password"],input[type="email"],textarea,select{
+  border:1px solid var(--line)!important;border-radius:8px!important;background:#fff!important;color:var(--ink)!important;box-shadow:none!important}
+input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(--ink)!important;box-shadow:none!important}
+input[type="checkbox"],input[type="radio"]{accent-color:var(--ink)!important}
+[class*="ring-"]{--tw-ring-color:var(--ink)!important}
+[class*="has-\\[\\:checked\\]"]:has(:checked){box-shadow:0 0 0 1.5px var(--ink) inset!important}
+
+/* ── 아이콘: 색 제거, 크기 절제 ── */
+i.fas,i.far,i.fab{color:inherit!important;opacity:.7}
+button i.fas,button i.far{opacity:.85}
+
+/* ── 배지/태그 ── */
+.url-tag,[class*="rounded-full"]{border-radius:999px!important}
+[class*="bg-slate-2"][class*="rounded"],[class*="bg-gray-2"][class*="rounded"]{background:var(--soft)!important}
+
+/* ── 표 ── */
+table{border-color:var(--line)!important} th{background:#fff!important;color:var(--muted)!important;font-weight:600!important;border-bottom:1px solid var(--line)!important}
+td{border-color:var(--line)!important}
+tbody tr:hover{background:var(--soft)!important}
+
+/* ── 진행바 ── */
+[class*="bg-emerald-5"][class*="h-"],[class*="bg-blue-5"][class*="h-"],[class*="bg-indigo-5"][class*="h-"],[class*="bg-blue-6"][class*="h-"]{background:var(--ink)!important}
+
+/* ── 푸터 ── */
+.g-foot{border-top:1px solid var(--line);margin-top:80px}
+.g-foot-in{max-width:1180px;margin:0 auto;padding:28px 40px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+
+/* 동적 클래스(JS로 토글되는 활성 버튼) */
+.bg-blue-600,.bg-blue-700,.bg-emerald-600,.bg-indigo-600,.cat-btn.bg-blue-600{background:var(--ink)!important;color:#fff!important}
+.bg-blue-50,button.bg-blue-50{background:var(--soft)!important;color:var(--ink)!important}
+.bg-gray-100,.bg-gray-200{background:var(--soft)!important;color:var(--ink)!important}
+
+/* 페이지별 활성 탭/방식 버튼 */
+.input-tab-btn.active,.method-btn.active,.mode-btn.active{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important}
+.input-tab-btn,.method-btn,.mode-btn{background:#fff!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-radius:10px!important}
+/* 아이콘은 먹색 60% 로 통일 (인라인 색 포함) */
+i[class*="fa-"]{color:var(--ink)!important;opacity:.6}
+button i[class*="fa-"]{color:inherit!important;opacity:.9}
+
+
+
+/* ── 푸터 (통일) ── */
+.g-foot{border-top:1px solid var(--line);margin-top:80px}
+.g-foot-in{max-width:1180px;margin:0 auto;padding:26px 40px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;box-sizing:border-box}
+.g-foot-in .co{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.co-logo{height:14px;width:auto;vertical-align:-2px}
+.fls{display:inline-flex;align-items:center;gap:12px;white-space:nowrap} .fls .fl{color:var(--muted);text-decoration:none} .fls .fl:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px} .fls .sep{color:var(--line)}
+/* ── 상단 메뉴: 햄버거 (900px 이하) ── */
+.g-burger{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;align-items:center;justify-content:center;padding:0}
+.g-burger span{display:block;width:18px;height:2px;background:var(--ink);position:relative} .g-burger span::before,.g-burger span::after{content:"";position:absolute;left:0;width:18px;height:2px;background:var(--ink)} .g-burger span::before{top:-6px} .g-burger span::after{top:6px}
+@media (max-width:900px){
+  .g-top-in{padding:0 20px;height:60px}
+  .g-burger{display:inline-flex}
+  .g-gnb{display:none;position:absolute;left:0;right:0;top:60px;background:#fff;border-bottom:1px solid var(--line);flex-direction:column;gap:0;padding:8px 0 12px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+  .g-gnb.open{display:flex}
+  .g-gnb a{padding:12px 24px;font-size:16px}
+  .g-top{position:relative}
+  .g-foot-in{padding:22px 20px;flex-direction:column;align-items:flex-start;gap:10px}
+  .net,.ai-link{display:none!important}
+}
+
+/* 모바일 폭에서 넘치는 요소 보정 */
+@media (max-width:900px){ .max-w-6xl,.max-w-7xl,.max-w-5xl,.max-w-2xl{padding-left:16px!important;padding-right:16px!important} table{display:block;overflow-x:auto} .grid{grid-template-columns:1fr!important} img,pre{max-width:100%} }
+@media (max-width:900px){ .rg{grid-template-columns:1fr!important} .rg4{grid-template-columns:1fr 1fr!important} }
+
+/* ── 더보기 드롭다운 ── */
+.g-more{position:relative;display:flex;align-items:center}
+.g-more-btn{background:none;border:0;font:inherit;font-size:15px;color:var(--muted);cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:6px} .g-more-btn i{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px)} .g-more-btn:hover,.g-more.on .g-more-btn{color:var(--ink)} .g-more.on .g-more-btn{font-weight:600}
+.g-more-menu{display:none;position:absolute;top:calc(100% + 14px);right:0;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,.08);z-index:50}
+.g-more.open .g-more-menu{display:block}
+.g-more-menu a{display:block;padding:10px 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;line-height:1.3} .g-more-menu a:hover{background:var(--soft)} .g-more-menu a.on{background:var(--soft)} .g-more-menu a small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);margin-top:2px}
+@media (max-width:900px){ .g-more{display:block} .g-more-btn{display:none} .g-more-menu{display:block;position:static;border:0;box-shadow:none;padding:0;min-width:0;border-top:1px solid var(--line);margin-top:6px;padding-top:6px} .g-more-menu a{padding:12px 24px;font-size:16px} }
+
+/* ── 로고 옆 공통 배지 (망 상태 · AI) ── */
+.g-badges{display:inline-flex;align-items:center;gap:14px;margin-left:18px;margin-right:auto}
+.g-net{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap} .g-net i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block} .g-net.off i{background:var(--warn)} .g-net em{font-style:normal}
+.g-ai{font-size:12.5px;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap} .g-ai i{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block} .g-ai.on i{background:var(--ink)} .g-ai.on{color:var(--ink)} .g-ai:hover{color:var(--ink)} .g-ai.hidden{display:none}
+.g-gnb{margin-left:0}
+@media (max-width:900px){ .g-badges{margin-left:10px;gap:10px} .g-net em{display:none} .g-ai{font-size:12px} }
+
+/* KRDS 기준 변경 표시등 — 2초 주기의 부드러운 깜빡임(초당 3회 미만), 움직임 줄이기 설정 시 정지 */
+.g-kw{font-size:12.5px;color:#b54708;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.g-kw[hidden]{display:none}
+.g-kw i{width:8px;height:8px;border-radius:50%;background:#f79009;animation:gkw 2s ease-in-out infinite}
+@keyframes gkw{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(247,144,9,.55)}50%{opacity:.35;box-shadow:0 0 0 6px rgba(247,144,9,0)}}
+@media (prefers-reduced-motion:reduce){.g-kw i{animation:none}}
+@media (max-width:900px){.g-kw em{display:none}}

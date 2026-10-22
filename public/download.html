@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>다운로드 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main{max-width:1180px;margin:0 auto;padding:0 40px 120px}
+  .ver{font-size:13px;color:var(--muted);margin-top:24px}
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:20px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:26px 28px;display:flex;flex-direction:column;gap:10px}
+  .card h2{font-size:19px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+  .card h2 .tag{font-size:11px;font-weight:700;color:var(--muted);background:var(--soft);padding:2px 8px;border-radius:4px}
+  .card p{margin:0;font-size:14px;color:#555;line-height:1.6}
+  .card .meta{font-size:12.5px;color:var(--muted)}
+  .card .how{font-size:12.5px;color:var(--muted);line-height:1.6;padding-top:8px;border-top:1px solid var(--line)}
+  .dl{margin-top:6px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--ink);color:#fff;font-size:15px;font-weight:600;text-decoration:none}
+  .dl:hover{opacity:.9} .dl.off{background:var(--line);color:#bdbdbd;pointer-events:none}
+  .note{margin-top:34px;border:1px solid var(--line);border-radius:14px;padding:22px 26px;font-size:14px;line-height:1.7}
+  .note h3{font-size:16px;margin:0 0 8px} .note table{width:100%;border-collapse:collapse;font-size:13.5px} .note td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top} .note td:first-child{color:var(--muted);width:160px;white-space:nowrap}
+  .docs{margin-top:34px} .docs h2{font-size:20px;font-weight:700;margin:0 0 4px} .docs .sub{font-size:13px;color:var(--muted);margin:0 0 14px}
+  .doclist{border:1px solid var(--line);border-radius:14px;overflow:hidden} .doc{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)} .doc:last-child{border-bottom:0}
+  .doc .ic{width:40px;height:40px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#555;letter-spacing:.02em} .doc .nm{font-size:15px;font-weight:600} .doc .mt{font-size:12px;color:var(--muted);margin-top:2px}
+  .doc .act{display:flex;gap:8px} .doc .act a{height:36px;padding:0 14px;display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;color:var(--ink)} .doc .act a.dark{background:var(--ink);color:#fff;border-color:var(--ink)} .doc .act a:hover{border-color:var(--ink)}
+  .web{margin-top:20px;padding:18px 22px;background:var(--soft);border-radius:12px;font-size:14px;line-height:1.6} .web a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-weight:600}
+  @media (max-width:900px){.cards{grid-template-columns:1fr}main{padding:0 20px 80px}}
+</style>
+</head>
+<body>
+<header class="g-top"><div class="g-top-in">
+  <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+  <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more on"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html" class="on">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+</div></header>
+<div class="g-title"><h1>다운로드</h1><p>설치 프로그램 · ZIP판 · Chrome 확장. 이 페이지는 서버에 올라간 최신 파일을 자동으로 보여줍니다.</p></div>
+
+<main>
+  <div class="ver" id="ver">목록을 불러오는 중…</div>
+  <div class="cards" id="cards"></div>
+  <div class="web" id="web" style="display:none"></div>
+  <div class="docs" id="docs" style="display:none"><h2>발표 · 문서 자료</h2><p class="sub">회의실에서 함께 보는 자료입니다. 서버 downloads 폴더에 올린 문서는 여기에 자동으로 나타납니다.</p><div class="doclist" id="doclist"></div></div>
+
+  <div class="note">
+    <h3>무엇을 받을까요?</h3>
+    <table>
+      <tr><td>일반 담당자</td><td><b>Windows 설치 프로그램</b> — 설치 한 번이면 끝. 행정망(폐쇄망) PC에서도 동작</td></tr>
+      <tr><td>설치 권한이 없는 PC</td><td><b>ZIP판</b> — 압축 풀고 START.bat</td></tr>
+      <tr><td>개발자 · 수시 점검</td><td><b>Chrome 확장</b> — 보고 있는 페이지를 옆 패널에서 바로 검사, F12 개발자 도구와 연동</td></tr>
+      <tr><td>팀 공용 웹</td><td>이 사이트 자체. 설치 없이 주소만 열면 됩니다 (내부망 주소 검사는 설치형으로)</td></tr>
+    </table>
+  </div>
+</main>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="co"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+<script src="/lib/nav.js" defer></script>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const mb = n => n == null ? '' : (n >= 1048576 ? (n/1048576).toFixed(1) + ' MB' : Math.round(n/1024) + ' KB')
+fetch('/api/downloads').then(r => r.json()).then(d => {
+  document.getElementById('ver').textContent = `현재 서비스 버전 v${d.version} · ${d.items.some(i => i.file) ? '파일 ' + d.items.filter(i => i.file).length + '종' : '이 설치본에는 다운로드 파일이 없습니다'}`
+  document.getElementById('cards').innerHTML = d.items.filter(i => i.key !== 'server' || i.file).map(i => `
+    <div class="card"><h2>${esc(i.name)}${i.version ? `<span class="tag">v${esc(i.version)}</span>` : ''}</h2>
+      <p>${esc(i.desc)}</p>
+      <div class="meta">${i.file ? `${esc(i.file)} · ${mb(i.size)} · ${new Date(i.mtime).toLocaleDateString('ko-KR')}` : '아직 올라오지 않았습니다'}</div>
+      <a class="dl ${i.file ? '' : 'off'}" href="${i.url || '#'}" ${i.file ? 'download' : ''}>${i.file ? '내려받기' : '준비 중'}</a>
+      <div class="how">${esc(i.how)}</div></div>`).join('')
+  if (d.extras && d.extras.length) { const box = document.getElementById('docs'); box.style.display = 'block'; document.getElementById('doclist').innerHTML = d.extras.map(x => `<div class="doc"><div class="ic">${esc(x.kind.toUpperCase())}</div><div><div class="nm">${esc(x.label || x.file.replace(/\.[^.]+$/, ''))}</div><div class="mt">${esc(x.kind.toUpperCase())} · ${mb(x.size)} · ${new Date(x.mtime).toLocaleString('ko-KR', { dateStyle:'medium', timeStyle:'short' })}</div></div><div class="act">${/pdf|mp4|png|jpg/.test(x.kind) ? `<a href="${x.url}" target="_blank" rel="noopener">바로 보기</a>` : ''}<a class="dark" href="${x.url}" download>내려받기</a></div></div>`).join('') }
+  if (!d.public && !d.items.some(i => i.file)) { const w = document.getElementById('web'); w.style.display = 'block'; w.innerHTML = d.web ? `설치형에서는 파일을 직접 제공하지 않습니다. 팀 웹 서비스 <a href="${esc(d.web)}/download.html" target="_blank" rel="noopener">${esc(d.web)}</a>에서 받으세요.` : '설치형에서는 파일을 직접 제공하지 않습니다. 팀 웹 서비스의 다운로드 페이지에서 받으세요.' }
+}).catch(() => document.getElementById('ver').textContent = '목록을 불러오지 못했습니다')
+</script>
+</body>
+</html>

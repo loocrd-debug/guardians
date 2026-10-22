@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><style>
+  :root{--ink:#222;--line:#ebebeb;--muted:#8c8c8c;--soft:#f4f4f4;--bad:#ef6253;--good:#41b979;--warn:#f0a34d}
+  body{margin:0;font-family:Pretendard,-apple-system,"Malgun Gothic",sans-serif;font-size:12.5px;color:var(--ink);background:#fff}
+  .top{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .top b{font-size:14px} .top span{color:var(--muted)}
+  button{font:inherit;cursor:pointer} .run{height:30px;padding:0 12px;background:var(--ink);color:#fff;border:0;border-radius:6px;font-weight:600}
+  .list{padding:0 14px}
+  .v{display:grid;grid-template-columns:44px 1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+  .lv{font-size:11px;font-weight:700} .lv.critical,.lv.serious{color:var(--bad)} .lv.moderate{color:var(--warn)} .lv.minor{color:var(--muted)}
+  .t{font-weight:600} .d{color:var(--muted);margin-top:2px;font-size:11.5px} .sel{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#444;margin-top:3px;word-break:break-all}
+  pre{margin:6px 0 0;padding:6px 8px;background:#f1faf5;border:1px solid #bfe8d0;border-radius:5px;font:11px/1.45 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+  .ins{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-weight:600;white-space:nowrap} .ins:hover{border-color:var(--ink)}
+  .empty{padding:20px 14px;color:var(--muted)}
+</style></head><body>
+<div class="top"><b>가디언즈</b><span id="st">이 페이지의 접근성 위반을 요소 검사 패널과 연결합니다</span><span style="flex:1"></span><button class="run" id="run">이 페이지 검사</button></div>
+<div class="list" id="list"><div class="empty">"이 페이지 검사"를 누르세요.</div></div>
+<script src="ko.js"></script><script src="kwcag.js"></script><script src="panel.js"></script>
+</body></html>

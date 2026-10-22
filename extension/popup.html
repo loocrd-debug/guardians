@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root{--ink:#222;--line:#ebebeb;--muted:#8c8c8c;--soft:#f4f4f4;--bad:#ef6253;--good:#41b979;--warn:#f0a34d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:400px;font-family:Pretendard,-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;color:var(--ink);background:#fff;font-size:13px;letter-spacing:-.01em}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .brand{font-size:16px;font-weight:800;letter-spacing:-.04em} .brand small{font-size:11px;color:var(--muted);font-weight:500;margin-left:6px;letter-spacing:0}
+  .mode{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .mode label{padding:5px 9px;font-size:11px;color:var(--muted);cursor:pointer} .mode input{display:none} .mode label:has(input:checked){background:var(--ink);color:#fff}
+  .body{padding:16px}
+  .cta{width:100%;height:46px;background:var(--ink);color:#fff;border:0;border-radius:8px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .cta:disabled{background:var(--line);color:#bdbdbd}
+  .url{font-size:11px;color:var(--muted);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .res{display:none} .res.on{display:block}
+  .head{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;padding:6px 0 14px;border-bottom:1px solid var(--line)}
+  .score{font-size:44px;font-weight:800;letter-spacing:-.05em;line-height:1} .score small{font-size:13px;color:var(--muted);font-weight:500;margin-left:3px;letter-spacing:0}
+  .verdict{font-size:14px;font-weight:700} .verdict .bad{color:var(--bad)} .verdict .good{color:var(--good)}
+  .meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6}
+  .stats{display:flex;border-bottom:1px solid var(--line)} .stats div{flex:1;padding:10px 0} .stats b{display:block;font-size:18px;font-weight:800;letter-spacing:-.03em} .stats span{font-size:11px;color:var(--muted)}
+  .stats .g b{color:var(--good)} .stats .b b{color:var(--bad)}
+  .list{max-height:420px;overflow:auto}
+  .vclick{cursor:pointer} .vclick:hover{background:var(--soft);margin:0 -16px;padding-left:16px;padding-right:16px}
+  .v{padding:11px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:44px 1fr;gap:10px}
+  .v .lv{font-size:11px;font-weight:700} .lv.critical,.lv.serious{color:var(--bad)} .lv.moderate{color:var(--warn)} .lv.minor{color:var(--muted)}
+  .v .t{font-size:13px;font-weight:600;line-height:1.35} .v .d{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .kw{display:inline-block;font-size:10px;font-weight:700;background:var(--soft);padding:1px 6px;border-radius:3px;margin-right:5px;vertical-align:1px}
+  .empty{padding:20px 0;color:var(--muted)}
+  .acts{display:flex;gap:8px;margin-top:12px}
+  .btn{flex:1;height:40px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--ink)} .btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .err{color:var(--bad);font-size:12px;margin-top:10px;display:none} .err.on{display:block}
+  .foot{padding:10px 16px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between}
+  .foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">가디언즈<small>빠른 접근성 검사</small></div>
+  <div class="mode" title="검사 깊이">
+    <label><input type="radio" name="mode" value="expert" checked>전체 규칙</label>
+    <label><input type="radio" name="mode" value="simple">핵심 15</label>
+  </div>
+</div>
+<div class="body">
+  <button class="cta" id="run">이 페이지 검사</button>
+  <div class="url" id="url"></div>
+  <div class="err" id="err"></div>
+
+  <div class="res" id="res">
+    <div class="head">
+      <div><div class="score" id="score">—<small>점</small></div></div>
+      <div><div class="verdict" id="verdict"></div><div class="meta" id="meta"></div></div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="list" id="list"></div>
+    <div class="acts">
+      <button class="btn" id="hl">위반 요소 표시</button>
+      <button class="btn dark" id="deep">가디언즈에서 정밀 검사</button>
+    </div>
+    <div class="note">항목을 누르면 페이지에서 그 요소로 이동해 강조하고 수정 제안을 보여줍니다. F12 개발자 도구의 <b>가디언즈</b> 탭에서는 '요소 검사'로 바로 갈 수 있습니다. 이 결과는 브라우저 안에서 axe-core로 즉시 계산한 값입니다. 스크린샷·오탈자·링크·KRDS·보고서(PPTX·Excel)는 가디언즈 도구에서 정밀 검사하세요. 자동 검사로 판정할 수 없는 KWCAG 항목 13개는 사람이 확인해야 합니다.</div>
+  </div>
+</div>
+<div class="foot"><span id="ver">가디언즈 v6.19 · KWCAG 2.2 · WCAG 2.1</span><a href="#" id="crit">검사 기준</a></div>
+<script src="ko.js"></script>
+<script src="kwcag.js"></script>
+<script src="fixes.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

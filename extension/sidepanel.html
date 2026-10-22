@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>가디언즈 — 빠른 품질 검사</title>
+<style>
+  :root{--ink:#222;--muted:#8c8c8c;--line:#ebebeb;--soft:#f4f4f4;--bad:#ef6253;--good:#41b979;--warn:#f0a34d}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif;font-size:13px;color:var(--ink);background:#fff;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .brand{font-size:17px;font-weight:800;letter-spacing:-.03em} .brand small{font-size:11px;font-weight:400;color:var(--muted);margin-left:6px}
+  .gear{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;color:var(--muted);font-size:14px} .gear:hover{border-color:var(--ink);color:var(--ink)}
+  .wrap{flex:1;overflow:auto;padding:16px 16px 20px}
+  .status{font-size:22px;font-weight:800;letter-spacing:-.03em;margin:4px 0 2px} .sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fff;cursor:pointer} .card:hover{border-color:var(--ink)}
+  .bottom{padding:12px 16px 14px;border-top:1px solid var(--line);background:#fff}
+  .bottom .run{margin:0} .bottom .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+  .url{font-size:11px;color:var(--muted);word-break:break-all;margin-bottom:10px;line-height:1.4}
+  .mode{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px} .mode label{flex:1;text-align:center;padding:8px 0;font-size:12px;color:var(--muted);cursor:pointer} .mode input{display:none} .mode label:has(input:checked){background:var(--ink);color:#fff}
+  .run{width:100%;height:46px;border:0;border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer} .run:disabled{background:var(--line);color:#bdbdbd}
+  .auto{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin:8px 0 0} .auto input{accent-color:var(--ink)}
+  .res{display:none;margin-top:18px} .res.on{display:block}
+  .hero{display:flex;align-items:baseline;gap:10px} .score{font-size:40px;font-weight:800;letter-spacing:-.04em;line-height:1} .score small{font-size:13px;font-weight:400;color:var(--muted);margin-left:2px}
+  .verdict{font-size:13px;font-weight:600} .good{color:var(--good)} .bad{color:var(--bad)}
+  .meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:pre-line;line-height:1.4}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;margin:12px 0 4px;overflow:hidden} .stats div{padding:9px 6px;text-align:center;border-right:1px solid var(--line)} .stats div:last-child{border-right:0} .stats b{display:block;font-size:17px;font-weight:800} .stats span{font-size:10.5px;color:var(--muted)} .stats .b b{color:var(--bad)}
+  .tabs{display:flex;border-bottom:1px solid var(--line);margin:16px -16px 12px;padding:0 16px} .tabs button{flex:1;height:38px;border:0;background:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px} .tabs button.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)} .tabs b{font-weight:800} .tabs .bad{color:var(--bad)}
+  .pane{display:none} .pane.on{display:block}
+  .k{display:grid;grid-template-columns:40px 1fr;gap:8px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px} .k .st{font-size:11px;font-weight:700} .st.pass{color:var(--good)} .st.partial{color:var(--warn)} .st.fail{color:var(--bad)} .st.na{color:var(--muted)}
+  .k .n{font-weight:600} .k .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45} .k .e{font-size:11px;color:#555;margin-top:3px;word-break:break-all}
+  .summ{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px} .summ div{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center} .summ b{display:block;font-size:20px;font-weight:800} .summ span{font-size:10.5px;color:var(--muted)}
+  .note{font-size:11px;color:var(--muted);line-height:1.5;margin:4px 0 10px}
+  .sec{font-size:12px;font-weight:700;margin:14px 0 2px;display:flex;justify-content:space-between;align-items:center} .sec span{font-weight:400;color:var(--muted);font-size:11px}
+  .v{display:grid;grid-template-columns:44px 1fr;gap:8px;border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px;cursor:pointer} .v:hover{border-color:var(--ink)}
+  .lv{font-size:11px;font-weight:700;padding-top:2px} .lv.critical,.lv.serious{color:var(--bad)} .lv.moderate{color:var(--warn)} .lv.minor{color:var(--muted)}
+  .t{font-weight:600;line-height:1.35} .kw{display:inline-block;font-size:10px;font-weight:700;background:var(--soft);padding:1px 5px;border-radius:3px;margin-right:5px;vertical-align:1px;color:#555}
+  .d{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45} .d code{font-family:ui-monospace,Consolas,monospace;font-size:10.5px} .d b{color:var(--good)}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px} .acts button,.acts a{height:40px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none;display:flex;align-items:center;justify-content:center} .acts .dark{background:var(--ink);color:#fff;border-color:var(--ink)} .acts button:hover,.acts a:hover{border-color:var(--ink)}
+  .empty{padding:18px 0;color:var(--muted);text-align:center} .err{display:none;margin-top:10px;font-size:12px;color:var(--bad);line-height:1.5} .err.on{display:block}
+  .foot{font-size:10.5px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line);line-height:1.5}
+  .settings{display:none;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:12px} .settings.on{display:block} .settings label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px} .settings input{width:100%;height:36px;padding:0 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px} .settings .row{display:flex;gap:6px;margin-top:8px} .settings button{height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+</style></head>
+<body>
+<div class="top"><div class="brand">가디언즈<small>빠른 품질 검사</small></div><button class="gear" id="gear" title="설정">⚙</button></div>
+<div class="wrap">
+  <div class="status" id="status">대기 중</div>
+  <div class="sub" id="url">검사할 페이지를 열고 아래 버튼을 누르세요.</div>
+  <div class="settings" id="settings"><label for="srv">정밀 검사 서버 (기본: 팀 웹 · 설치형이면 아래 버튼)</label><input id="srv" type="url" placeholder="https://guardians.ai.kr"><div class="row"><button id="srvSave">저장</button><button id="srvLocal">설치형(localhost:3000)</button></div></div>
+  <div class="mode"><label><input type="radio" name="mode" value="expert" checked>전체 규칙</label><label><input type="radio" name="mode" value="simple">핵심 15</label></div>
+  <label class="auto"><input type="checkbox" id="autoRun"> 탭을 바꾸거나 페이지가 바뀌면 자동 검사</label>
+  <div class="err" id="err"></div>
+  <div class="res" id="res">
+    <div class="hero"><div class="score" id="score"></div><div class="verdict" id="verdict"></div></div>
+    <div class="meta" id="meta"></div>
+    <div class="stats" id="stats"></div>
+    <div class="summ" id="summ" style="margin-top:10px"></div>
+    <div class="tabs"><button class="on" data-p="a11y">접근성 <b id="tA"></b></button><button data-p="krds">KRDS <b id="tK"></b></button><button data-p="std">웹표준 <b id="tS"></b></button></div>
+    <div class="pane on" id="pane-a11y"><div class="sec">위반 목록 <span>항목을 누르면 페이지에서 그 요소로 이동</span></div><div id="list"></div></div>
+    <div class="pane" id="pane-krds"><div id="krdsOut"><div class="empty">검사하면 KRDS 정밀 판정 16규칙과 디자인 토큰 11항목이 나옵니다.</div></div></div>
+    <div class="pane" id="pane-std"><div id="stdOut"><div class="empty">검사하면 웹표준 간이 점검이 나옵니다.</div></div></div>
+    <div class="acts"><button id="hl">위반 요소 표시</button><a id="deep" class="dark" href="#" target="_blank">정밀 검사 →</a></div>
+  </div>
+</div>
+<div class="bottom"><button class="run" id="run">이 페이지 검사</button><div class="hint">브라우저 안에서 즉시 계산 · 점수 산식·조항은 가디언즈 도구와 동일 · F12 가디언즈 탭에서 요소 검사</div></div>
+<script src="ko.js"></script><script src="kwcag.js"></script><script src="fixes.js"></script><script src="sidepanel.js"></script>
+</body></html>

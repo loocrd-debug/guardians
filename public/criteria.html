@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>검사 기준 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main{max-width:1180px;margin:0 auto;padding:0 40px 120px}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-top:28px;overflow-x:auto}
+  .tabs button{padding:14px 18px;font-size:15px;color:var(--muted);border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;cursor:pointer;font:inherit}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+  .tabs button:hover{color:var(--ink)}
+  .sec{display:none;padding-top:36px} .sec.on{display:block}
+  .lead{font-size:17px;max-width:760px}
+  .facts{display:grid;grid-template-columns:150px 1fr;gap:12px 24px;margin-top:28px;font-size:14px;max-width:900px}
+  .facts dt{color:var(--muted)} .facts dd{margin:0;color:var(--ink)}
+  .facts dd code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--soft);padding:2px 6px;border-radius:4px}
+  .counts{display:flex;gap:28px;margin-top:36px;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .counts div{display:flex;flex-direction:column} .counts b{font-size:28px;font-weight:800;letter-spacing:-.04em} .counts span{font-size:13px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin-top:28px;font-size:14px}
+  th{text-align:left;padding:12px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
+  td.no{color:var(--muted);width:44px} td.nm{font-weight:600;white-space:nowrap} td.ref{color:var(--muted);white-space:nowrap;font-size:13px}
+  td .note{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+  td .cat{display:block;color:var(--muted);font-size:12px;font-weight:400}
+  .jd{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .jd.auto{background:#f1faf5;color:#2f9a60} .jd.partial{background:#fff8ef;color:#b9771f} .jd.manual{background:var(--soft);color:var(--muted)}
+  .rules{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--muted);display:block;margin-top:4px;word-break:break-all}
+  .limits{margin-top:36px;max-width:900px} .limits h3{font-size:17px;font-weight:700;margin:0 0 10px}
+  .limits li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;color:#444;list-style:none}
+  .limits li::before{content:"—";color:var(--muted);margin-right:10px}
+  .print{margin-top:36px;display:flex;gap:10px}
+  .print button{height:48px;padding:0 22px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+  .print button:hover{border-color:var(--ink)}
+
+  .selftest{margin-top:28px;border:1px solid var(--line);border-radius:12px;padding:22px 24px}
+  .st-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start} .st-head .sub{font-size:13px;color:var(--muted);margin:6px 0 0;max-width:760px}
+  .st-btn{height:44px;padding:0 20px;border:0;border-radius:10px;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap} .st-btn:disabled{background:var(--line);color:#bdbdbd}
+  .st-tbl{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px} .st-tbl th{text-align:left;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line)} .st-tbl td{padding:9px 8px;border-bottom:1px solid var(--line)}
+  .st-ok{color:var(--good);font-weight:700} .st-ng{color:var(--bad);font-weight:700}
+  .st-sum{margin-top:14px;font-size:15px;font-weight:700} .st-sum small{font-weight:400;color:var(--muted);margin-left:8px}
+  @media print{.g-top,.tabs,.print,.g-foot{display:none!important}.sec{display:block!important;page-break-after:always}}
+  @media (max-width:760px){main{padding:0 20px 80px}.facts{grid-template-columns:1fr}.counts{gap:16px}td.nm{white-space:normal}}
+</style>
+</head>
+<body>
+<header class="g-top"><div class="g-top-in">
+  <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+  <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more on"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html" class="on">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+</div></header>
+<div class="g-title"><h1>검사 기준</h1><p>검사마다 무엇을, 어떤 기준으로, 어떻게 판정하는지 정리했습니다. 결과서와 화면은 이 기준을 그대로 따릅니다.</p></div>
+
+<main>
+  <section class="selftest" id="selftest">
+    <div class="st-head">
+      <div><h2 style="font-size:20px;font-weight:700;margin:0">도구 자가 진단</h2>
+        <p class="sub">오류를 일부러 심어 둔 <a href="/selftest.html" target="_blank" style="text-decoration:underline;text-underline-offset:3px">시험 페이지</a>를 지금 검사해, 정답표와 같은 결과가 나오는지 확인합니다. 접근성 5건 · 깨진 링크 1건 · 오탈자 2건 · KRDS 정밀 판정 10건(준수·부분 준수·미준수).</p></div>
+      <button class="st-btn" id="stRun" onclick="reportCheck()">자가 진단 실행</button>
+    </div>
+    <div id="stOut"></div>
+  </section>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="secs"></div>
+</main>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const JD = { true:['auto','자동'], partial:['partial','부분 자동'], false:['manual','수동'] }
+
+// ── 자가 진단: 정답표 대조 ──
+const ST_EXPECT = {
+  a11y: { 'html-has-lang':1, 'image-alt':1, 'button-name':1, 'label':1, 'color-contrast':1 },
+  deadLinks: 1, typos: 2,
+  krds: { 'lang':'fail', 'title':'pass', 'charset':'pass', 'viewport':'fail', 'h1':'pass', 'img-alt':'fail', 'form-label':'fail', 'header':'partial', 'footer':'partial', 'main':'pass' },
+}
+document.getElementById('stRun').onclick = async () => {
+  const b = document.getElementById('stRun'), out = document.getElementById('stOut'); b.disabled = true; b.textContent = '검사 중… (약 20초)'
+  const rows = []; let pass = 0, total = 0
+  const add = (item, exp, got, ok) => { rows.push([item, exp, got, ok]); total++; if (ok) pass++ }
+  try {
+    const url = location.origin + '/selftest.html'
+    const r = await (await fetch('/api/scan', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, level:'wcag2aa', includeScreenshot:false, scanMode:'expert', checkLinks:true, checkSpelling:true }) })).json()
+    const found = {}; (r.violations||[]).forEach(v => found[v.id] = v.nodes.length)
+    for (const [id, n] of Object.entries(ST_EXPECT.a11y)) add(`접근성 · ${id}`, `${n}건`, `${found[id]||0}건`, (found[id]||0) === n)
+    const extra = Object.keys(found).filter(k => !(k in ST_EXPECT.a11y)); add('접근성 · 정답표 외 오탐', '0건', `${extra.length}건${extra.length?' ('+extra.join(', ')+')':''}`, extra.length === 0)
+    add('접근성 · KWCAG 매핑 누락', '0건', `${(r.violations||[]).filter(v=>!v.kwcag).length}건`, (r.violations||[]).every(v=>v.kwcag))
+    const dead = (r.links?.dead||[]).length; add('깨진 링크', `${ST_EXPECT.deadLinks}건`, `${dead}건`, dead === ST_EXPECT.deadLinks)
+    const ty = r.spelling ? (r.spelling.totalIssues ?? (r.spelling.issues||[]).length) : null
+    add('오탈자 (인터넷 필요)', `${ST_EXPECT.typos}건`, ty == null ? '검사 불가' : `${ty}건`, ty === ST_EXPECT.typos)
+    const k = await (await fetch('/api/krds-scan', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, tier:'full' }) })).json()
+    const km = {}; (k.items||[]).forEach(i => km[i.id] = i.passed ? 'pass' : (i.partial ? 'partial' : 'fail'))
+    const KO = { pass:'준수', partial:'부분 준수', fail:'미준수' }
+    for (const [id, e] of Object.entries(ST_EXPECT.krds)) add(`KRDS · ${id}`, KO[e], km[id] == null ? '없음' : KO[km[id]], km[id] === e)
+    add('점수 산식 재계산', '서버 점수 = 산식값', `${r.score} = ${Math.max(0, 100 - ((r.summary.impactCounts.critical*15)+(r.summary.impactCounts.serious*10)+(r.summary.impactCounts.moderate*5)+(r.summary.impactCounts.minor*2)))}`, r.score === Math.max(0, 100 - ((r.summary.impactCounts.critical*15)+(r.summary.impactCounts.serious*10)+(r.summary.impactCounts.moderate*5)+(r.summary.impactCounts.minor*2))))
+    out.innerHTML = `<table class="st-tbl"><thead><tr><th>항목</th><th>정답</th><th>검사 결과</th><th>판정</th></tr></thead><tbody>${rows.map(([i,e,g,ok]) => `<tr><td>${i}</td><td>${e}</td><td>${g}</td><td class="${ok?'st-ok':'st-ng'}">${ok?'일치':'불일치'}</td></tr>`).join('')}</tbody></table>
+      <div class="st-sum">${pass} / ${total} 일치 <small>엔진 axe-core ${r.engine?.axe} · ${new Date().toLocaleString('ko-KR')} · 이 진단은 검사 로직이 정답표와 일치하는지 확인하는 것으로, 대상 사이트의 품질을 뜻하지 않습니다.</small></div>`
+  } catch (e) { out.innerHTML = `<div style="color:var(--bad);margin-top:12px">진단 실패: ${e.message}</div>` }
+  finally { b.disabled = false; b.textContent = '다시 진단' }
+}
+
+fetch('/criteria.json').then(r => r.json()).then(d => {
+  document.getElementById('ver').textContent = `가디언즈 v${d.version} · 검사 기준 ${d.updated}`
+  const tabs = document.getElementById('tabs'), secs = document.getElementById('secs')
+  d.inspections.forEach((ins, i) => {
+    const b = document.createElement('button'); b.role='tab'; b.textContent = ins.name; b.dataset.id = ins.id
+    b.onclick = () => activate(ins.id); tabs.appendChild(b)
+    const a = ins.items.filter(x=>x.auto===true).length, p = ins.items.filter(x=>x.auto==='partial').length, m = ins.items.filter(x=>x.auto===false).length
+    const cols = ins.columns || ['번호','검사 항목','확인하는 것','판정','근거']
+    const s = document.createElement('section'); s.className='sec'; s.id='sec-'+ins.id
+    s.innerHTML = `
+      <p class="lead">${esc(ins.purpose)}</p>
+      <dl class="facts">
+        <dt>기준·표준</dt><dd>${esc(ins.standard)}</dd>
+        ${ins.legal ? `<dt>법적 근거</dt><dd>${esc(ins.legal)}</dd>` : ''}
+        <dt>검사 엔진</dt><dd>${esc(ins.engine)}</dd>
+        ${ins.levels ? `<dt>검사 수준</dt><dd>${esc(ins.levels)}</dd>` : ''}
+        ${ins.tiers ? `<dt>검사 범위</dt><dd>${esc(ins.tiers)}</dd>` : ''}
+        ${ins.modes ? `<dt>검사 모드</dt><dd>${esc(ins.modes.simple)}<br>${esc(ins.modes.expert)}</dd>` : ''}
+        <dt>점수 산정</dt><dd><code>${esc(ins.scoring)}</code></dd>
+      </dl>
+      <div class="counts">
+        <div><b>${ins.items.length}</b><span>검사 항목</span></div>
+        <div><b>${a}</b><span>자동 판정</span></div>
+        ${p ? `<div><b>${p}</b><span>부분 자동</span></div>` : ''}
+        ${m ? `<div><b>${m}</b><span>수동 확인 필요</span></div>` : ''}
+      </div>
+      <table>
+        <thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>${ins.items.map(x => {
+          const [cls,lab] = JD[String(x.auto)] || JD.false
+          return `<tr>
+            <td class="no">${esc(x.no)}</td>
+            <td class="nm">${esc(x.name)}${x.cat ? `<span class="cat">${esc(x.cat)}</span>` : ''}</td>
+            <td>${esc(x.what)}${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}${x.rules ? `<span class="rules">${x.rules.map(esc).join(' · ')}</span>` : ''}</td>
+            <td><span class="jd ${cls}">${lab}</span></td>
+            <td class="ref">${esc(x.ref||'')}</td>
+          </tr>`}).join('')}</tbody>
+      </table>
+      ${ins.limits && ins.limits.length ? `<div class="limits"><h3>자동 검사의 한계</h3><ul>${ins.limits.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
+      <div class="print"><button onclick="window.print()">이 기준 인쇄 · PDF 저장</button></div>`
+    secs.appendChild(s)
+  })
+  function activate(id){
+    tabs.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.id===id))
+    secs.querySelectorAll('.sec').forEach(s => s.classList.toggle('on', s.id==='sec-'+id))
+    history.replaceState(null,'','#'+id)
+  }
+  activate((location.hash||'#a11y').slice(1))
+})
+</script>
+<script src="/lib/nav.js" defer></script>
+<script>
+async function reportCheck(){ try { const r = await (await fetch('/api/report/selfcheck')).json(); let el = document.getElementById('rptChk'); if (!el) { el = document.createElement('div'); el.id='rptChk'; el.style.cssText='margin-top:10px;font-size:13px;color:#555'; const b=document.getElementById('stRun'); b.parentElement.appendChild(el) }
+  el.innerHTML = r.generate ? '✓ 결과서 엔진 정상 — PPTX 생성 ' + Math.round(r.bytes/1024) + 'KB (' + r.platform + ', node ' + r.node + ')' : '✗ 결과서 엔진 오류 — ' + (r.error || '생성 실패') } catch(e) {} }
+</script>
+</body>
+</html>

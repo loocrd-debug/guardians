@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예약 검사 — 가디언즈</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  main{max-width:1180px;margin:0 auto;padding:0 40px 120px}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:56px;margin-top:36px;align-items:start}
+  h2{font-size:24px;font-weight:700;letter-spacing:-.03em;margin:0}
+  .sub{font-size:14px;color:var(--muted);margin-top:6px}
+  /* 목록 */
+  .rows{margin-top:20px;border-top:1px solid var(--line)}
+  .row{padding:20px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;cursor:pointer}
+  .row:hover{background:linear-gradient(to right,transparent,transparent)} .row.on .nm{text-decoration:underline;text-underline-offset:4px}
+  .row .nm{font-size:17px;font-weight:600} .row .u{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-all}
+  .row .meta{font-size:13px;color:var(--muted);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .row .meta b{color:var(--ink);font-weight:500}
+  .score{font-size:28px;font-weight:800;letter-spacing:-.04em;text-align:right;min-width:90px}
+  .score small{font-size:12px;font-weight:500;color:var(--muted);display:block;letter-spacing:0}
+  .up{color:var(--good)} .down{color:var(--bad)} .flat{color:var(--muted)}
+  .off{opacity:.45}
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--ink)}
+  .pill.err{background:#fff5f4;color:var(--bad)}
+  .empty{padding:44px 0;color:var(--muted);font-size:16px}
+  /* 폼 */
+  .form{border:1px solid var(--line);border-radius:12px;padding:24px;position:sticky;top:24px}
+  .form h3{font-size:17px;font-weight:700;margin:0 0 4px}
+  .f{margin-top:18px} .f label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .f input[type=text],.f input[type=url],.f input[type=time],.f select{width:100%;height:44px;padding:0 12px;border:1px solid var(--line)!important;border-radius:8px!important;font:inherit;font-size:15px;background:#fff}
+  .f input:focus,.f select:focus{outline:none;border-color:var(--ink)!important}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg label{flex:1;text-align:center;padding:12px 0;margin:0;font-size:14px;cursor:pointer;color:var(--muted)}
+  .seg input{display:none} .seg input:checked+span{color:#fff} .seg label:has(input:checked){background:var(--ink);color:#fff}
+  .chk{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:14px} .chk label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+  .chk input{accent-color:var(--ink);margin:0}
+  .cta{width:100%;height:52px;margin-top:22px;background:var(--ink);color:#fff;font:inherit;font-size:16px;font-weight:600;border:0;border-radius:10px;cursor:pointer}
+  .cta:disabled{background:var(--line);color:#bdbdbd}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+  .msg{margin-top:14px;font-size:13px;color:var(--good)} .msg.err{color:var(--bad)}
+  /* 상세 */
+  .detail{margin-top:56px;display:none} .detail.on{display:block}
+  .dhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .acts{display:flex;gap:8px}
+  .btn{height:44px;padding:0 18px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--ink)} .btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)} .btn.danger{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
+  th{text-align:left;padding:12px 10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:14px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+  td.n{font-weight:700} td a{text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .chart{margin-top:24px;height:120px;border-bottom:1px solid var(--line);position:relative;display:flex;align-items:flex-end;gap:6px;padding-bottom:0}
+  .bar{flex:1;background:var(--ink);border-radius:3px 3px 0 0;position:relative;min-width:6px;max-width:28px}
+  .bar.low{background:var(--bad)} .bar.mid{background:var(--warn)} .bar.high{background:var(--good)}
+  .bar span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+  .chart-cap{font-size:12px;color:var(--muted);margin-top:8px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}.form{position:static}main{padding:0 20px 80px}}
+</style>
+</head>
+<body>
+<header class="g-top"><div class="g-top-in">
+  <a class="g-brand" href="/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+  <nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more on"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html" class="on">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
+</div></header>
+<div class="g-title"><h1>예약 검사</h1><p>정해진 시간에 자동으로 검사하고, 지난번과 비교해 나빠지면 알려드립니다. 도구가 켜져 있는 동안 실행됩니다.</p></div>
+
+<main>
+  <div class="grid">
+    <section>
+      <h2>예약 목록</h2>
+      <div class="sub" id="lsub">불러오는 중</div>
+      <div class="rows" id="rows"></div>
+
+      <div class="detail" id="detail">
+        <div class="dhead">
+          <div><h2 id="dname"></h2><div class="sub" id="dsub"></div></div>
+          <div class="acts">
+            <button class="btn dark" id="runNow">지금 실행</button>
+            <button class="btn" id="toggle">일시정지</button>
+            <button class="btn danger" id="del">삭제</button>
+          </div>
+        </div>
+        <div class="chart" id="chart"></div>
+        <div class="chart-cap">회차별 접근성 점수 (오른쪽이 최근)</div>
+        <table><thead><tr><th>일시</th><th>점수</th><th>변화</th><th>위반</th><th>깨진 링크</th><th>오탈자</th><th>KRDS</th><th>실행</th><th>결과서</th></tr></thead><tbody id="hist"></tbody></table>
+      </div>
+    </section>
+
+    <aside class="form">
+      <h3>새 예약</h3>
+      <div class="sub">주소와 주기만 정하면 됩니다.</div>
+      <div class="f"><label for="url">사이트 주소</label><input id="url" type="url" placeholder="www.example.go.kr"></div>
+      <div class="f"><label for="name">이름 (선택)</label><input id="name" type="text" placeholder="예: 정부24 메인"></div>
+      <div class="f"><label>주기</label>
+        <div class="seg" id="freq">
+          <label><input type="radio" name="freq" value="daily" checked><span>매일</span></label>
+          <label><input type="radio" name="freq" value="weekly"><span>매주</span></label>
+          <label><input type="radio" name="freq" value="hourly"><span>매시간</span></label>
+        </div></div>
+      <div class="f" id="wdwrap" style="display:none"><label for="weekday">요일</label>
+        <select id="weekday"><option value="1">월요일</option><option value="2">화요일</option><option value="3">수요일</option><option value="4">목요일</option><option value="5">금요일</option><option value="6">토요일</option><option value="0">일요일</option></select></div>
+      <div class="f"><label for="time" id="tlabel">실행 시각</label><input id="time" type="time" value="09:00"></div>
+      <div class="f"><label>검사 항목</label>
+        <div class="chk">
+          <label><input type="checkbox" checked disabled> 웹 접근성</label>
+          <label><input type="checkbox" id="cLinks" checked> 깨진 링크</label>
+          <label><input type="checkbox" id="cSpell"> 오탈자</label>
+          <label><input type="checkbox" id="cKrds"> KRDS</label>
+          <label><input type="checkbox" id="cW3c"> HTML 표준</label>
+        </div></div>
+      <div class="f"><label for="webhook">알림 웹훅 URL (선택)</label><input id="webhook" type="url" placeholder="https://hooks.slack.com/services/…">
+        <div class="hint">Slack · Teams · 카카오워크 등의 수신 웹훅 주소. 비워두면 화면에서만 확인합니다.</div></div>
+      <div class="f" id="nwrap" style="display:none"><label>알림 시점</label>
+        <div class="seg"><label><input type="radio" name="nw" value="worse" checked><span>나빠질 때만</span></label><label><input type="radio" name="nw" value="always"><span>매회</span></label></div></div>
+      <button class="cta" id="add" disabled>예약 추가</button>
+      <div class="msg" id="msg"></div>
+    </aside>
+  </div>
+</main>
+
+<footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
+
+<script>
+const $ = s => document.querySelector(s)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const WD = ['일','월','화','수','목','금','토']
+const fmt = iso => iso ? new Date(iso).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'
+const freqText = s => s.freq==='hourly' ? `매시간 ${String(s.time||'09:00').split(':')[1]}분` : s.freq==='weekly' ? `매주 ${WD[s.weekday??1]}요일 ${s.time}` : `매일 ${s.time}`
+const delta = d => d == null ? '' : d > 0 ? `<span class="up">▲${d}</span>` : d < 0 ? `<span class="down">▼${Math.abs(d)}</span>` : `<span class="flat">―</span>`
+let list = [], cur = null
+
+async function load(){
+  list = await (await fetch('/api/schedules')).json()
+  $('#lsub').textContent = list.length ? `${list.length}건 · 다음 실행 ${fmt(list.filter(s=>s.enabled&&s.nextRun).map(s=>s.nextRun).sort()[0])}` : '아직 예약이 없습니다. 오른쪽에서 추가하세요.'
+  $('#rows').innerHTML = list.map(s => {
+    const ls = s.lastSummary
+    return `<div class="row ${s.enabled?'':'off'} ${cur===s.id?'on':''}" data-id="${s.id}">
+      <div>
+        <div class="nm">${esc(s.name)} ${s.enabled ? '' : '<span class="pill">일시정지</span>'} ${s.lastError ? `<span class="pill err">실패</span>` : ''}</div>
+        <div class="u">${esc(s.url)}</div>
+        <div class="meta"><span>${freqText(s)}</span><span>다음 <b>${fmt(s.nextRun)}</b></span><span>최근 <b>${fmt(s.lastRun)}</b></span>${s.webhook ? '<span>알림 켬</span>' : ''}</div>
+      </div>
+      <div class="score">${ls && ls.score != null ? `${ls.score}<small>점 ${ls.deltaScore != null ? delta(ls.deltaScore) : ''} · 위반 ${ls.violations}</small>` : `<small>아직 결과 없음</small>`}</div>
+    </div>`
+  }).join('') || `<div class="empty">예약을 추가하면 여기에 나타납니다.</div>`
+  document.querySelectorAll('.row').forEach(r => r.onclick = () => open(r.dataset.id))
+  if (cur) open(cur)
+}
+async function open(id){
+  const s = list.find(x => x.id === id); if (!s) { cur = null; $('#detail').classList.remove('on'); return }
+  cur = id
+  document.querySelectorAll('.row').forEach(r => r.classList.toggle('on', r.dataset.id===id))
+  $('#detail').classList.add('on')
+  $('#dname').textContent = s.name; $('#dsub').textContent = `${s.url} · ${freqText(s)} · ${s.scanMode==='simple'?'핵심 15규칙':'전체 규칙'}`
+  $('#toggle').textContent = s.enabled ? '일시정지' : '다시 켜기'
+  const h = await (await fetch(`/api/schedules/${id}/history`)).json()
+  $('#hist').innerHTML = h.length ? h.map(r => `<tr>
+    <td>${fmt(r.ts)}</td><td class="n">${r.score ?? '—'}</td><td>${delta(r.deltaScore)}</td><td>${r.violations}${r.deltaViolations ? ` <small class="${r.deltaViolations>0?'down':'up'}">(${r.deltaViolations>0?'+':''}${r.deltaViolations})</small>` : ''}</td>
+    <td>${r.deadLinks ?? '—'}</td><td>${r.typos ?? '—'}</td><td>${r.krdsFailed ?? '—'}</td><td style="color:var(--muted)">${r.trigger==='manual'?'수동':'자동'} · ${r.durationSec}초</td>
+    <td><a onclick="dl('${id}','${r.key}','pptx')">PPTX</a> · <a onclick="dl('${id}','${r.key}','excel')">Excel</a></td></tr>`).join('') : `<tr><td colspan="9" style="color:var(--muted)">아직 실행된 회차가 없습니다. "지금 실행"으로 첫 결과를 만들어 보세요.</td></tr>`
+  const last = h.slice(0, 20).reverse()
+  $('#chart').innerHTML = last.map(r => `<div class="bar ${r.score>=80?'high':r.score>=50?'mid':'low'}" style="height:${Math.max(4, r.score ?? 0)}%"><span>${r.score ?? ''}</span></div>`).join('')
+  $('#detail').scrollIntoView({ behavior:'smooth', block:'start' })
+}
+async function dl(id, key, kind){
+  const r = await (await fetch(`/api/schedules/${id}/results/${key}`)).json()
+  const s = list.find(x => x.id === id)
+  const res = await fetch(kind==='pptx' ? '/api/report/pptx' : '/api/report/excel', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ ...r, reportMeta: { project: s?.name || '', generatedAt: new Date().toLocaleString('ko-KR'), toolVersion:'v6.19' } }) })
+  if (!res.ok) { const d = await res.json().catch(() => ({})); alert('결과서 생성 실패: ' + (d.error || res.status)); return }
+  const blob = await res.blob(); const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+  a.download = `${(s?.name||'예약검사').replace(/[\\/:*?"<>|]/g,'_')}_${key.slice(0,10)}.${kind==='pptx'?'pptx':'xlsx'}`; a.click()
+}
+$('#runNow').onclick = async () => { if (!cur) return; $('#runNow').textContent='실행 중…'; $('#runNow').disabled=true
+  try { await fetch(`/api/schedules/${cur}/run`, { method:'POST' }) } finally { $('#runNow').textContent='지금 실행'; $('#runNow').disabled=false; load() } }
+$('#toggle').onclick = async () => { const s = list.find(x=>x.id===cur); await fetch(`/api/schedules/${cur}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ enabled: !s.enabled }) }); load() }
+$('#del').onclick = async () => { if (!confirm('이 예약과 지난 결과를 모두 삭제할까요?')) return; await fetch(`/api/schedules/${cur}`, { method:'DELETE' }); cur = null; $('#detail').classList.remove('on'); load() }
+
+// 폼
+$('#url').addEventListener('input', () => $('#add').disabled = !$('#url').value.trim())
+document.querySelectorAll('input[name=freq]').forEach(r => r.addEventListener('change', () => {
+  const v = document.querySelector('input[name=freq]:checked').value
+  $('#wdwrap').style.display = v==='weekly' ? '' : 'none'
+  $('#tlabel').textContent = v==='hourly' ? '실행 분 (매시 몇 분)' : '실행 시각'
+}))
+$('#webhook').addEventListener('input', () => $('#nwrap').style.display = $('#webhook').value.trim() ? '' : 'none')
+$('#add').onclick = async () => {
+  const b = { url: $('#url').value.trim(), name: $('#name').value.trim(), freq: document.querySelector('input[name=freq]:checked').value,
+    time: $('#time').value || '09:00', weekday: +$('#weekday').value, checkLinks: $('#cLinks').checked, checkSpelling: $('#cSpell').checked,
+    checkKRDS: $('#cKrds').checked, checkW3C: $('#cW3c').checked, webhook: $('#webhook').value.trim(), notifyWhen: document.querySelector('input[name=nw]:checked').value }
+  $('#add').disabled = true
+  const r = await fetch('/api/schedules', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(b) })
+  const s = await r.json()
+  if (!r.ok) { $('#msg').className='msg err'; $('#msg').textContent = s.error || '추가하지 못했습니다'; $('#add').disabled=false; return }
+  $('#msg').className='msg'; $('#msg').textContent = `추가했습니다. 다음 실행 ${fmt(s.nextRun)}`
+  $('#url').value=''; $('#name').value=''; cur = s.id; load()
+}
+load(); setInterval(load, 30000)
+</script>
+<script src="/lib/nav.js" defer></script>
+</body>
+</html>
