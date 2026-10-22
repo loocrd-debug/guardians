@@ -78,7 +78,8 @@
     if (no(t)) return say('네, 필요하시면 언제든 불러 주세요.', () => setTimeout(close, 2000))
     set('think'); $('#gvSay').textContent = '말씀을 이해하는 중입니다…'
     let r; try { r = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json() } catch (e) { r = { ok: false, error: e.message } }
-    if (!r.ok) return say('죄송합니다. AI가 응답하지 않았습니다. ' + (r.error ? '(' + r.error + ')' : ''))
+    if (!r.ok) return say(r.error && /체험/.test(r.error) ? r.error : '죄송합니다. AI가 응답하지 않았습니다. ' + (r.error ? '(' + r.error + ')' : ''))
+    if (r.demo) check()
     if (!r.url) return say('어느 사이트를 검사할까요? 사이트 이름이나 주소를 말씀해 주세요.', listen)
     const names = { checkLinks: '깨진 링크', checkSpelling: '오탈자', checkW3C: 'HTML 표준', checkKRDS: 'KRDS' }; const on = Object.entries(r.checks || {}).filter(([k, v]) => v && names[k]).map(([k]) => names[k])
     const host = r.url.replace(/^https?:\/\//, '').replace(/\/$/, '')
@@ -101,6 +102,8 @@
   $('#gvIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gvSend').click() })
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) close(); if (e.altKey && (e.key === 'v' || e.key === 'V' || e.key === 'ㅍ')) { e.preventDefault(); open ? close() : (fab.classList.contains('on') && openBox()) } })
   // AI가 켜져 있을 때만 버튼 표시 (키 없음 · 행정망이면 숨김)
-  const check = async () => { try { const a = await (await fetch('/api/ai/status')).json(); fab.classList.toggle('on', !!a.enabled) } catch (_) {} }
+  const check = async () => { try { const a = await (await fetch('/api/ai/status')).json(); const demo = !a.enabled && a.demo && a.demo.on; fab.classList.toggle('on', !!a.enabled || !!demo)
+      fab.innerHTML = '<i aria-hidden="true"></i>AI 비서' + (demo ? ' <small style="font-weight:500;opacity:.75">체험</small>' : '')
+      box.querySelector('.gv-hint').textContent = (demo ? `체험판 — 심사 · 체험용으로 오늘 ${a.demo.left}회 더 말로 지시할 수 있어요 (AI 비서만) · ` : '') + '말한 내용은 크롬·엣지 음성 인식 서비스로 글로 바뀝니다 · 비서의 모든 말은 이 자막으로도 표시 · ESC 닫기' } catch (_) {} }
   check(); setInterval(check, 60000); try { speechSynthesis.getVoices() } catch (_) {}
 })()

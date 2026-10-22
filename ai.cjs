@@ -35,7 +35,8 @@ module.exports = function attachAI(app, APP_ROOT, OFFLINE) {
   const writeSettings = s => { fs.mkdirSync(path.dirname(SETTINGS), { recursive: true }); fs.writeFileSync(SETTINGS, JSON.stringify(s, null, 2)) }
   const PUBLIC = process.env.GUARDIANS_PUBLIC === '1'
   let reqKey = ''   // 공개 모드: 요청마다 헤더로 받은 키 (서버에 저장하지 않음)
-  const getKey = () => process.env.ANTHROPIC_API_KEY || (PUBLIC ? reqKey : readSettings().anthropicKey) || ''
+  const ALS = new (require('async_hooks').AsyncLocalStorage)()   // 체험용 키는 그 요청 안에서만 (다른 요청과 섞이지 않게)
+  const getKey = () => ((ALS.getStore() || {}).key) || process.env.ANTHROPIC_API_KEY || (PUBLIC ? reqKey : readSettings().anthropicKey) || ''
   const mask = k => k ? k.slice(0, 10) + '…' + k.slice(-4) : ''
 
   async function status() {
@@ -144,7 +145,16 @@ ${vs.map(v => `- [${v.impact}] ${v.kwcag ? 'KWCAG ' + v.kwcag.no + ' ' : ''}${v.
 
   // ── API ──
   app.use('/api/ai', (req, res, next) => { reqKey = PUBLIC ? String(req.headers['x-anthropic-key'] || '') : ''; next() })
-  app.get('/api/ai/status', async (req, res) => { const s = await status(); if (PUBLIC) { s.public = true; if (!s.enabled && !reqKey) s.reason = '공개 서비스에서는 키를 서버에 저장하지 않습니다. 이 브라우저에만 저장됩니다 — AI 설정에서 입력하세요.' } res.json(s) })
+  // 심사 · 체험용 AI 비서 — 방문자에게 키가 없을 때 서버 키로 "말로 지시" 해석만 허용 (하루 전체 · 접속자별 횟수 제한)
+  const DEMO_KEY = () => process.env.GUARDIANS_DEMO_AI === '1' ? (process.env.GUARDIANS_DEMO_AI_KEY || process.env.GUARDIANS_WATCH_AI_KEY || '') : ''
+  const DEMO = { day: '', total: 0, ip: {} }
+  const demoDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
+  const demoIp = req => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
+  const demoLeft = req => { if (!PUBLIC || !DEMO_KEY()) return null; const d = demoDay(); if (DEMO.day !== d) { DEMO.day = d; DEMO.total = 0; DEMO.ip = {} }
+    const T = +process.env.GUARDIANS_DEMO_DAILY || 100, P = +process.env.GUARDIANS_DEMO_PER_IP || 10
+    return Math.max(0, Math.min(T - DEMO.total, P - (DEMO.ip[demoIp(req)] || 0))) }
+  app.get('/api/ai/status', async (req, res) => { const s = await status(); if (PUBLIC) { s.public = true; if (!s.enabled && !reqKey) s.reason = '공개 서비스에서는 키를 서버에 저장하지 않습니다. 이 브라우저에만 저장됩니다 — AI 설정에서 입력하세요.'
+      if (!reqKey) { const left = demoLeft(req); if (left != null) s.demo = { on: true, left, scope: 'AI 비서(말로 지시)만', perIp: +process.env.GUARDIANS_DEMO_PER_IP || 10 } } } res.json(s) })
   app.post('/api/ai/settings', (req, res) => {
     if (PUBLIC) return res.json({ ok: true, public: true, keyMasked: '' })   // 서버 저장 안 함 (브라우저 localStorage 사용)
     const key = String((req.body || {}).anthropicKey || '').trim()
@@ -166,9 +176,15 @@ ${vs.map(v => `- [${v.impact}] ${v.kwcag ? 'KWCAG ' + v.kwcag.no + ' ' : ''}${v.
     catch (e) { res.status(500).json({ ok: false, error: e.message }) }
   })
   app.post('/api/ai/command', async (req, res) => {
+    let demo = false
     try { const text = String((req.body || {}).text || '').trim(); if (!text) return res.status(400).json({ error: '지시 없음' })
-      res.json({ ok: true, ...(await command(text)) }) }
-    catch (e) { res.status(500).json({ ok: false, error: e.message }) }
+      if (PUBLIC && !reqKey) { const left = demoLeft(req); if (left != null) { if (left <= 0) return res.status(429).json({ ok: false, error: '오늘 체험 횟수를 모두 사용했습니다. 내일 다시 이용하시거나, AI 배지에서 본인 Claude 키를 넣어 주세요.' })
+          if (text.length > 300) return res.status(400).json({ ok: false, error: '체험판은 300자 이내로 말씀해 주세요.' })
+          demo = true; DEMO.total++; const ip = demoIp(req); DEMO.ip[ip] = (DEMO.ip[ip] || 0) + 1 } }
+      const out = demo ? await ALS.run({ key: DEMO_KEY() }, () => command(text)) : await command(text)
+      if (demo && (out.ok === false || out.error)) { DEMO.total = Math.max(0, DEMO.total - 1); const ip = demoIp(req); DEMO.ip[ip] = Math.max(0, (DEMO.ip[ip] || 1) - 1) }
+      res.json(Object.assign({ ok: true }, out, demo ? { demo: true, left: demoLeft(req) } : {})) }
+    catch (e) { if (demo) { DEMO.total = Math.max(0, DEMO.total - 1); const ip = demoIp(req); DEMO.ip[ip] = Math.max(0, (DEMO.ip[ip] || 1) - 1) }  /* 실패한 시도는 횟수에서 빼기 */ res.status(500).json({ ok: false, error: e.message }) }
   })
   app.get('/api/ai/aliases', (req, res) => res.json(ALIASES.map(([re, u]) => ({ pattern: re.source, url: u }))))
   console.log(`[AI] 보조 모듈 준비 · 모델 ${MODEL} · 키 ${getKey() ? '있음' : '없음'}`)
