@@ -436,6 +436,20 @@ app.get('/api/support', (req, res) => {
   res.json({ on: true, url: process.env.GUARDIANS_SUPPORT_URL, owner: cfg.owner || process.env.GUARDIANS_SUPPORT_OWNER || '', goal, raised, pct: goal ? Math.min(100, Math.round(raised / goal * 100)) : null, month: cfg.month || '', today: STATS[kstDay()] || 0, qr: existsSync(SUPPORT_QR) })
 })
 app.get('/api/support/qr', (req, res) => SUPPORT_ON && existsSync(SUPPORT_QR) ? res.sendFile(SUPPORT_QR) : res.status(404).end())
+// ── 변경분 받기 (관리자 토큰) — Claude 작업 환경 → 서버 data/incoming → 서버 cron이 GitHub에 커밋 · 푸시 · 반영 (사이트 중단 없음)
+app.post('/api/admin/incoming', express.raw({ type: '*/*', limit: '30mb' }), (req, res) => {
+  const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })
+  const name = String(req.query.name || '').replace(/[^\w.-]/g, ''); if (!/\.zip$/.test(name) || !req.body || !req.body.length) return res.status(400).json({ error: 'zip 파일이 필요합니다' })
+  const msg = Buffer.from(String(req.headers['x-commit-msg'] || ''), 'base64').toString('utf8').slice(0, 500) || '변경분 반영'
+  const dir = join(APP_ROOT, 'data', 'incoming'); mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, name + '.msg'), msg); writeFileSync(join(dir, name), req.body)
+  res.json({ ok: true, name, bytes: req.body.length, note: '1분 안에 서버가 GitHub에 커밋하고 반영합니다' })
+})
+app.get('/api/admin/incoming/status', (req, res) => {
+  const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })
+  let log = ''; try { log = readFileSync(join(APP_ROOT, 'data', 'incoming', 'last.log'), 'utf8').slice(-1500) } catch (_) {}
+  res.json({ version: APP_VERSION, log })
+})
 app.use(express.static(join(APP_ROOT, 'public')))
 
 // axe-core 소스 서버 시작 시 1회만 로드 (캐싱 → 매 스캔 I/O 제거)
