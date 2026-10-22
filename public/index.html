@@ -591,11 +591,12 @@ $('#aiClear').onclick = async () => { AIKEY.set(''); await fetch('/api/ai/settin
 $('#aiTest').onclick = async () => { $('#aiSt').textContent = '연결 확인 중…'; try { const r = await (await fetch('/api/ai/test', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anthropicKey: $('#aiKey').value.trim() }) })).json(); $('#aiSt').textContent = r.ok ? `연결 정상 (응답: ${r.reply})` : `실패: ${r.error}` } catch (e) { $('#aiSt').textContent = '실패: ' + e.message } }
 
 /* 자연어 지시 */
-async function runCommand(text){
+window.runCommand = runCommand
+async function runCommand(text, pre){
   if (!text.trim()) return
   const rp = $('#cmdReply'); rp.style.display = 'block'; rp.textContent = '해석 중…'
   try {
-    const r = await (await fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) })).json()
+    const r = pre || await (await fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) })).json()
     if (!r.ok) throw new Error(r.error || '해석 실패')
     if (!r.url) { rp.textContent = '검사할 주소를 찾지 못했습니다. 사이트 이름이나 URL을 포함해 주세요. ' + (r.reply||''); return }
     rp.textContent = r.reply || `${r.url} 검사를 준비합니다.`
@@ -675,6 +676,7 @@ $('#dlXlsx').addEventListener('click', () => dl('/api/report/excel', `검사보�
 $('#dlHtml').addEventListener('click', () => dl('/api/report', `검사보고서_${stamp()}.html`))
 $('#again').addEventListener('click', () => { urlIn.value=''; go1.disabled=true; show('p1'); urlIn.focus() })
 </script>
+<script src="/lib/assistant.js" defer></script>
 <script src="/lib/nav.js" defer><script>if (location.hash === '#ai') { history.replaceState(null, '', '/'); setTimeout(() => window.__openAi && window.__openAi(), 400) }</script>
 </body>
 </html>

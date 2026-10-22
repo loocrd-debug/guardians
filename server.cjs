@@ -97,7 +97,7 @@ const APP_ROOT = process.pkg
   : __dirname
 
 // ── 버전 상수 ─────────────────────────────────────────
-const APP_VERSION = '6.20.0'
+const APP_VERSION = '6.21.0'
 
 // ═══════════════════════════════════════════════════════════
 //  axe-core 규칙 한국어 번역 테이블 (help / description)
