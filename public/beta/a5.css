@@ -26,3 +26,6 @@ button,.btn,a.btn{border-radius:12px}
 table th{color:var(--muted)}
 /* 하단 */
 .g-foot{border-top:1px solid var(--line)}
+/* 본문 · 하단 폭을 상단바(1280)와 맞춤 */
+main:not(.wrap),.g-foot-in,.g-wrap,.wrap-in{max-width:1280px!important;padding-left:40px!important;padding-right:40px!important;box-sizing:border-box}
+@media (max-width:760px){main:not(.wrap),.g-foot-in,.g-top-in,.g-title{padding-left:20px!important;padding-right:20px!important}}
