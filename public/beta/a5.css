@@ -1,0 +1,28 @@
+/* 가디언즈 베타 — A5 디자인 공통 덧칠 (기존 화면 위에 얹어 전체 화면을 같은 톤으로) */
+:root{--ink:#0b0b0c;--muted:#5f5f66;--line:#ececef;--soft:#f3f3f5;--acc:#3b5bfd}
+html,body{color:var(--ink)!important;letter-spacing:-.01em}
+a:hover{color:var(--acc)}
+:focus-visible{outline:3px solid #f79009!important;outline-offset:2px}
+/* 상단바 */
+.g-top{border-bottom:1px solid var(--line)}
+.g-top-in{max-width:1280px!important;padding:0 40px!important;height:68px}
+.g-brand{font-size:20px!important;letter-spacing:-.02em!important}
+.g-brand .a5dot{color:var(--acc)}
+.g-brand .a5beta{font-size:11.5px;font-weight:700;border:1px solid var(--ink);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:3px;letter-spacing:0}
+.g-gnb{gap:22px!important;font-size:14.5px!important;align-items:center}
+.g-gnb a{color:#3d3d42!important}.g-gnb a.on,.g-gnb a[aria-current]{color:var(--ink)!important;font-weight:700}
+.g-gnb .a5old{height:36px;padding:0 12px;border:1px solid #d4d4d9;border-radius:10px;display:inline-flex;align-items:center;font-size:13.5px}
+/* 제목 영역 */
+.g-title{max-width:1280px!important;padding:48px 40px 8px!important}
+.g-title h1{font-size:44px!important;letter-spacing:-.04em!important;line-height:1.15!important}
+.g-title p{color:#4a4a50!important}
+.max-w-6xl,.max-w-7xl,.max-w-5xl{max-width:1280px!important}
+/* 입력 · 버튼 · 카드 */
+input[type=text],input[type=url],input[type=email],input[type=number],input[type=password],select,textarea{border-radius:12px!important;border-color:#c9c9cf!important}
+button,.btn,a.btn{border-radius:12px}
+[class*="rounded-lg"],[class*="rounded-xl"],[class*="rounded-2xl"]{border-radius:16px!important}
+[class*="border-gray-200"],[class*="border-slate-200"]{border-color:var(--line)!important}
+[class*="text-gray-500"],[class*="text-slate-500"]{color:var(--muted)!important}
+table th{color:var(--muted)}
+/* 하단 */
+.g-foot{border-top:1px solid var(--line)}

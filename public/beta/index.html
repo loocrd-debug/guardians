@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>가디언즈 베타 — 웹 품질 검사</title>
 <link rel="stylesheet" href="/lib/pretendard.css">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/beta/a5.css">
 <style>
 :root{--ink:#0b0b0c;--sub:#4a4a50;--mut:#5f5f66;--line:#ececef;--line2:#d4d4d9;--soft:#f3f3f5;--acc:#3b5bfd;--accsoft:#f3f5ff;--good:#0b6b47;--mono:ui-monospace,"Cascadia Mono",Consolas,"D2Coding",monospace}
 *{box-sizing:border-box}
@@ -120,6 +122,27 @@ form.q input[type=text]{width:100%;border:0;font-size:17px;padding:6px 0 12px;ou
 .manual summary::-webkit-details-marker{display:none}
 .manual summary b{font-size:20px}.manual summary span{font-size:14px;color:var(--mut)}.manual summary em{margin-left:auto;font-style:normal;font-size:14px;font-weight:700}
 .manual ol{margin:0 0 12px;padding-left:22px;font-size:14.5px;line-height:1.9;color:#3d3d42}
+
+.hero2{padding:64px 0 28px;max-width:960px}
+.hero2 h1.big{font-size:52px;line-height:1.18}
+form.q2{margin-top:32px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--ink);border-radius:20px;padding:10px 10px 10px 22px;background:#fff;box-shadow:0 16px 40px rgba(11,11,12,.07)}
+form.q2 .qi{flex:none;color:#8a8a92}
+form.q2 input{flex:1;min-width:0;border:0!important;outline:none;font-size:22px;height:56px;padding:0 4px;background:transparent;color:var(--ink);border-radius:0!important}
+form.q2 .mic{flex:none;width:52px;height:52px;border-radius:14px;border:0;background:transparent;color:#5f5f66;cursor:pointer;display:flex;align-items:center;justify-content:center}
+form.q2 .mic:hover,form.q2 .mic.on{background:var(--accsoft);color:var(--acc)}
+form.q2 .go{flex:none;height:56px;padding:0 30px;border-radius:14px;border:0;background:var(--acc);color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+form.q2 .go[disabled]{opacity:.6}
+.opts{margin-top:14px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:14px}
+.opts .ol{color:var(--mut);margin-right:8px}
+.opt{height:34px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#8a8a92;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.opt::before{content:"";width:14px;height:14px;border-radius:4px;border:1.5px solid #b5b5bc;box-sizing:border-box}
+.opt[aria-pressed=true]{color:var(--ink);font-weight:600}
+.opt[aria-pressed=true]::before{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 2px #fff}
+.opt.fixed{cursor:default}
+.opt:hover{background:var(--soft)}
+section.log{margin:8px 0 8px}
+section.log[hidden]{display:none}
+@media (max-width:760px){.hero2 h1.big{font-size:34px}form.q2 input{font-size:17px}form.q2 .go{padding:0 18px}}
 footer{border-top:1px solid var(--line)}
 footer .wrap{padding:22px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
 footer img{height:20px;width:auto}
@@ -130,57 +153,45 @@ footer a{color:var(--mut)}
 </head>
 <body>
 <a class="sr" href="#main">본문 바로가기</a>
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="/beta/">가디언즈<b>.</b><span class="beta">베타</span></a>
-    <nav class="prod" aria-label="제품">
-      <a href="/beta/" aria-current="page">Scan</a>
-      <a href="/reader.html">Reader</a>
-      <a href="/compat.html">Compat</a>
-      <a href="/krds-watch.html">KRDS Watch</a>
-      <a href="/download.html">Extension</a>
-    </nav>
-    <div class="topr">
-      <a class="btn" href="/">기존 화면</a>
-      <a class="btn dark" href="/download.html">다운로드</a>
-    </div>
+<header class="g-top">
+  <div class="g-top-in">
+    <a class="g-brand" href="/beta/" title="검사(메인)로">가디언즈<small>웹 품질 검사</small></a>
+<nav class="g-gnb" aria-label="주 메뉴"><a href="/reader.html">스크린 리더</a><a href="/compat.html">브라우저 호환</a><div class="g-more"><button type="button" class="g-more-btn" aria-haspopup="true" aria-expanded="false">더보기 <i aria-hidden="true"></i></button><div class="g-more-menu" role="menu"><a href="/manual.pdf" target="_blank" rel="noopener">사용설명서<small>처음 쓰는 분을 위한 전체 안내 (PDF)</small></a><a href="/pro.html">전문가 모드<small>탭·사이트 전체·엑셀</small></a><a href="/krds.html">KRDS<small>구조 28 · 토큰 11</small></a><a href="/krds-watch.html">KRDS 기준 추적<small>AI가 매주 공식 사이트 확인</small></a><a href="/minwon.html">민원안내<small>정부24 민원 페이지</small></a><a href="/schedule.html">예약 검사<small>매주 자동 · 악화 알림</small></a><a href="/download.html">다운로드<small>설치 파일 · 확장 · 발표 자료</small></a><a href="/criteria.html">검사 기준<small>98개 기준 · 자가 진단</small></a></div></div></nav>
   </div>
 </header>
 
 <main id="main" class="wrap">
-  <div class="hero">
-    <section class="l">
-      <p class="badge"><i></i>새 디자인 베타 · 의견을 모으는 중입니다</p>
-      <h1 class="big">검사는 30초,<br>결과서는<br><em>버튼 한 번.</em></h1>
-      <p class="lead">공공 웹사이트의 접근성 · KRDS · 표준을 한 번에 검사하고, 감리에 그대로 내는 결과서를 만듭니다.</p>
-      <form class="q" id="qf" novalidate>
-        <label class="cap" for="q">검사할 사이트</label>
-        <input id="q" type="text" autocomplete="url" placeholder="www.example.go.kr 또는 “국민신문고 접근성 검사해 줘”">
-        <div class="chips" role="group" aria-label="검사 항목">
-          <button type="button" class="chip fixed" aria-pressed="true" aria-disabled="true" title="접근성은 항상 검사합니다">접근성</button>
-          <button type="button" class="chip" data-k="checkLinks" aria-pressed="true">깨진 링크</button>
-          <button type="button" class="chip" data-k="checkSpelling" aria-pressed="false">오탈자</button>
-          <button type="button" class="chip" data-k="checkKRDS" aria-pressed="true">KRDS</button>
-          <button type="button" class="chip" data-k="checkW3C" aria-pressed="false">HTML 표준</button>
-          <div class="qact">
-            <button type="button" class="ico" id="mic" aria-label="말로 입력하기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-            <button type="submit" class="btn pri" id="go">검사 시작</button>
-          </div>
-        </div>
-      </form>
-      <p class="err" id="err" role="alert"></p>
-    </section>
+  <section class="hero2">
+    <p class="badge"><i></i>새 디자인 베타 · 의견을 모으는 중입니다</p>
+    <h1 class="big">검사는 30초, 결과서는 <em>버튼 한 번.</em></h1>
+    <p class="lead">공공 웹사이트의 접근성 · KRDS · 표준을 한 번에 검사하고, 감리에 그대로 내는 결과서를 만듭니다.</p>
+    <form class="q2" id="qf" novalidate>
+      <label class="sr" for="q">검사할 사이트</label>
+      <svg class="qi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="text" autocomplete="url" placeholder="www.example.go.kr 또는 “국민신문고 접근성 검사해 줘”">
+      <button type="button" class="mic" id="mic" aria-label="말로 입력하기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="submit" class="go" id="go">검사</button>
+    </form>
+    <div class="opts" role="group" aria-label="검사 항목">
+      <span class="ol">검사 항목</span>
+      <button type="button" class="opt fixed" aria-pressed="true" aria-disabled="true" title="접근성은 항상 검사합니다">접근성</button>
+      <button type="button" class="opt" data-k="checkLinks" aria-pressed="true">깨진 링크</button>
+      <button type="button" class="opt" data-k="checkSpelling" aria-pressed="false">오탈자</button>
+      <button type="button" class="opt" data-k="checkKRDS" aria-pressed="true">KRDS</button>
+      <button type="button" class="opt" data-k="checkW3C" aria-pressed="false">HTML 표준</button>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+  </section>
 
-    <section class="log" aria-label="검사 진행">
-      <div class="bar"><i></i><i></i><i></i><span id="lhost" style="margin-left:8px">대기 중</span><span class="st" id="lst"></span></div>
-      <ol id="steps" aria-live="polite"><li class="wait"><span class="k">·</span> 주소를 넣고 검사 시작을 누르면 여기서 진행됩니다</li></ol>
-      <div class="sum" id="lsum" hidden>
-        <div><div style="font-size:12px;color:#9a9aa2">고칠 문제</div><div class="n" id="lsn">0건</div></div>
-        <div class="m" id="lsm"></div>
-        <a class="btn" href="#res" style="background:#fff;color:var(--ink)">결과 보기</a>
-      </div>
-    </section>
-  </div>
+  <section class="log" id="log" aria-label="검사 진행" hidden>
+    <div class="bar"><i></i><i></i><i></i><span id="lhost" style="margin-left:8px">대기 중</span><span class="st" id="lst"></span></div>
+    <ol id="steps" aria-live="polite"></ol>
+    <div class="sum" id="lsum" hidden>
+      <div><div style="font-size:12px;color:#9a9aa2">고칠 문제</div><div class="n" id="lsn">0건</div></div>
+      <div class="m" id="lsm"></div>
+      <a class="btn" href="#res" style="background:#fff;color:var(--ink)">결과 보기</a>
+    </div>
+  </section>
 
   <section id="res" aria-labelledby="rh2">
     <div class="rhead">
@@ -236,9 +247,9 @@ const LV = { critical: ['치명', 's1'], serious: ['심각', 's2'], moderate: ['
 let R = null, O = null, tab = 'all'
 
 // 검사 항목 칩
-document.querySelectorAll('.chip[data-k]').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'))
-const opts = () => { const o = { level: 'wcag2aa', includeScreenshot: true, scanMode: 'expert', useW3CLinks: false }; document.querySelectorAll('.chip[data-k]').forEach(b => o[b.dataset.k] = b.getAttribute('aria-pressed') === 'true'); return o }
-const setChips = c => document.querySelectorAll('.chip[data-k]').forEach(b => { if (c && c[b.dataset.k] != null) b.setAttribute('aria-pressed', String(!!c[b.dataset.k])) })
+document.querySelectorAll('.opt[data-k]').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'))
+const opts = () => { const o = { level: 'wcag2aa', includeScreenshot: true, scanMode: 'expert', useW3CLinks: false }; document.querySelectorAll('.opt[data-k]').forEach(b => o[b.dataset.k] = b.getAttribute('aria-pressed') === 'true'); return o }
+const setChips = c => document.querySelectorAll('.opt[data-k]').forEach(b => { if (c && c[b.dataset.k] != null) b.setAttribute('aria-pressed', String(!!c[b.dataset.k])) })
 
 // 말로 입력 (크롬 · 엣지)
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -254,7 +265,7 @@ function runLog(host, o) {
   const st = [['페이지 열기 · Chromium', 2], ['접근성 · KWCAG 2.2 33항목', 6]]
   if (o.checkLinks) st.push(['깨진 링크 확인', 10]); if (o.checkKRDS) st.push(['KRDS 구조 28 · 토큰 11', 6]); if (o.checkSpelling) st.push(['오탈자 확인', 5]); if (o.checkW3C) st.push(['HTML 표준 확인', 5])
   st.push(['결과 정리', 99])
-  $('#lhost').textContent = host; $('#lst').textContent = '검사 중'; $('#lsum').hidden = true
+  $('#log').hidden = false; $('#lhost').textContent = host; $('#lst').textContent = '검사 중'; $('#lsum').hidden = true
   let i = 0, left = st[0][1]
   const draw = () => { $('#steps').innerHTML = st.map(([t], k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'wait'}"><span class="k">${k < i ? '✓' : k === i ? '●' : '·'}</span> ${esc(t)}</li>`).join('') }
   draw(); clearInterval(tick); tick = setInterval(() => { if (--left <= 0 && i < st.length - 1) { i++; left = st[i][1]; draw() } }, 1000)
@@ -277,7 +288,7 @@ $('#qf').onsubmit = async e => {
   try {
     let url = t
     if (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(t)) {
-      $('#lhost').textContent = '말을 해석하는 중'; $('#steps').innerHTML = '<li class="now"><span class="k">●</span> AI가 문장을 해석하는 중</li>'
+      $('#log').hidden = false; $('#lhost').textContent = '말을 해석하는 중'; $('#steps').innerHTML = '<li class="now"><span class="k">●</span> AI가 문장을 해석하는 중</li>'
       const a = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json().catch(() => ({}))
       if (!a.ok || !a.url) throw new Error(a.error || '사이트 이름을 찾지 못했습니다. 주소를 직접 넣어 주세요.')
       url = a.url; setChips(a.checks)
@@ -291,7 +302,7 @@ $('#qf').onsubmit = async e => {
   } catch (err) { clearInterval(tick); $('#lst').textContent = '중단'; $('#err').textContent = '검사하지 못했습니다. ' + err.message }
   finally { go.disabled = false; go.textContent = '검사 시작' }
 }
-$('#again').onclick = () => { window.scrollTo({ top: 0 }); $('#q').select(); $('#q').focus() }
+$('#again').onclick = () => { $('#res').classList.remove('on'); $('#log').hidden = true; window.scrollTo({ top: 0 }); $('#q').select(); $('#q').focus() }
 
 // 결과 그리기
 function render() {
@@ -346,5 +357,7 @@ document.querySelectorAll('[data-dl]').forEach(b => b.onclick = async () => {
   } catch (e) { alert('결과서를 만들지 못했습니다. ' + e.message) } finally { b.disabled = false; b.textContent = t } })
 })()
 </script>
+<script src="/lib/nav.js"></script>
+<script src="/beta/beta.js" defer></script>
 </body>
 </html>
