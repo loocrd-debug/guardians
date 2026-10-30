@@ -58,6 +58,9 @@ form.q input[type=text]{width:100%;border:0;font-size:17px;padding:6px 0 12px;ou
 .log .sum .n{font-size:30px;font-weight:800;color:#fff}
 .log .sum .m{font-size:13.5px;color:#c9c9cf;line-height:1.6;flex:1;min-width:160px}
 .log .sum .btn{border:0}
+.log .sum[hidden]{display:none}
+#rh2:focus{outline:none}
+
 @keyframes blink{50%{opacity:.3}}.log li.now .k{animation:blink 1s infinite}
 @media (prefers-reduced-motion:reduce){.log li.now .k{animation:none}}
 /* 제품 목록 */
@@ -83,10 +86,10 @@ form.q input[type=text]{width:100%;border:0;font-size:17px;padding:6px 0 12px;ou
 .rbody{margin-top:20px;display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
 .shot{flex:1 1 480px;min-width:0;margin:0;border:1px solid #e4e4e8;border-radius:16px;overflow:hidden;background:#f6f6f8;position:sticky;top:16px}
 .shot .cap{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #e4e4e8;background:#fff;font-size:13px;color:var(--mut)}
-.shot .pic{position:relative}
+.shot .pic{position:relative;overflow:hidden;padding:0}
 .shot img{display:block;width:100%;height:auto}
 .mk{position:absolute;border:2px solid var(--ink);border-radius:4px;background:rgba(59,91,253,.08);cursor:pointer;padding:0}
-.mk span{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff}
+.mk span{position:absolute;left:-4px;top:-4px;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff}
 .mk.c1{border-color:var(--acc)}.mk.c1 span{background:var(--acc)}
 .mk.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--acc)}
 .list{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:10px}
@@ -312,7 +315,7 @@ function shot() {
   if (!r.screenshot) { $('#shot').hidden = true; return }
   const W = (r.screenshotViewport || {}).width || 1280, H = (r.screenshotViewport || {}).height || 900
   $('#shot').hidden = false; $('#vp').textContent = `${W} × ${H}`
-  $('#pic').innerHTML = `<img src="data:image/png;base64,${r.screenshot}" alt="검사한 페이지 첫 화면 — 번호는 접근성 문제 위치">` + boxes.map(b => `<button type="button" class="mk ${b.imp === 'critical' ? 'c1' : ''}" data-vi="${b.vi}" aria-label="${b.num}번 문제로 이동" style="left:${b.r.x / W * 100}%;top:${b.r.y / H * 100}%;width:${Math.max(b.r.w, 8) / W * 100}%;height:${Math.max(b.r.h, 8) / H * 100}%"><span>${b.num}</span></button>`).join('')
+  $('#pic').innerHTML = `<img src="data:image/png;base64,${r.screenshot}" alt="검사한 페이지 첫 화면 — 번호는 접근성 문제 위치">` + boxes.map(b => `<button type="button" class="mk ${b.imp === 'critical' ? 'c1' : ''}" data-vi="${b.vi}" aria-label="${b.num}번 문제로 이동" style="left:${b.r.x / W * 100}%;top:${b.r.y / H * 100}%;width:${Math.max(b.r.w, 8) / W * 100}%;height:${Math.max(b.r.h, 8) / H * 100}%"><span style="${b.r.x < 16 || b.r.y < 16 ? 'transform:none;left:2px;top:2px' : ''}">${b.num}</span></button>`).join('')
   $('#pic').onclick = e => { const b = e.target.closest('.mk'); if (!b) return; if (tab !== 'all' && tab !== 'a11y') { tab = 'a11y'; $('#tabs').querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.t === 'a11y'))); list() } const d = document.getElementById('v' + b.dataset.vi); if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); d.querySelector('summary').focus(); mark(b.dataset.vi) } }
 }
 const mark = vi => document.querySelectorAll('.mk').forEach(m => m.classList.toggle('on', m.dataset.vi === String(vi)))
