@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가디언즈 베타 — 웹 품질 검사</title>
+<link rel="stylesheet" href="/lib/pretendard.css">
+<style>
+:root{--ink:#0b0b0c;--sub:#4a4a50;--mut:#5f5f66;--line:#ececef;--line2:#d4d4d9;--soft:#f3f3f5;--acc:#3b5bfd;--accsoft:#f3f5ff;--good:#0b6b47;--mono:ui-monospace,"Cascadia Mono",Consolas,"D2Coding",monospace}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic","맑은 고딕",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--ink)}a:hover{color:var(--acc)}
+button,input{font:inherit}
+:focus-visible{outline:3px solid #f79009;outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 40px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* 상단 */
+header.top{border-bottom:1px solid var(--line)}
+header.top .wrap{height:68px;display:flex;align-items:center;gap:30px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+.logo b{color:var(--acc)}
+.beta{font-size:11.5px;font-weight:700;border:1px solid var(--ink);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:3px}
+nav.prod{display:flex;gap:22px;flex-wrap:wrap;font-size:14.5px}
+nav.prod a{text-decoration:none;color:#3d3d42}nav.prod a[aria-current]{color:var(--ink);font-weight:700}
+.topr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line2);background:#fff;color:var(--ink);font-size:14.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn.dark{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+.btn[disabled]{opacity:.55;cursor:default}
+/* 첫 화면 */
+.hero{display:flex;flex-wrap:wrap;gap:48px;align-items:center;padding:56px 0 48px}
+.hero .l{flex:1 1 480px;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;padding:6px 12px;border:1px solid #e2e2e6;border-radius:999px;font-size:13px;color:#3d3d42}
+.badge i{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+h1.big{margin:0;font-size:54px;line-height:1.14;font-weight:800;letter-spacing:-.04em}
+h1.big em{font-style:normal;color:var(--acc)}
+.lead{margin:20px 0 0;font-size:17px;line-height:1.7;color:var(--sub);max-width:480px}
+form.q{margin-top:28px;max-width:540px;border:1px solid #dcdce1;border-radius:16px;padding:14px 14px 12px;box-shadow:0 12px 32px rgba(11,11,12,.06)}
+form.q label.cap{display:block;font-size:12.5px;color:#66666d;margin-bottom:4px}
+form.q input[type=text]{width:100%;border:0;font-size:17px;padding:6px 0 12px;outline:none;color:var(--ink);background:transparent}
+.chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{height:34px;padding:0 12px;border-radius:999px;border:1px solid #dcdce1;background:#fff;color:#3d3d42;font-size:13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.fixed{cursor:default}
+.qact{margin-left:auto;display:flex;gap:6px}
+.ico{width:44px;height:44px;border-radius:12px;border:1px solid #dcdce1;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.ico.on{border-color:var(--acc);color:var(--acc)}
+.err{margin:12px 0 0;color:#9b2121;font-size:14px;min-height:20px}
+/* 검사 로그 */
+.log{flex:1 1 520px;min-width:0;background:var(--ink);color:#e8e8ea;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(11,11,12,.18)}
+.log .bar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid #222226;font-size:13px;color:#9a9aa2}
+.log .bar i{width:10px;height:10px;border-radius:50%;background:#3a3a40}
+.log .bar .st{margin-left:auto;color:#9db0ff}
+.log ol{list-style:none;margin:0;padding:20px 22px;font-family:var(--mono);font-size:13.5px;line-height:2.1;min-height:200px}
+.log li .k{display:inline-block;width:18px}
+.log li.done .k{color:#6ad08f}.log li.now .k{color:#9db0ff}.log li.wait{color:#6b6b72}
+.log .sum{margin:0 22px 22px;background:#16161a;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.log .sum .n{font-size:30px;font-weight:800;color:#fff}
+.log .sum .m{font-size:13.5px;color:#c9c9cf;line-height:1.6;flex:1;min-width:160px}
+.log .sum .btn{border:0}
+@keyframes blink{50%{opacity:.3}}.log li.now .k{animation:blink 1s infinite}
+@media (prefers-reduced-motion:reduce){.log li.now .k{animation:none}}
+/* 제품 목록 */
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));border-top:1px solid var(--ink);margin:8px 0 64px}
+.prods a{text-decoration:none;color:var(--ink);padding:22px 22px 22px 0;display:flex;flex-direction:column;gap:6px}
+.prods .no{font-family:var(--mono);font-size:12.5px;color:var(--acc)}
+.prods b{font-size:18px}.prods span.d{font-size:14px;color:#55555c;line-height:1.55}
+/* 결과 */
+#res{display:none;padding:8px 0 64px}
+#res.on{display:block}
+.rhead{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;padding:24px 0 28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.rhead .meta{font-family:var(--mono);font-size:13px;color:var(--mut);line-height:1.7;word-break:break-all}
+.rhead h2{margin:10px 0 0;font-size:46px;line-height:1.15;font-weight:800;letter-spacing:-.04em}
+.rhead h2 em{font-style:normal;color:var(--acc)}
+.sev{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;font-size:13px}
+.sev span{padding:5px 12px;border-radius:999px;border:1px solid var(--line2);color:#3d3d42}
+.sev span.s1{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.sev span.s2{border-color:var(--ink);color:var(--ink);font-weight:700}
+.racts{flex:1 1 360px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tabs{margin-top:20px;display:flex;gap:6px;flex-wrap:wrap;font-size:14px}
+.tabs button{padding:9px 14px;border-radius:10px;border:0;background:var(--soft);color:#3d3d42;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;font-weight:700}
+.rbody{margin-top:20px;display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.shot{flex:1 1 480px;min-width:0;margin:0;border:1px solid #e4e4e8;border-radius:16px;overflow:hidden;background:#f6f6f8;position:sticky;top:16px}
+.shot .cap{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #e4e4e8;background:#fff;font-size:13px;color:var(--mut)}
+.shot .pic{position:relative}
+.shot img{display:block;width:100%;height:auto}
+.mk{position:absolute;border:2px solid var(--ink);border-radius:4px;background:rgba(59,91,253,.08);cursor:pointer;padding:0}
+.mk span{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px #fff}
+.mk.c1{border-color:var(--acc)}.mk.c1 span{background:var(--acc)}
+.mk.on{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--acc)}
+.list{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.it{border:1px solid #e4e4e8;border-radius:16px}
+.it[open]{border-color:var(--ink)}
+.it summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.it summary::-webkit-details-marker{display:none}
+.it .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.it .num.c1{background:var(--acc)}.it .num.none{background:var(--soft);color:var(--mut)}
+.it .tt{font-size:16px;font-weight:700}
+.it .tag{font-size:13px;color:var(--mut)}
+.it .lv{margin-left:auto;font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line2);color:#3d3d42;white-space:nowrap}
+.it .lv.s1{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}.it .lv.s2{border-color:var(--ink);color:var(--ink);font-weight:700}
+.it .bd{padding:0 20px 18px}
+.it dl{margin:0;display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px 14px;font-size:14.5px;line-height:1.6}
+.it dt{color:#6b6b72}.it dd{margin:0;word-break:break-word}
+.it code{font-family:var(--mono);font-size:12.5px}
+.ba{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ba div{border-radius:10px;padding:12px 14px;min-width:0}
+.ba .b{background:#f6f6f8}.ba .a{background:var(--ink);color:#e8e8ea}
+.ba small{display:block;font-size:12px;color:#6b6b72;margin-bottom:6px}.ba .a small{color:#9a9aa2}
+.ba pre{margin:0;white-space:pre-wrap;word-break:break-all;font-family:var(--mono);font-size:12.5px;max-height:180px;overflow:auto}
+.it .tools{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.it .tools .btn{height:38px;font-size:13.5px}
+.empty{padding:28px 0;color:var(--mut);font-size:15px}
+.manual{margin-top:32px;border-top:1px solid var(--ink)}
+.manual summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:22px 0}
+.manual summary::-webkit-details-marker{display:none}
+.manual summary b{font-size:20px}.manual summary span{font-size:14px;color:var(--mut)}.manual summary em{margin-left:auto;font-style:normal;font-size:14px;font-weight:700}
+.manual ol{margin:0 0 12px;padding-left:22px;font-size:14.5px;line-height:1.9;color:#3d3d42}
+footer{border-top:1px solid var(--line)}
+footer .wrap{padding:22px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+footer img{height:20px;width:auto}
+footer .r{margin-left:auto;display:flex;gap:14px}
+footer a{color:var(--mut)}
+@media (max-width:760px){.wrap{padding:0 20px}h1.big{font-size:38px}.rhead h2{font-size:34px}.ba{grid-template-columns:1fr}.shot{position:static}}
+</style>
+</head>
+<body>
+<a class="sr" href="#main">본문 바로가기</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/beta/">가디언즈<b>.</b><span class="beta">베타</span></a>
+    <nav class="prod" aria-label="제품">
+      <a href="/beta/" aria-current="page">Scan</a>
+      <a href="/reader.html">Reader</a>
+      <a href="/compat.html">Compat</a>
+      <a href="/krds-watch.html">KRDS Watch</a>
+      <a href="/download.html">Extension</a>
+    </nav>
+    <div class="topr">
+      <a class="btn" href="/">기존 화면</a>
+      <a class="btn dark" href="/download.html">다운로드</a>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <div class="hero">
+    <section class="l">
+      <p class="badge"><i></i>새 디자인 베타 · 의견을 모으는 중입니다</p>
+      <h1 class="big">검사는 30초,<br>결과서는<br><em>버튼 한 번.</em></h1>
+      <p class="lead">공공 웹사이트의 접근성 · KRDS · 표준을 한 번에 검사하고, 감리에 그대로 내는 결과서를 만듭니다.</p>
+      <form class="q" id="qf" novalidate>
+        <label class="cap" for="q">검사할 사이트</label>
+        <input id="q" type="text" autocomplete="url" placeholder="www.example.go.kr 또는 “국민신문고 접근성 검사해 줘”">
+        <div class="chips" role="group" aria-label="검사 항목">
+          <button type="button" class="chip fixed" aria-pressed="true" aria-disabled="true" title="접근성은 항상 검사합니다">접근성</button>
+          <button type="button" class="chip" data-k="checkLinks" aria-pressed="true">깨진 링크</button>
+          <button type="button" class="chip" data-k="checkSpelling" aria-pressed="false">오탈자</button>
+          <button type="button" class="chip" data-k="checkKRDS" aria-pressed="true">KRDS</button>
+          <button type="button" class="chip" data-k="checkW3C" aria-pressed="false">HTML 표준</button>
+          <div class="qact">
+            <button type="button" class="ico" id="mic" aria-label="말로 입력하기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+            <button type="submit" class="btn pri" id="go">검사 시작</button>
+          </div>
+        </div>
+      </form>
+      <p class="err" id="err" role="alert"></p>
+    </section>
+
+    <section class="log" aria-label="검사 진행">
+      <div class="bar"><i></i><i></i><i></i><span id="lhost" style="margin-left:8px">대기 중</span><span class="st" id="lst"></span></div>
+      <ol id="steps" aria-live="polite"><li class="wait"><span class="k">·</span> 주소를 넣고 검사 시작을 누르면 여기서 진행됩니다</li></ol>
+      <div class="sum" id="lsum" hidden>
+        <div><div style="font-size:12px;color:#9a9aa2">고칠 문제</div><div class="n" id="lsn">0건</div></div>
+        <div class="m" id="lsm"></div>
+        <a class="btn" href="#res" style="background:#fff;color:var(--ink)">결과 보기</a>
+      </div>
+    </section>
+  </div>
+
+  <section id="res" aria-labelledby="rh2">
+    <div class="rhead">
+      <div style="flex:999 1 480px;min-width:0">
+        <div class="meta" id="rmeta"></div>
+        <h2 id="rh2" tabindex="-1"></h2>
+        <div class="sev" id="rsev"></div>
+      </div>
+      <div class="racts">
+        <button type="button" class="btn pri" data-dl="pptx">PPTX 결과서 저장</button>
+        <button type="button" class="btn" data-dl="excel">Excel</button>
+        <button type="button" class="btn" data-dl="html">HTML</button>
+        <button type="button" class="btn" id="again">다른 사이트 검사</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="검사 종류" id="tabs"></div>
+    <div class="rbody">
+      <figure class="shot" id="shot" hidden>
+        <div class="cap">페이지 캡처 · 번호를 누르면 해당 문제로 이동<span style="margin-left:auto" id="vp"></span></div>
+        <div class="pic" id="pic"></div>
+      </figure>
+      <div class="list" id="list" role="tabpanel"></div>
+    </div>
+    <details class="manual" id="man" hidden>
+      <summary><b>사람이 확인해야 하는 항목</b><span id="mann"></span><em>펼쳐서 확인 →</em></summary>
+      <ol id="manl"></ol>
+    </details>
+  </section>
+
+  <section aria-label="가디언즈 제품">
+    <div class="prods">
+      <a href="/beta/"><span class="no">01 · Scan</span><b>7가지 검사 · 결과서</b><span class="d">위치 · 근거 · 수정 코드 → PPTX · Excel</span></a>
+      <a href="/reader.html"><span class="no">02 · Reader</span><b>스크린 리더</b><span class="d">낭독 대본 · 듣기 · 모바일 점검</span></a>
+      <a href="/compat.html"><span class="no">03 · Compat</span><b>브라우저 호환</b><span class="d">Chrome · Edge · Safari · Firefox 비교</span></a>
+      <a href="/krds-watch.html"><span class="no">04 · KRDS Watch</span><b>AI 기준 추적</b><span class="d">매주 KRDS 변경 해석 · 승인 후 배포</span></a>
+      <a href="/download.html"><span class="no">05 · Extension</span><b>크롬 확장</b><span class="d">보고 있는 페이지를 옆 패널에서</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="/solideo-logo.png" alt="솔리데오">
+    <span>가디언즈 베타 — 새 디자인을 실제 검사로 확인하는 화면입니다</span>
+    <span class="r"><a href="/manual.pdf">사용설명서</a><a href="/criteria.html">검사 기준</a><a href="/">기존 화면</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const LV = { critical: ['치명', 's1'], serious: ['심각', 's2'], moderate: ['보통', ''], minor: ['경미', ''] }
+let R = null, O = null, tab = 'all'
+
+// 검사 항목 칩
+document.querySelectorAll('.chip[data-k]').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'))
+const opts = () => { const o = { level: 'wcag2aa', includeScreenshot: true, scanMode: 'expert', useW3CLinks: false }; document.querySelectorAll('.chip[data-k]').forEach(b => o[b.dataset.k] = b.getAttribute('aria-pressed') === 'true'); return o }
+const setChips = c => document.querySelectorAll('.chip[data-k]').forEach(b => { if (c && c[b.dataset.k] != null) b.setAttribute('aria-pressed', String(!!c[b.dataset.k])) })
+
+// 말로 입력 (크롬 · 엣지)
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+if (!SR) $('#mic').hidden = true
+$('#mic').onclick = () => { const r = new SR(); r.lang = 'ko-KR'; r.interimResults = true; $('#mic').classList.add('on')
+  r.onresult = e => { $('#q').value = [...e.results].map(x => x[0].transcript).join('') }
+  r.onend = () => { $('#mic').classList.remove('on'); if ($('#q').value.trim()) $('#qf').requestSubmit() }
+  r.onerror = () => $('#mic').classList.remove('on'); try { r.start() } catch (_) {} }
+
+// 검사 진행 로그 — 서버는 한 번에 응답하므로 단계를 차례로 보여 줌
+let tick = 0
+function runLog(host, o) {
+  const st = [['페이지 열기 · Chromium', 2], ['접근성 · KWCAG 2.2 33항목', 6]]
+  if (o.checkLinks) st.push(['깨진 링크 확인', 10]); if (o.checkKRDS) st.push(['KRDS 구조 28 · 토큰 11', 6]); if (o.checkSpelling) st.push(['오탈자 확인', 5]); if (o.checkW3C) st.push(['HTML 표준 확인', 5])
+  st.push(['결과 정리', 99])
+  $('#lhost').textContent = host; $('#lst').textContent = '검사 중'; $('#lsum').hidden = true
+  let i = 0, left = st[0][1]
+  const draw = () => { $('#steps').innerHTML = st.map(([t], k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'wait'}"><span class="k">${k < i ? '✓' : k === i ? '●' : '·'}</span> ${esc(t)}</li>`).join('') }
+  draw(); clearInterval(tick); tick = setInterval(() => { if (--left <= 0 && i < st.length - 1) { i++; left = st[i][1]; draw() } }, 1000)
+  return st
+}
+function finishLog(r, o) {
+  clearInterval(tick); const c = counts(r, o)
+  const lines = [['페이지 열기 · ' + ((r.engine || {}).browser || 'Chromium'), ''], ['접근성 · KWCAG 2.2 33항목', `위반 ${c.a11y}`]]
+  if (o.checkLinks) lines.push(['깨진 링크', `${c.links} / ${(r.links || {}).total ?? '?'}`]); if (o.checkKRDS) lines.push(['KRDS 구조 · 토큰', `미준수 ${c.krds}`]); if (o.checkSpelling) lines.push(['오탈자', `${c.spell}`]); if (o.checkW3C) lines.push(['HTML 표준', `오류 ${c.w3c}`])
+  $('#steps').innerHTML = lines.map(([t, n]) => `<li class="done"><span class="k">✓</span> ${esc(t)}${n ? ' — ' + esc(n) : ''}</li>`).join('')
+  $('#lst').textContent = '완료'; $('#lsum').hidden = false; $('#lsn').textContent = c.total + '건'
+  $('#lsm').textContent = (r.violations || []).slice(0, 3).map(v => v.help || v.description).join(' · ') || '자동 검사로 찾은 접근성 위반이 없습니다'
+}
+const counts = (r, o) => { const a11y = (r.violations || []).length, links = o.checkLinks && r.links ? (r.links.dead || []).length : 0, spell = o.checkSpelling && r.spelling ? (r.spelling.issues || []).length : 0, krds = o.checkKRDS && r.krds ? (r.krds.failed || 0) : 0, w3c = o.checkW3C && r.w3c ? (r.w3c.errorCount || 0) : 0; return { a11y, links, spell, krds, w3c, total: a11y + links + spell + krds + w3c } }
+
+// 검사 실행 — 주소가 아니면 AI가 문장을 해석
+$('#qf').onsubmit = async e => {
+  e.preventDefault(); $('#err').textContent = ''; let t = $('#q').value.trim(); if (!t) { $('#err').textContent = '사이트 주소를 넣어 주세요.'; $('#q').focus(); return }
+  const go = $('#go'); go.disabled = true; go.textContent = '검사 중…'
+  try {
+    let url = t
+    if (!/^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(t)) {
+      $('#lhost').textContent = '말을 해석하는 중'; $('#steps').innerHTML = '<li class="now"><span class="k">●</span> AI가 문장을 해석하는 중</li>'
+      const a = await (await fetch('/api/ai/command', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })).json().catch(() => ({}))
+      if (!a.ok || !a.url) throw new Error(a.error || '사이트 이름을 찾지 못했습니다. 주소를 직접 넣어 주세요.')
+      url = a.url; setChips(a.checks)
+    }
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url
+    O = opts(); runLog(url.replace(/^https?:\/\//, '').replace(/\/$/, ''), O)
+    const res = await fetch('/api/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, ...O }) })
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || '서버 오류 ' + res.status)
+    R = await res.json(); finishLog(R, O); render(); $('#res').classList.add('on')
+    setTimeout(() => { $('#res').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); $('#rh2').focus({ preventScroll: true }) }, 400)
+  } catch (err) { clearInterval(tick); $('#lst').textContent = '중단'; $('#err').textContent = '검사하지 못했습니다. ' + err.message }
+  finally { go.disabled = false; go.textContent = '검사 시작' }
+}
+$('#again').onclick = () => { window.scrollTo({ top: 0 }); $('#q').select(); $('#q').focus() }
+
+// 결과 그리기
+function render() {
+  const r = R, o = O, c = counts(r, o), en = r.engine || {}, ic = (r.summary || {}).impactCounts || {}
+  const k = r.krds && r.krds.url ? 'KRDS 기준 적용' : ''
+  $('#rmeta').innerHTML = `${esc(r.url)} · ${esc(new Date(r.scannedAt || Date.now()).toLocaleString('ko-KR'))}<br>axe-core ${esc(en.axe || '')} · ${esc(en.viewport || '')} · ${en.network === 'offline' ? '폐쇄망 엔진' : '인터넷'}${k ? ' · ' + k : ''} · 접근성 점수 ${esc(r.score ?? '-')}`
+  $('#rh2').innerHTML = r.scoreConfidence === 'low' ? '판정 보류 — 검사할 내용이 너무 적습니다' : c.total ? `고칠 문제 <em>${c.total}건</em>` : '자동 검사로 찾은 문제가 <em>없습니다</em>'
+  $('#rsev').innerHTML = [['치명', ic.critical, 's1'], ['심각', ic.serious, 's2'], ['보통', ic.moderate, ''], ['경미', ic.minor, '']].filter(x => x[1]).map(([l, n, s]) => `<span class="${s}">${l} ${n}</span>`).join('') + ((r.manualItems || []).length ? `<span>사람이 확인할 항목 ${(r.manualItems || []).length}</span>` : '')
+  const T = [['all', '전체', c.total], ['a11y', '접근성', c.a11y]]
+  if (o.checkKRDS) T.push(['krds', 'KRDS', c.krds]); if (o.checkLinks) T.push(['links', '깨진 링크', c.links]); if (o.checkSpelling) T.push(['spell', '오탈자', c.spell]); if (o.checkW3C) T.push(['w3c', 'HTML 표준', c.w3c])
+  tab = 'all'
+  $('#tabs').innerHTML = T.map(([id, l, n]) => `<button type="button" role="tab" data-t="${id}" aria-selected="${id === tab}">${l} ${n}</button>`).join('')
+  $('#tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) return; tab = b.dataset.t; $('#tabs').querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', String(x === b))); list() }
+  shot(); list()
+  const m = r.manualItems || []; $('#man').hidden = !m.length; $('#mann').textContent = `${m.length}개 · 자동 검사로는 판정할 수 없음`
+  $('#manl').innerHTML = m.map(x => `<li>${esc(x.title || x.name || x.help || x.id || '')}${x.kwcag ? ` <span style="color:var(--mut)">· KWCAG ${esc(x.kwcag.no || x.kwcag)}</span>` : ''}</li>`).join('')
+}
+function shot() {
+  const r = R, vs = r.violations || []; let num = 0; const boxes = []
+  vs.forEach((x, vi) => { const s = (x.nodes || []).filter(n => n.rect && !n.rect.hidden && n.rect.inView && !n.rect.big && !n.rect.covered); x._num = s.length ? ++num : null; s.slice(0, 6).forEach(n => boxes.push({ vi, num: x._num, imp: x.impact, r: n.rect })) })
+  if (!r.screenshot) { $('#shot').hidden = true; return }
+  const W = (r.screenshotViewport || {}).width || 1280, H = (r.screenshotViewport || {}).height || 900
+  $('#shot').hidden = false; $('#vp').textContent = `${W} × ${H}`
+  $('#pic').innerHTML = `<img src="data:image/png;base64,${r.screenshot}" alt="검사한 페이지 첫 화면 — 번호는 접근성 문제 위치">` + boxes.map(b => `<button type="button" class="mk ${b.imp === 'critical' ? 'c1' : ''}" data-vi="${b.vi}" aria-label="${b.num}번 문제로 이동" style="left:${b.r.x / W * 100}%;top:${b.r.y / H * 100}%;width:${Math.max(b.r.w, 8) / W * 100}%;height:${Math.max(b.r.h, 8) / H * 100}%"><span>${b.num}</span></button>`).join('')
+  $('#pic').onclick = e => { const b = e.target.closest('.mk'); if (!b) return; if (tab !== 'all' && tab !== 'a11y') { tab = 'a11y'; $('#tabs').querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.t === 'a11y'))); list() } const d = document.getElementById('v' + b.dataset.vi); if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); d.querySelector('summary').focus(); mark(b.dataset.vi) } }
+}
+const mark = vi => document.querySelectorAll('.mk').forEach(m => m.classList.toggle('on', m.dataset.vi === String(vi)))
+function list() {
+  const r = R, o = O, out = []
+  if (tab === 'all' || tab === 'a11y') (r.violations || []).forEach((x, vi) => {
+    const n0 = (x.nodes || [])[0] || {}, f = x.fix || {}, lv = LV[x.impact] || [x.impact, ''], after = (n0.suggest && n0.suggest.after) || f.after || ''
+    out.push(`<details class="it" id="v${vi}" ${out.length === 0 ? 'open' : ''}><summary><span class="num ${x._num ? (x.impact === 'critical' ? 'c1' : '') : 'none'}">${x._num ?? '–'}</span><span class="tt">${esc(x.help || x.description)}</span><span class="tag">${x.kwcag ? 'KWCAG ' + esc(x.kwcag.no) + ' ' + esc(x.kwcag.name || '') : '모범 사례'} · ${(x.nodes || []).length}곳</span><span class="lv ${lv[1]}">${lv[0]}</span></summary>
+      <div class="bd"><dl><dt>어디</dt><dd><code>${esc((n0.target || []).join(' ') || '-')}</code></dd><dt>무엇</dt><dd>${esc(f.why || x.description || '')}</dd><dt>어떻게</dt><dd>${esc(f.how || '규칙 설명을 참고하세요.')}</dd></dl>
+      ${n0.html || after ? `<div class="ba"><div class="b"><small>지금 코드</small><pre>${esc(String(n0.html || f.before || '').slice(0, 400))}</pre></div><div class="a"><small>이렇게 고치기</small><pre>${esc(after)}</pre></div></div>` : ''}
+      <div class="tools">${after ? `<button type="button" class="btn" data-copy="${esc(after)}">코드 복사</button>` : ''}${x.helpUrl ? `<a class="btn" href="${esc(x.helpUrl)}" target="_blank" rel="noopener">규칙 설명</a>` : ''}</div></div></details>`) })
+  if ((tab === 'all' || tab === 'krds') && o.checkKRDS && r.krds) (r.krds.items || []).filter(i => !i.passed).forEach(i => out.push(`<details class="it"><summary><span class="num none">K</span><span class="tt">${esc(i.name)}</span><span class="tag">KRDS · ${esc(i.category || '')}${i.partial ? ' · 부분 준수' : ''}</span><span class="lv ${i.level === '필수' ? 's2' : ''}">${esc(i.level || '')}</span></summary><div class="bd"><dl><dt>지금</dt><dd>${esc(i.deepDetail || i.detail || '')}</dd><dt>어떻게</dt><dd>${esc(i.recommend || '')}</dd></dl></div></details>`))
+  if ((tab === 'all' || tab === 'links') && o.checkLinks && r.links) (r.links.dead || []).forEach(l => out.push(`<details class="it"><summary><span class="num none">L</span><span class="tt">${esc(l.text || '(글자 없는 링크)')} — 열리지 않음</span><span class="tag">${esc(l.status || l.error || '')}</span><span class="lv">깨진 링크</span></summary><div class="bd"><dl><dt>주소</dt><dd><code>${esc(l.url)}</code></dd><dt>어떻게</dt><dd>주소를 고치거나 링크를 지우세요.</dd></dl></div></details>`))
+  if ((tab === 'all' || tab === 'spell') && o.checkSpelling && r.spelling) (r.spelling.issues || []).forEach(s => out.push(`<details class="it"><summary><span class="num none">가</span><span class="tt">${esc(s.word)} → ${esc(s.suggestion || '')}</span><span class="tag">${esc(s.desc || '맞춤법')}</span><span class="lv">오탈자</span></summary><div class="bd"><dl><dt>문장</dt><dd>${esc(s.context || '')}</dd>${s.help ? `<dt>설명</dt><dd>${esc(s.help)}</dd>` : ''}</dl></div></details>`))
+  if ((tab === 'all' || tab === 'w3c') && o.checkW3C && r.w3c) (r.w3c.errors || []).slice(0, 50).forEach(m => out.push(`<details class="it"><summary><span class="num none">H</span><span class="tt">${esc(m.message || m.msg || '')}</span><span class="tag">${m.lastLine ? m.lastLine + '행' : ''}</span><span class="lv">HTML 오류</span></summary><div class="bd"><dl><dt>코드</dt><dd><code>${esc(m.extract || '')}</code></dd></dl></div></details>`))
+  $('#list').innerHTML = out.join('') || '<p class="empty">이 항목에서 찾은 문제가 없습니다.</p>'
+  $('#list').querySelectorAll('details[id^=v]').forEach(d => d.addEventListener('toggle', () => d.open && mark(d.id.slice(1))))
+  $('#list').onclick = e => { const b = e.target.closest('[data-copy]'); if (b) { navigator.clipboard.writeText(b.dataset.copy).then(() => { const t = b.textContent; b.textContent = '복사했습니다'; setTimeout(() => b.textContent = t, 1500) }) } }
+}
+
+// 결과서
+const P = { pptx: ['/api/report/pptx', '접근성_결과서', 'pptx'], excel: ['/api/report/excel', '검사보고서', 'xlsx'], html: ['/api/report', '검사보고서', 'html'] }
+document.querySelectorAll('[data-dl]').forEach(b => b.onclick = async () => {
+  if (!R) return; const [path, nm, ext] = P[b.dataset.dl], t = b.textContent; b.disabled = true; b.textContent = '만드는 중…'
+  try { const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...R, reportMeta: { org: '', dept: '', inspector: '', project: '', generatedAt: new Date().toLocaleString('ko-KR'), toolVersion: 'v6.21 베타' } }) })
+    if (!res.ok) throw new Error('HTTP ' + res.status); const bl = await res.blob(), a = document.createElement('a'); a.href = URL.createObjectURL(bl)
+    const d = new Date(), st = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; a.download = `${nm}_${st}.${ext}`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000)
+  } catch (e) { alert('결과서를 만들지 못했습니다. ' + e.message) } finally { b.disabled = false; b.textContent = t } })
+})()
+</script>
+</body>
+</html>
