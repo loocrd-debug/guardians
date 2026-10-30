@@ -44,3 +44,12 @@ input::placeholder,textarea::placeholder{color:#b4b4bb!important;opacity:1}
 input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:17px;height:17px;vertical-align:-3px}
 /* 버튼 묶음(예: iPhone · Galaxy · 데스크톱)은 바깥을 알약으로 */
 [role=group],.seg,.segmented{border-radius:999px!important}
+/* 세로로 늘어나는 버튼(목록 옆 큰 실행 버튼)은 알약 대신 큰 둥근 사각형 */
+button.self-stretch,button[class*="h-full"],button[class*="py-4"],button[class*="py-5"],button[class*="py-6"]{border-radius:24px!important}
+/* 체크박스 · 라디오 — 둥근 파란 선택 (기존 검정 대신) */
+input[type=checkbox],input[type=radio]{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0 2px 0 0;border:1.5px solid #b5b5bc;border-radius:6px;background:#fff;display:inline-grid;place-content:center;cursor:pointer;vertical-align:-4px;accent-color:var(--acc)!important;transition:background .12s,border-color .12s}
+input[type=radio]{border-radius:50%}
+input[type=checkbox]:checked{background:var(--acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--acc)}
+input[type=radio]:checked{border:5px solid var(--acc)}
+input[type=checkbox]:disabled,input[type=radio]:disabled{opacity:.5;cursor:default}
+@media (prefers-reduced-motion:reduce){input[type=checkbox],input[type=radio]{transition:none}}
