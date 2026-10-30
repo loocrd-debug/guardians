@@ -34,3 +34,13 @@ table th{color:var(--muted)}
 /* 본문 · 하단 폭을 상단바(1280)와 맞춤 */
 main:not(.wrap),.g-foot-in,.g-wrap,.wrap-in{max-width:1280px!important;padding-left:40px!important;padding-right:40px!important;box-sizing:border-box}
 @media (max-width:760px){main:not(.wrap),.g-foot-in,.g-top-in,.g-title{padding-left:20px!important;padding-right:20px!important}}
+/* ── 둥근 톤 (메인 · 결과와 동일) ── */
+button:not(.g-more-btn):not([role=tab]):not(.mk),a.btn,.btn,[class*="rounded-md"]:is(button,a),[class*="rounded-lg"]:is(button,a),[class*="rounded-xl"]:is(button,a){border-radius:999px!important}
+input[type=text],input[type=url],input[type=email],input[type=number],input[type=password],input[type=search],select{border-radius:999px!important;padding-left:18px!important;padding-right:18px!important}
+textarea{border-radius:20px!important;padding:14px 18px!important}
+input::placeholder,textarea::placeholder{color:#b4b4bb!important;opacity:1}
+[class*="rounded-lg"]:not(button):not(a):not(input),[class*="rounded-xl"]:not(button):not(a):not(input),[class*="rounded-2xl"]:not(button):not(a):not(input),.card,.box,details{border-radius:22px!important}
+[role=tab],.tab,.tabs button{border-radius:999px!important}
+input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:17px;height:17px;vertical-align:-3px}
+/* 버튼 묶음(예: iPhone · Galaxy · 데스크톱)은 바깥을 알약으로 */
+[role=group],.seg,.segmented{border-radius:999px!important}
