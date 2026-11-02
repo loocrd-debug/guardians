@@ -15,4 +15,4 @@ main a:hover{color:var(--acc)}
 .a5em{font-style:normal;color:var(--acc)}
 /* 좁은 읽기 화면(개인정보처리방침 등)도 제목 시작선을 로고에 맞추고, 글 폭만 좁게 */
 main[style*="max-width:860px"]{max-width:1180px!important}
-main[style*="max-width:860px"]>*{max-width:860px}
+main[style*="max-width:860px"]>*{max-width:860px;margin-left:0!important;margin-right:0!important}
