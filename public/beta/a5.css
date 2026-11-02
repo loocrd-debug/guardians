@@ -16,3 +16,19 @@ main a:hover{color:var(--acc)}
 /* 좁은 읽기 화면(개인정보처리방침 등)도 제목 시작선을 로고에 맞추고, 글 폭만 좁게 */
 main[style*="max-width:860px"]{max-width:1180px!important}
 main[style*="max-width:860px"]>*{max-width:860px;margin-left:0!important;margin-right:0!important}
+/* 로고 · 상태 표시 · 메뉴를 한 가로줄(세로 가운데)에 */
+.g-brand{display:inline-flex!important;align-items:center!important;gap:0}
+.g-brand small{line-height:1!important;margin-left:8px;align-self:center}
+.g-brand .a5beta{align-self:center;vertical-align:0!important;line-height:1.4}
+.g-badges{align-items:center!important}
+.g-badges>*{display:inline-flex!important;align-items:center!important;line-height:1!important}
+/* 크롬 확장 배너 (메인) */
+.a5ext-banner{margin:56px 0 0;padding:22px 24px;border-radius:16px;background:#f4f6ff;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.a5ext-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.a5ext-banner .tx{flex:1 1 320px;min-width:0}
+.a5ext-banner .tx b{display:block;font-size:16px;color:#0b0b0c}
+.a5ext-banner .tx span{display:block;font-size:14px;color:#5f5f66;margin-top:4px;line-height:1.6}
+.a5ext-banner .bt{display:flex;gap:8px;flex-wrap:wrap}
+.a5ext-banner a{height:42px;padding:0 16px;border-radius:10px;display:inline-flex;align-items:center;font-size:14px;font-weight:600;text-decoration:none}
+.a5ext-banner a.p{background:var(--acc);color:#fff}.a5ext-banner a.p:hover{color:#fff;filter:brightness(.95)}
+.a5ext-banner a.s{background:#fff;color:#0b0b0c;border:1px solid #d4d4d9}
