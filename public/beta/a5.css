@@ -22,6 +22,7 @@ main[style*="max-width:860px"]>*{max-width:860px;margin-left:0!important;margin-
 .g-brand .a5beta{align-self:center;vertical-align:0!important;line-height:1.4}
 .g-badges{align-items:center!important}
 .g-badges>*{display:inline-flex!important;align-items:center!important;line-height:1!important}
+.g-badges>[hidden]{display:none!important}
 /* 크롬 확장 배너 (메인) */
 .a5ext-banner{margin:56px 0 0;padding:22px 24px;border-radius:16px;background:#f4f6ff;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .a5ext-banner .ic{flex:none;width:44px;height:44px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--acc)}
