@@ -8,4 +8,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--acc)!important}
 main a:hover{color:var(--acc)}
 /* 베타 표시 · 기존 화면 버튼 */
 .g-brand .a5beta{font-size:11px;font-weight:600;border:1px solid currentColor;border-radius:999px;padding:1px 7px;margin-left:8px;vertical-align:2px}
-.g-gnb .a5old{border:1px solid #d4d4d9;border-radius:8px;padding:6px 10px;font-size:13px}
+.g-gnb{align-items:center!important}
+.g-gnb>a,.g-gnb>.g-more>.g-more-btn{display:inline-flex;align-items:center;line-height:1.2}
+.g-gnb .a5old{display:inline-flex;align-items:center;height:30px;box-sizing:border-box;border:1px solid #d4d4d9;border-radius:8px;padding:0 10px;font-size:13px;line-height:1}
+/* 제목의 핵심 단어 — 포인트 색 */
+.a5em{font-style:normal;color:var(--acc)}
