@@ -13,3 +13,6 @@ main a:hover{color:var(--acc)}
 .g-gnb .a5old{display:inline-flex;align-items:center;height:30px;box-sizing:border-box;border:1px solid #d4d4d9;border-radius:8px;padding:0 10px;font-size:13px;line-height:1}
 /* 제목의 핵심 단어 — 포인트 색 */
 .a5em{font-style:normal;color:var(--acc)}
+/* 좁은 읽기 화면(개인정보처리방침 등)도 제목 시작선을 로고에 맞추고, 글 폭만 좁게 */
+main[style*="max-width:860px"]{max-width:1180px!important}
+main[style*="max-width:860px"]>*{max-width:860px}
