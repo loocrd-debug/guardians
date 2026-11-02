@@ -18,6 +18,6 @@
     if (home && m && !document.querySelector('.a5ext-banner')) { const b = document.createElement('section'); b.className = 'a5ext-banner'; b.setAttribute('aria-label', '크롬 확장 프로그램')
       b.innerHTML = '<span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3h4v3a2 2 0 1 0 4 0V5h1a2 2 0 0 1 2 2v4h-2a2 2 0 1 0 0 4h2v4a2 2 0 0 1-2 2h-4v-2a2 2 0 1 0-4 0v2H5a2 2 0 0 1-2-2v-4h2a2 2 0 1 0 0-4H3V7a2 2 0 0 1 2-2h5z"/></svg></span><div class="tx"><b>크롬 확장 프로그램</b><span>작업 중인 페이지를 브라우저 옆 패널에서 바로 검사합니다 — 개발 · 퍼블리싱 중에 창을 옮기지 않고, 결과는 이 화면과 같습니다.</span></div><div class="bt"><a class="p" id="a5extdl" href="/beta/download.html">확장 받기</a><a class="s" href="/beta/download.html">설치 방법</a></div>'
       m.appendChild(b); fetch('/api/downloads').then(r => r.json()).then(d => { const it = (d.items || []).find(x => x.key === 'ext' && x.url); if (it) { const a = document.getElementById('a5extdl'); a.href = it.url; a.textContent = '확장 받기 · v' + it.version; a.setAttribute('download', '') } }).catch(() => {}) } }
-  const run0 = run; const runAll = () => { run0(); em(); ext() }
+  const run0 = run; const runAll = () => { run0() }
   runAll(); new MutationObserver(runAll).observe(document.documentElement, { subtree: true, childList: true })
 })()

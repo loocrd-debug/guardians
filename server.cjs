@@ -97,7 +97,7 @@ const APP_ROOT = process.pkg
   : __dirname
 
 // ── 버전 상수 ─────────────────────────────────────────
-const APP_VERSION = '6.21.0'
+const APP_VERSION = '6.22.0'
 
 // ═══════════════════════════════════════════════════════════
 //  axe-core 규칙 한국어 번역 테이블 (help / description)
@@ -387,6 +387,7 @@ button{width:100%;height:52px;margin-top:22px;border:0;border-radius:10px;backgr
 // ── 다운로드 센터: downloads/ 폴더의 설치 파일을 목록·제공 (업데이트 때 폴더만 바꾸면 페이지가 따라감)
 const DL_DIR = require('path').join(APP_ROOT, 'downloads')
 const DL_KINDS = [
+  { key: 'update', re: /^Guardians-Update-v[\d.]+-\d{8}\.exe$/i, name: '업데이트 파일 (설치형 · 행정망)', desc: '이미 설치한 가디언즈를 최신으로. 더블클릭하면 설치 폴더를 찾아 프로그램 · 크롬 확장 · KRDS 기준만 바꾸고 검사 기록 · 설정은 그대로 둡니다. 어느 6.x 버전이든 이 파일 하나로 최신이 됩니다', how: '행정망은 인터넷 PC에서 받아 USB로 옮긴 뒤 실행 · 크롬 확장을 쓰면 끝난 뒤 크롬을 다시 켜기' },
   { key: 'exe', re: /^Guardians-Setup-v[\d.]+\.exe$/i, name: 'Windows 설치 프로그램', desc: '더블클릭 → 다음 → 설치. 관리자 권한 불필요, 검사용 브라우저·확장·예약 검사 포함, 인터넷 없이 실행', how: '처음 실행 시 "Windows의 PC 보호" 창이 뜨면 [추가 정보] → [실행]' },
   { key: 'zip', re: /^Guardians-v[\d.]+\.zip$/i, name: '설치 없이 쓰는 ZIP판', desc: '압축을 풀고 START.bat 실행. 검사용 브라우저 포함(폐쇄망 가능)', how: 'ZIP 우클릭 → 속성 → [차단 해제] → 압축 풀기' },
   { key: 'ext', re: /^Guardians-Chrome-Extension-v[\d.]+\.zip$/i, name: 'Chrome 확장 (사이드 패널)', desc: '보고 있는 페이지를 브라우저 옆 패널에서 즉시 검사. 항목을 누르면 요소로 이동', how: 'chrome://extensions → 개발자 모드 켜기 → 압축 푼 폴더를 끌어다 놓기 → 퍼즐 아이콘에서 고정' },
@@ -437,6 +438,12 @@ app.get('/api/support', (req, res) => {
 })
 app.get('/api/support/qr', (req, res) => SUPPORT_ON && existsSync(SUPPORT_QR) ? res.sendFile(SUPPORT_QR) : res.status(404).end())
 // ── 변경분 받기 (관리자 토큰) — Claude 작업 환경 → 서버 data/incoming → 서버 cron이 GitHub에 커밋 · 푸시 · 반영 (사이트 중단 없음)
+// ── 다운로드 파일 올리기 (관리자) — 업데이트 파일 · 설치 파일처럼 Git에 넣지 않는 큰 파일
+app.post('/api/admin/download-file', express.raw({ type: '*/*', limit: '250mb' }), (req, res) => {
+  const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })
+  const name = String(req.query.name || ''); if (!/^Guardians-[\w.-]+\.(exe|zip)$/.test(name) || !req.body || !req.body.length) return res.status(400).json({ error: '파일 이름 또는 내용이 올바르지 않습니다' })
+  try { writeFileSync(join(DL_DIR, name), req.body); res.json({ ok: true, name, bytes: req.body.length }) } catch (e) { res.status(500).json({ error: e.message }) }
+})
 app.post('/api/admin/incoming', express.raw({ type: '*/*', limit: '30mb' }), (req, res) => {
   const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })
   const name = String(req.query.name || '').replace(/[^\w.-]/g, ''); if (!/\.zip$/.test(name) || !req.body || !req.body.length) return res.status(400).json({ error: 'zip 파일이 필요합니다' })

@@ -89,3 +89,20 @@ ${pct}${S.qr ? '<div class="gs-qr"><img src="/api/support/qr" alt="카카오페�
     const gl = document.getElementById('gsLink'); if (gl) gl.addEventListener('click', e => { e.preventDefault(); open() })
   }).catch(() => {})
 })()
+
+// ── v6.22: 화면 제목 핵심 단어 강조 · 크롬 확장 바로가기 · 메인 확장 배너 (설치형 · 웹 공통)
+;(() => {
+  const KEY = [/KRDS/, /스크린 리더/, /브라우저 호환/, /사이트 전체/, /전문가/, /예약/, /보안/, /정합성/, /민원안내/, /개인정보/, /다운로드/, /기준/, /검사(?=할까요)/, /항목/, /결과/, /문제/]
+  const em = () => document.querySelectorAll('main h1, .g-title h1').forEach(h => { if (h.querySelector('.g-em')) return
+    const w = document.createTreeWalker(h, NodeFilter.SHOW_TEXT); let t; while ((t = w.nextNode())) { for (const re of KEY) { const m = t.data.match(re); if (m) {
+      const r = document.createRange(); r.setStart(t, m.index); r.setEnd(t, m.index + m[0].length); const s = document.createElement('em'); s.className = 'g-em'; r.surroundContents(s); return } } } })
+  const base = location.pathname.startsWith('/beta/') ? '/beta' : ''
+  const ext = () => { const n = document.querySelector('.g-gnb'); if (n && !n.querySelector('.g-extlink')) { const more = n.querySelector('.g-more'); const a = document.createElement('a'); a.className = 'g-extlink'; a.href = base + '/download.html'; a.textContent = '크롬 확장'; more ? n.insertBefore(a, more) : n.appendChild(a) }
+    const home = /^(\/beta)?\/?(index\.html)?$/.test(location.pathname); const m = document.querySelector('main')
+    if (home && m && !document.querySelector('.g-ext')) { const b = document.createElement('section'); b.className = 'g-ext'; b.setAttribute('aria-label', '크롬 확장 프로그램')
+      b.innerHTML = '<span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3h4v3a2 2 0 1 0 4 0V5h1a2 2 0 0 1 2 2v4h-2a2 2 0 1 0 0 4h2v4a2 2 0 0 1-2 2h-4v-2a2 2 0 1 0-4 0v2H5a2 2 0 0 1-2-2v-4h2a2 2 0 1 0 0-4H3V7a2 2 0 0 1 2-2h5z"/></svg></span><div class="tx"><b>크롬 확장 프로그램</b><span>작업 중인 페이지를 브라우저 옆 패널에서 바로 검사합니다 — 개발 · 퍼블리싱 중에 창을 옮기지 않고, 결과는 이 화면과 같습니다.</span></div><div class="bt"><a class="p" id="g-extdl" href="' + base + '/download.html">확장 받기</a><a class="s" href="' + base + '/download.html">설치 방법</a></div>'
+      m.appendChild(b); fetch('/api/downloads').then(r => r.json()).then(d => { const it = (d.items || []).find(x => x.key === 'ext' && x.url); if (it) { const a = document.getElementById('g-extdl'); a.href = it.url; a.textContent = '확장 받기 · v' + it.version; a.setAttribute('download', '') } }).catch(() => {}) } }
+  const run = () => { em(); ext() }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run()
+  new MutationObserver(run).observe(document.documentElement, { subtree: true, childList: true })
+})()

@@ -3,6 +3,7 @@
 exec 9>/tmp/guardians-incoming.lock; flock -n 9 || exit 0
 IN=/opt/guardians/data/incoming; REPO="$HOME/guardians-repo/guardians"; LOG="$IN/last.log"
 sudo chmod 777 "$IN" 2>/dev/null
+sudo chown -R 1001:1001 /opt/guardians/downloads 2>/dev/null   # 관리자 업로드(업데이트 파일 등)를 앱이 쓸 수 있게
 shopt -s nullglob; for z in "$IN"/*.zip; do
   OUT=$( { echo "== $(date '+%F %T') $(basename "$z")"
     cd "$REPO" && git checkout -q main && git pull -q --ff-only origin main || { echo "PULL_FAIL"; exit 1; }
