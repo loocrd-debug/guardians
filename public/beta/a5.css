@@ -6,7 +6,7 @@ a:hover{color:var(--acc)}
 /* 제목 글꼴 — G마켓 산스(무료 · 상업 사용 가능), 본문은 Pretendard 그대로 */
 @font-face{font-family:"GmarketSans";font-weight:700;font-display:swap;src:url(/lib/fonts/GmarketSansBold.woff2) format("woff2")}
 @font-face{font-family:"GmarketSans";font-weight:500;font-display:swap;src:url(/lib/fonts/GmarketSansMedium.woff2) format("woff2")}
-.g-title h1,main h1,main h2,.a5-display{font-family:"GmarketSans","Pretendard Variable",Pretendard,sans-serif!important;font-weight:700!important;letter-spacing:-.02em!important}
+.g-title h1,main h1,.a5-display{font-family:"GmarketSans","Pretendard Variable",Pretendard,sans-serif!important;font-weight:700!important;letter-spacing:-.02em!important}
 .g-title h1{font-size:40px!important;line-height:1.25!important}
 /* 상단바 */
 .g-top{border-bottom:1px solid var(--line)}
@@ -55,3 +55,6 @@ input[type=checkbox]:checked{background:var(--acc) url("data:image/svg+xml,%3Csv
 input[type=radio]:checked{border:5px solid var(--acc)}
 input[type=checkbox]:disabled,input[type=radio]:disabled{opacity:.5;cursor:default}
 @media (prefers-reduced-motion:reduce){input[type=checkbox],input[type=radio]{transition:none}}
+
+/* 본문(main) 안에 들어 있는 제목 영역은 바깥 여백을 다시 주지 않음 (KRDS 기준 추적 등) */
+main .g-title{padding-left:0!important;padding-right:0!important;max-width:none!important}
