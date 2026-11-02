@@ -1,60 +1,11 @@
-/* 가디언즈 베타 — A5 디자인 공통 덧칠 (기존 화면 위에 얹어 전체 화면을 같은 톤으로) */
-:root{--ink:#0b0b0c;--muted:#5f5f66;--line:#ececef;--soft:#f3f3f5;--acc:#3b5bfd}
-html,body{color:var(--ink)!important;letter-spacing:-.01em}
-a:hover{color:var(--acc)}
-:focus-visible{outline:3px solid #f79009!important;outline-offset:2px}
-/* 제목 글꼴 — G마켓 산스(무료 · 상업 사용 가능), 본문은 Pretendard 그대로 */
+/* 가디언즈 베타 — 기존 디자인 그대로 + 화면 제목 글꼴(G마켓 산스) + 포인트 색(파랑) 하나 */
 @font-face{font-family:"GmarketSans";font-weight:700;font-display:swap;src:url(/lib/fonts/GmarketSansBold.woff2) format("woff2")}
-@font-face{font-family:"GmarketSans";font-weight:500;font-display:swap;src:url(/lib/fonts/GmarketSansMedium.woff2) format("woff2")}
-.g-title h1,main h1,.a5-display{font-family:"GmarketSans","Pretendard Variable",Pretendard,sans-serif!important;font-weight:700!important;letter-spacing:-.02em!important}
-.g-title h1{font-size:40px!important;line-height:1.25!important}
-/* 상단바 */
-.g-top{border-bottom:1px solid var(--line)}
-.g-top-in{max-width:1280px!important;padding:0 40px!important;height:68px}
-.g-brand{font-size:20px!important;letter-spacing:-.02em!important;font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif!important;font-weight:800!important}
-.g-brand .a5beta{font-family:"Pretendard Variable",Pretendard,sans-serif;font-weight:600}
-.g-foot,.g-foot *,footer,footer *{font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic",sans-serif!important}
-.g-brand .a5dot{color:var(--acc)}
-.g-brand .a5beta{font-size:11.5px;font-weight:700;border:1px solid var(--ink);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:3px;letter-spacing:0}
-.g-gnb{gap:22px!important;font-size:14.5px!important;align-items:center}
-.g-gnb a{color:#3d3d42!important}.g-gnb a.on,.g-gnb a[aria-current]{color:var(--ink)!important;font-weight:700}
-.g-gnb .a5old{height:36px;padding:0 12px;border:1px solid #d4d4d9;border-radius:10px;display:inline-flex;align-items:center;font-size:13.5px}
-/* 제목 영역 */
-.g-title{max-width:1280px!important;padding:48px 40px 8px!important}
-.g-title h1{font-size:44px!important;letter-spacing:-.04em!important;line-height:1.15!important}
-.g-title p{color:#4a4a50!important}
-.max-w-6xl,.max-w-7xl,.max-w-5xl{max-width:1280px!important}
-/* 입력 · 버튼 · 카드 */
-input[type=text],input[type=url],input[type=email],input[type=number],input[type=password],select,textarea{border-radius:12px!important;border-color:#c9c9cf!important}
-button,.btn,a.btn{border-radius:12px}
-[class*="rounded-lg"],[class*="rounded-xl"],[class*="rounded-2xl"]{border-radius:16px!important}
-[class*="border-gray-200"],[class*="border-slate-200"]{border-color:var(--line)!important}
-[class*="text-gray-500"],[class*="text-slate-500"]{color:var(--muted)!important}
-table th{color:var(--muted)}
-/* 하단 */
-.g-foot{border-top:1px solid var(--line)}
-/* 본문 · 하단 폭을 상단바(1280)와 맞춤 */
-main:not(.wrap),.g-foot-in,.g-wrap,.wrap-in{max-width:1280px!important;padding-left:40px!important;padding-right:40px!important;box-sizing:border-box}
-@media (max-width:760px){main:not(.wrap),.g-foot-in,.g-top-in,.g-title{padding-left:20px!important;padding-right:20px!important}}
-/* ── 둥근 톤 (메인 · 결과와 동일) ── */
-button:not(.g-more-btn):not([role=tab]):not(.mk),a.btn,.btn,[class*="rounded-md"]:is(button,a),[class*="rounded-lg"]:is(button,a),[class*="rounded-xl"]:is(button,a){border-radius:999px!important}
-input[type=text],input[type=url],input[type=email],input[type=number],input[type=password],input[type=search],select{border-radius:999px!important;padding-left:18px!important;padding-right:18px!important}
-textarea{border-radius:20px!important;padding:14px 18px!important}
-input::placeholder,textarea::placeholder{color:#b4b4bb!important;opacity:1}
-[class*="rounded-lg"]:not(button):not(a):not(input),[class*="rounded-xl"]:not(button):not(a):not(input),[class*="rounded-2xl"]:not(button):not(a):not(input),.card,.box,details{border-radius:22px!important}
-[role=tab],.tab,.tabs button{border-radius:999px!important}
-input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:17px;height:17px;vertical-align:-3px}
-/* 버튼 묶음(예: iPhone · Galaxy · 데스크톱)은 바깥을 알약으로 */
-[role=group],.seg,.segmented{border-radius:999px!important}
-/* 세로로 늘어나는 버튼(목록 옆 큰 실행 버튼)은 알약 대신 큰 둥근 사각형 */
-:is(button.self-stretch,button[class*="h-full"],button[class*="py-4"],button[class*="py-5"],button[class*="py-6"]):not(.a5x):not(.a5y):not(.a5z){border-radius:24px!important}
-/* 체크박스 · 라디오 — 둥근 파란 선택 (기존 검정 대신) */
-input[type=checkbox],input[type=radio]{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0 2px 0 0;border:1.5px solid #b5b5bc;border-radius:6px;background:#fff;display:inline-grid;place-content:center;cursor:pointer;vertical-align:-4px;accent-color:var(--acc)!important;transition:background .12s,border-color .12s}
-input[type=radio]{border-radius:50%}
-input[type=checkbox]:checked{background:var(--acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;border-color:var(--acc)}
-input[type=radio]:checked{border:5px solid var(--acc)}
-input[type=checkbox]:disabled,input[type=radio]:disabled{opacity:.5;cursor:default}
-@media (prefers-reduced-motion:reduce){input[type=checkbox],input[type=radio]{transition:none}}
-
-/* 본문(main) 안에 들어 있는 제목 영역은 바깥 여백을 다시 주지 않음 (KRDS 기준 추적 등) */
-main .g-title{padding-left:0!important;padding-right:0!important;max-width:none!important}
+:root{--acc:#3b5bfd}
+/* 화면 제목에만 G마켓 산스 */
+.g-title h1,main h1{font-family:"GmarketSans","Pretendard Variable",Pretendard,sans-serif!important;font-weight:700!important;letter-spacing:-.02em!important}
+/* 포인트 색 — 선택 · 링크 강조에만 (주요 버튼은 기존 검정 유지) */
+input[type=checkbox],input[type=radio]{accent-color:var(--acc)!important}
+main a:hover{color:var(--acc)}
+/* 베타 표시 · 기존 화면 버튼 */
+.g-brand .a5beta{font-size:11px;font-weight:600;border:1px solid currentColor;border-radius:999px;padding:1px 7px;margin-left:8px;vertical-align:2px}
+.g-gnb .a5old{border:1px solid #d4d4d9;border-radius:8px;padding:6px 10px;font-size:13px}

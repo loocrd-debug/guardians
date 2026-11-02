@@ -451,8 +451,9 @@ app.get('/api/admin/incoming/status', (req, res) => {
   res.json({ version: APP_VERSION, log })
 })
 // ── 베타(새 디자인) — 기존 화면을 그대로 쓰되 A5 공통 디자인을 덧칠해 /beta/ 아래에서 보여 줌 (기존 주소는 영향 없음)
-app.get('/beta/:page', (req, res, next) => {
-  const p = String(req.params.page || ''); if (!/^[a-z0-9-]+\.html$/.test(p) || p === 'index.html') return next()
+app.get(['/beta', '/beta/', '/beta/:page'], (req, res, next) => {
+  if (req.path === '/beta') return res.redirect(301, '/beta/')
+  const p = String(req.params.page || 'index.html'); if (!/^[a-z0-9-]+\.html$/.test(p)) return next()
   const f = join(APP_ROOT, 'public', p); if (!existsSync(f)) return next()
   let h = readFileSync(f, 'utf8'); h = h.replace('</head>', '<link rel="stylesheet" href="/beta/a5.css"><script src="/beta/beta.js" defer></script></head>')
   res.set('Cache-Control', 'no-cache').type('html').send(h)
