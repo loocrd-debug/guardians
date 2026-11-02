@@ -442,7 +442,7 @@ app.get('/api/support/qr', (req, res) => SUPPORT_ON && existsSync(SUPPORT_QR) ? 
 app.post('/api/admin/download-file', express.raw({ type: '*/*', limit: '250mb' }), (req, res) => {
   const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })
   const name = String(req.query.name || ''); if (!/^Guardians-[\w.-]+\.(exe|zip)$/.test(name) || !req.body || !req.body.length) return res.status(400).json({ error: '파일 이름 또는 내용이 올바르지 않습니다' })
-  try { writeFileSync(join(DL_DIR, name), req.body); res.json({ ok: true, name, bytes: req.body.length }) } catch (e) { res.status(500).json({ error: e.message }) }
+  try { const f = join(DL_DIR, name); if (req.query.append === '1') require('fs').appendFileSync(f, req.body); else writeFileSync(f, req.body); res.json({ ok: true, name, bytes: require('fs').statSync(f).size }) } catch (e) { res.status(500).json({ error: e.message }) }   // 큰 파일은 조각으로 이어 붙임(append=1)
 })
 app.post('/api/admin/incoming', express.raw({ type: '*/*', limit: '30mb' }), (req, res) => {
   const t = process.env.GUARDIANS_ADMIN_TOKEN; if (!t || req.headers['x-admin-token'] !== t) return res.status(403).json({ error: '관리자만' })

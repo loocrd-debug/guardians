@@ -169,7 +169,8 @@ main a:hover{color:var(--acc)}
 .g-badges>*{display:inline-flex!important;align-items:center!important;line-height:1!important}
 .g-badges>[hidden]{display:none!important}
 .g-gnb{align-items:center!important}
-.g-gnb>a,.g-gnb>.g-more>.g-more-btn{display:inline-flex;align-items:center;line-height:1.2}
+.g-gnb>a,.g-gnb>.g-more>.g-more-btn{display:inline-flex;align-items:center;line-height:1.2;font-weight:500}
+.g-gnb>a.on,.g-gnb>a[aria-current]{font-weight:700}
 /* 좁은 읽기 화면도 제목 시작선을 로고에 맞춤 */
 main[style*="max-width:860px"]{max-width:1180px!important}
 main[style*="max-width:860px"]>*{max-width:860px;margin-left:0!important;margin-right:0!important}
