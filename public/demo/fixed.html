@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>민원 신청 안내 — 예시 페이지</title>
+<style>
+body{margin:0;font-family:"Malgun Gothic",sans-serif;background:#f4f5f7;color:#222}
+.top{background:#1d3f8f;color:#fff;padding:18px 32px;font-size:20px;font-weight:700}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:#fff;color:#000;padding:8px}
+.wrap{max-width:960px;margin:28px auto;padding:0 24px}
+.hero{background:#fff;border-radius:12px;padding:28px;display:flex;gap:24px;align-items:center}
+.hero img{width:260px;height:150px;border-radius:8px;background:#cfd8ea}
+.notice{color:#5a5f68;font-size:14px;margin-top:10px}
+.form{background:#fff;border-radius:12px;padding:24px;margin-top:20px}
+.form input{width:70%;height:40px;border:1px solid #767676;border-radius:6px;padding:0 10px}
+.btn{margin-left:8px;height:42px;padding:0 18px;border-radius:6px;background:#1d3f8f;color:#fff;border:0;font-size:15px}
+.links a{margin-right:16px}
+.demo{position:fixed;right:12px;bottom:12px;background:#111;color:#fff;font-size:12px;padding:6px 10px;border-radius:6px}
+</style></head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="top">○○시청 민원 안내</header>
+<main id="main" class="wrap">
+  <h1 style="position:absolute;left:-999px">민원 신청 안내</h1>
+  <div class="hero">
+    <img src="/demo/banner.svg" alt="온라인 민원 신청 안내 — 컴퓨터로 민원을 쓰는 모습">
+    <div><h2 style="margin:0;font-size:24px">온라인으로 민원을 신청하세요</h2>
+    <p class="notice">※ 접수된 민원은 3일 이내에 처리됩니다.</p></div>
+  </div>
+  <form class="form" onsubmit="event.preventDefault();alert('신청')">
+    <label for="t" style="display:block;margin-bottom:6px">민원 제목</label>
+    <input id="t" type="text" placeholder="예: 도로 파손 신고">
+    <button class="btn" type="submit">신청</button>
+  </form>
+  <p class="links"><a href="#">민원 처리 절차 자세히 보기</a><a href="#">자주 묻는 질문 자세히 보기</a></p>
+</main>
+<div class="demo" aria-hidden="true">가디언즈 시연용 예시 페이지 (고친 후)</div>
+</body></html>
