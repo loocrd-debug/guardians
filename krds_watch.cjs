@@ -33,9 +33,9 @@ module.exports = function (app, APP_ROOT, opts = {}) {
   const installed = pkg => { try { return JSON.parse(fs.readFileSync(join(APP_ROOT, 'node_modules', pkg, 'package.json'), 'utf8')).version } catch (_) { try { return require(pkg + '/package.json').version } catch (_) { return null } } }
   async function interpretEngine(e, cur, latest, notes) {
     const k = key(); if (!k) return { skipped: true, reason: 'AI 키 없음 — 버전 비교 결과만 기록' }
-    const prompt = `당신은 정부 웹사이트 품질 검사 도구 "가디언즈"의 검사 엔진 관리자입니다.\n${e.name}의 새 버전이 나왔습니다 (현재 ${cur} → 최신 ${latest}).\n아래 릴리스 노트를 읽고, 가디언즈의 검사 결과(접근성 판정 규칙 · 화면 캡처 · 브라우저 동작)에 어떤 영향이 있는지 분석하세요.\n\n[릴리스 노트]\n${String(notes || '(릴리스 노트를 가져오지 못함)').slice(0, 9000)}\n\nJSON만 출력: {"summary":"한두 문장 요약","impact":"high|medium|low|none","items":[{"what":"바뀐 점","impact":"high|medium|low|none","affects":["영향받는 검사 항목"],"proposal":"가디언즈에서 할 일","reason":"근거"}]}`
+    const prompt = `당신은 정부 웹사이트 품질 검사 도구 "가디언즈"의 검사 엔진 관리자입니다.\n${e.name}의 새 버전이 나왔습니다 (현재 ${cur} → 최신 ${latest}).\n아래 릴리스 노트를 읽고, 가디언즈의 검사 결과(접근성 판정 규칙 · 화면 캡처 · 브라우저 동작)에 어떤 영향이 있는지 분석하세요.\n\n[릴리스 노트]\n${String(notes || '(릴리스 노트를 가져오지 못함)').slice(0, 9000)}\n\n항목(items)은 중요한 것 5개 이내로, 각 값은 한 문장으로 짧게 쓰세요.\nJSON만 출력: {"summary":"한두 문장 요약","impact":"high|medium|low|none","items":[{"what":"바뀐 점","impact":"high|medium|low|none","affects":["영향받는 검사 항목"],"proposal":"가디언즈에서 할 일","reason":"근거"}]}`
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90000)
-    try { const r = await fetch(API, { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' }, /^sk-ant-api/.test(k) ? { 'x-api-key': k } : { Authorization: 'Bearer ' + k }), body: JSON.stringify({ model: MODEL, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }) })
+    try { const r = await fetch(API, { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' }, /^sk-ant-api/.test(k) ? { 'x-api-key': k } : { Authorization: 'Bearer ' + k }), body: JSON.stringify({ model: MODEL, max_tokens: 4000, messages: [{ role: 'user', content: prompt }] }) })
       const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || 'HTTP ' + r.status)
       const text = (j.content || []).map(x => x.text || '').join('').replace(/```json|```/g, '').trim(); const out = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)); out.model = MODEL; return out
     } catch (err) { return { error: 'AI 해석 실패: ' + err.message } } finally { clearTimeout(t) } }
@@ -48,6 +48,10 @@ module.exports = function (app, APP_ROOT, opts = {}) {
           const rep = { id: now.replace(/[-:.TZ]/g, '').slice(0, 14) + String(made.length), at: now, trigger, kind: 'engine', changedSources: [e.id], changes: [{ source: e.id, name: e.name, url: 'https://github.com/' + e.repo + '/releases', diff: [{ kind: '변경', name: '버전', before: cur, after: latest }] }] }
           rep.ai = await interpretEngine(e, cur, latest, notes); rep.status = '검토 대기'; writeJ(join(REP, rep.id + '.json'), rep); made.push(rep)
           tell('가디언즈 — 검사 엔진 새 버전', `${e.name} ${latest} 공개 (현재 ${cur}). 검증 후 다음 업데이트에 반영됩니다.`, '/krds-watch.html#' + rep.id) }
+        else if (cur && vcmp(latest, cur) > 0) {   // 지난번 AI 해석이 실패했으면 다시 해석
+          for (const f of fs.readdirSync(REP).filter(f => f.endsWith('.json')).sort().reverse()) { const r0 = readJ(join(REP, f), {})
+            if (r0.kind === 'engine' && (r0.changedSources || [])[0] === e.id) { if (r0.ai && (r0.ai.error || r0.ai.skipped) && key()) { let notes = ''; try { notes = (JSON.parse(await get('https://api.github.com/repos/' + e.repo + '/releases/latest')).body) || '' } catch (_) {}
+                const ai = await interpretEngine(e, cur, latest, notes); if (!ai.error) { r0.ai = ai; writeJ(join(REP, f), r0) } } break } } }
       } catch (err) { st.engines[e.id] = Object.assign({}, prev, { installed: cur, ok: false, error: err.message, checkedAt: now }) } }
     return made }
   async function get(url) { const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000)
