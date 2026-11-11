@@ -1,4 +1,4 @@
-// KRDS 기준 자동 추적 — ① 매주 KRDS 공식 사이트·토큰 CSS 감시 → ② 바뀐 부분을 AI(Claude)가 해석해 영향 규칙·수정안 작성 → ③ 알림
+// KRDS 기준 · 검사 엔진 자동 추적 — ① 매주 KRDS 공식 사이트·토큰 CSS 감시 → ② 바뀐 부분을 AI(Claude)가 해석해 영향 규칙·수정안 작성 → ③ 알림
 // 반영은 담당자 승인 후 수동 (판정 기준이 몰래 바뀌지 않도록). 키가 없으면 ①③만 동작.
 const { join } = require('path'); const fs = require('fs'); const crypto = require('crypto')
 const BASE = 'https://www.krds.go.kr'
@@ -15,6 +15,12 @@ const SOURCES = [
   { id: 'principle', name: '디자인 원칙', url: BASE + '/html/site/utility/utility_02.html', type: 'page' },
   { id: 'designer', name: '시작하기 · 디자이너', url: BASE + '/html/site/outline/outline_02.html', type: 'page' }
 ]
+// 검사 엔진 추적 — 설치된 버전과 공개된 최신 버전을 비교
+const ENGINES = [
+  { id: 'axe-core', name: 'axe-core · 접근성 규칙 엔진', pkg: 'axe-core', repo: 'dequelabs/axe-core' },
+  { id: 'playwright', name: 'Playwright · 검사용 브라우저', pkg: 'playwright', repo: 'microsoft/playwright' }
+]
+const vcmp = (a, b) => { const x = String(a).split(/[.-]/).map(n => parseInt(n, 10) || 0), y = String(b).split(/[.-]/).map(n => parseInt(n, 10) || 0); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0) } return 0 }
 const MODEL = 'claude-sonnet-4-6', API = 'https://api.anthropic.com/v1/messages'
 module.exports = function (app, APP_ROOT, opts = {}) {
   const DIR = join(APP_ROOT, 'data', 'krds-watch'), SNAP = join(DIR, 'snapshots'), REP = join(DIR, 'reports'), STATE = join(DIR, 'state.json')
@@ -23,6 +29,27 @@ module.exports = function (app, APP_ROOT, opts = {}) {
   const writeJ = (f, o) => fs.writeFileSync(f, JSON.stringify(o, null, 1))
   const key = () => process.env.GUARDIANS_WATCH_AI_KEY || process.env.ANTHROPIC_API_KEY || ''
   let running = false
+  const tell = (t, b, link) => { try { if (opts.notify) opts.notify(t, b, { kind: 'watch', link: link || '/krds-watch.html' }) } catch (_) {} }
+  const installed = pkg => { try { return JSON.parse(fs.readFileSync(join(APP_ROOT, 'node_modules', pkg, 'package.json'), 'utf8')).version } catch (_) { try { return require(pkg + '/package.json').version } catch (_) { return null } } }
+  async function interpretEngine(e, cur, latest, notes) {
+    const k = key(); if (!k) return { skipped: true, reason: 'AI 키 없음 — 버전 비교 결과만 기록' }
+    const prompt = `당신은 정부 웹사이트 품질 검사 도구 "가디언즈"의 검사 엔진 관리자입니다.\n${e.name}의 새 버전이 나왔습니다 (현재 ${cur} → 최신 ${latest}).\n아래 릴리스 노트를 읽고, 가디언즈의 검사 결과(접근성 판정 규칙 · 화면 캡처 · 브라우저 동작)에 어떤 영향이 있는지 분석하세요.\n\n[릴리스 노트]\n${String(notes || '(릴리스 노트를 가져오지 못함)').slice(0, 9000)}\n\nJSON만 출력: {"summary":"한두 문장 요약","impact":"high|medium|low|none","items":[{"what":"바뀐 점","impact":"high|medium|low|none","affects":["영향받는 검사 항목"],"proposal":"가디언즈에서 할 일","reason":"근거"}]}`
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90000)
+    try { const r = await fetch(API, { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' }, /^sk-ant-api/.test(k) ? { 'x-api-key': k } : { Authorization: 'Bearer ' + k }), body: JSON.stringify({ model: MODEL, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }) })
+      const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || 'HTTP ' + r.status)
+      const text = (j.content || []).map(x => x.text || '').join('').replace(/```json|```/g, '').trim(); const out = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)); out.model = MODEL; return out
+    } catch (err) { return { error: 'AI 해석 실패: ' + err.message } } finally { clearTimeout(t) } }
+  async function checkEngines(st, now, trigger) { st.engines = st.engines || {}; const made = []
+    for (const e of ENGINES) { const prev = st.engines[e.id] || {}; const cur = installed(e.pkg)
+      try { const j = JSON.parse(await get('https://registry.npmjs.org/' + e.pkg + '/latest')); const latest = j.version
+        const isNew = cur && vcmp(latest, cur) > 0 && prev.latest !== latest
+        st.engines[e.id] = { installed: cur, latest, ok: true, checkedAt: now, upToDate: !cur || vcmp(latest, cur) <= 0 }
+        if (isNew) { let notes = ''; try { notes = (JSON.parse(await get('https://api.github.com/repos/' + e.repo + '/releases/latest')).body) || '' } catch (_) {}
+          const rep = { id: now.replace(/[-:.TZ]/g, '').slice(0, 14) + String(made.length), at: now, trigger, kind: 'engine', changedSources: [e.id], changes: [{ source: e.id, name: e.name, url: 'https://github.com/' + e.repo + '/releases', diff: [{ kind: '변경', name: '버전', before: cur, after: latest }] }] }
+          rep.ai = await interpretEngine(e, cur, latest, notes); rep.status = '검토 대기'; writeJ(join(REP, rep.id + '.json'), rep); made.push(rep)
+          tell('가디언즈 — 검사 엔진 새 버전', `${e.name} ${latest} 공개 (현재 ${cur}). 검증 후 다음 업데이트에 반영됩니다.`, '/krds-watch.html#' + rep.id) }
+      } catch (err) { st.engines[e.id] = Object.assign({}, prev, { installed: cur, ok: false, error: err.message, checkedAt: now }) } }
+    return made }
   async function get(url) { const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 30000)
     try { const r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'Guardians-KRDS-Watch/1.0 (+https://guardians.ai.kr)' } }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.text() } finally { clearTimeout(t) } }
   function normalize(src, raw) {
@@ -69,16 +96,18 @@ module.exports = function (app, APP_ROOT, opts = {}) {
       st.lastRun = now; st.lastTrigger = trigger
       let rep = null
       if (changes.length) { rep = { id: now.replace(/[-:.TZ]/g, '').slice(0, 14), at: now, trigger, changedSources: changes.map(c => c.source), changes }
-        rep.ai = await interpret(changes); rep.status = '검토 대기'; writeJ(join(REP, rep.id + '.json'), rep); await notify(rep) }
-      writeJ(STATE, st); return { ok: true, baseline, changed: changes.length, report: rep && rep.id }
+        rep.ai = await interpret(changes); rep.status = '검토 대기'; writeJ(join(REP, rep.id + '.json'), rep); await notify(rep)
+        tell('가디언즈 — KRDS 변경 감지', `공식 자료 ${changes.length}곳이 바뀌었습니다.` + (rep.ai && rep.ai.summary ? ' ' + rep.ai.summary : ''), '/krds-watch.html#' + rep.id) }
+      const eng = await checkEngines(st, now, trigger)
+      writeJ(STATE, st); return { ok: true, baseline, changed: changes.length, report: rep && rep.id, engines: eng.length }
     } finally { running = false } }
   // 일정: GUARDIANS_WATCH=1 일 때 매주 월요일 06시(한국) 무렵 1회
   if (process.env.GUARDIANS_WATCH === '1') setInterval(() => { const k = new Date(Date.now() + 9 * 3600e3); const st = readJ(STATE, {})
     if (k.getUTCDay() === 1 && k.getUTCHours() === 6 && (!st.lastRun || Date.now() - Date.parse(st.lastRun) > 6 * 864e5)) run('schedule').catch(() => {}) }, 15 * 60e3)
   const isAdmin = req => { const t = process.env.GUARDIANS_ADMIN_TOKEN; if (t) return req.headers['x-admin-token'] === t; const ip = (req.socket.remoteAddress || ''); return /127\.0\.0\.1|::1$/.test(ip) }
   app.get('/api/krds-watch', (req, res) => { const st = readJ(STATE, { sources: {} })
-    const reps = (() => { try { return fs.readdirSync(REP).filter(f => f.endsWith('.json')).sort().reverse().slice(0, 30).map(f => { const r = readJ(join(REP, f), {}); return { id: r.id, at: r.at, changedSources: r.changedSources, status: r.status, summary: r.ai && (r.ai.summary || r.ai.reason || r.ai.error), impact: r.ai && r.ai.impact } }) } catch (_) { return [] } })()
-    res.json({ enabled: process.env.GUARDIANS_WATCH === '1', ai: !!key(), schedule: '매주 월요일 06시', lastRun: st.lastRun || null, sources: SOURCES.map(s => Object.assign({ id: s.id, name: s.name, url: s.url }, st.sources[s.id] || {})), reports: reps, running }) })
+    const reps = (() => { try { return fs.readdirSync(REP).filter(f => f.endsWith('.json')).sort().reverse().slice(0, 30).map(f => { const r = readJ(join(REP, f), {}); return { id: r.id, at: r.at, kind: r.kind || 'krds', changedSources: r.changedSources, status: r.status, summary: r.ai && (r.ai.summary || r.ai.reason || r.ai.error), impact: r.ai && r.ai.impact } }) } catch (_) { return [] } })()
+    res.json({ enabled: process.env.GUARDIANS_WATCH === '1', ai: !!key(), schedule: '매주 월요일 06시', lastRun: st.lastRun || null, sources: SOURCES.map(s => Object.assign({ id: s.id, name: s.name, url: s.url }, st.sources[s.id] || {})), engines: ENGINES.map(e => Object.assign({ id: e.id, name: e.name, url: 'https://github.com/' + e.repo + '/releases', installed: installed(e.pkg) }, (st.engines || {})[e.id] || {})), reports: reps, running }) })
   app.get('/api/krds-watch/report/:id', (req, res) => { const f = join(REP, String(req.params.id).replace(/[^0-9]/g, '') + '.json'); fs.existsSync(f) ? res.json(readJ(f, {})) : res.status(404).json({ error: '없음' }) })
   app.post('/api/krds-watch/run', async (req, res) => { if (!isAdmin(req)) return res.status(403).json({ error: '관리자만 실행할 수 있습니다' }); res.json(await run('manual')) })
   app.post('/api/krds-watch/report/:id/status', (req, res) => { if (!isAdmin(req)) return res.status(403).json({ error: '관리자만' }); const f = join(REP, String(req.params.id).replace(/[^0-9]/g, '') + '.json'); if (!fs.existsSync(f)) return res.status(404).end()

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "가디언즈 빠른 품질 검사",
   "short_name": "가디언즈",
-  "version": "6.22.0",
+  "version": "6.23.0",
   "description": "보고 있는 페이지의 접근성(KWCAG 2.2)·KRDS(구조·디자인 토큰)·웹표준을 사이드 패널에서 즉시 검사합니다. 정밀 검사·결과서는 가디언즈 웹으로 이어집니다.",
   "icons": {
     "16": "icons/16.png",

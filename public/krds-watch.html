@@ -32,14 +32,16 @@ pre{white-space:pre-wrap;font-size:12.5px;background:#fafafa;border-radius:10px;
 </div></header>
 <main>
 <div class="g-title" style="padding:44px 0 6px"><h1 style="font-size:36px;margin:0">KRDS 기준 추적</h1></div>
-<p class="lead">KRDS 공식 사이트와 디자인 토큰이 바뀌면 가디언즈의 판정 기준도 따라가야 합니다. 매주 공식 사이트를 확인해 바뀐 부분을 찾고, <b>AI가 그 변화가 어떤 판정 규칙에 영향을 주는지 해석해 수정안을 씁니다.</b> 판정 기준은 담당자가 확인한 뒤에만 바뀝니다.</p>
-<div class="flow"><div><b>① 감시 · 매주</b><span>공식 토큰 CSS와 스타일 · 컴포넌트 · 패턴 문서 비교</span></div><div><b>② AI 해석</b><span>바뀐 내용 → 영향받는 규칙 · 토큰 항목 · 수정안 · 근거</span></div><div><b>③ 알림</b><span>Slack · Teams로 요약 전달</span></div><div><b>④ 담당자 확인</b><span>검증 후 반영 — 기준이 몰래 바뀌지 않음</span></div></div>
+<p class="lead">KRDS 공식 사이트와 디자인 토큰, 그리고 검사 엔진이 바뀌면 가디언즈의 판정 기준도 따라가야 합니다. 매주 공식 사이트와 엔진의 새 버전을 확인해 바뀐 부분을 찾고, <b>AI가 그 변화가 어떤 판정 규칙에 영향을 주는지 해석해 수정안을 씁니다.</b> 판정 기준은 담당자가 확인한 뒤에만 바뀝니다.</p>
+<div class="flow"><div><b>① 감시 · 매주</b><span>공식 토큰 CSS와 스타일 · 컴포넌트 · 패턴 문서 비교</span></div><div><b>② AI 해석</b><span>바뀐 내용 → 영향받는 규칙 · 토큰 항목 · 수정안 · 근거</span></div><div><b>③ 알림</b><span>Windows 알림 · Slack · Teams로 전달</span></div><div><b>④ 담당자 확인</b><span>검증 후 반영 — 기준이 몰래 바뀌지 않음</span></div></div>
 <section class="sec"><h2>현재 상태</h2><div class="stat" id="stat"><div><small>불러오는 중</small><strong>…</strong></div></div>
 <div style="margin-top:14px"><button class="run" id="run" type="button">지금 확인하기</button><span class="note" id="runMsg" style="margin-left:10px"></span></div></section>
 <section class="sec"><h2>적용 중인 KRDS 기준</h2><div class="stat" id="std"><div><small>불러오는 중</small><strong>…</strong></div></div>
 <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="run" href="/api/krds-standard/download" style="text-decoration:none;background:var(--soft);color:var(--ink)">기준 파일 받기 (행정망용)</a><label class="run" style="background:var(--soft);color:var(--ink)">기준 파일 가져오기<input type="file" id="imp" accept=".json,application/json" style="display:none"></label><button class="run" id="pull" type="button" style="background:var(--soft);color:var(--ink)">지금 새 기준 확인</button><span class="note" id="stdMsg"></span></div>
 <p class="note">담당자가 변경 보고서를 확인하고 <b>반영 → 기준 발행</b>을 누르면, 서명된 새 기준이 만들어집니다. 설치형은 인터넷이 될 때 자동으로 받고(서명 확인 후 적용), 행정망은 위의 기준 파일로 가져옵니다. 서명이 맞지 않는 기준은 적용되지 않습니다.</p></section>
 <section class="sec"><h2>감시 대상</h2><div style="overflow-x:auto"><table><thead><tr><th>대상</th><th>상태</th><th>마지막 확인</th><th>주소</th></tr></thead><tbody id="src"></tbody></table></div></section>
+<section class="sec"><h2>검사 엔진</h2><div style="overflow-x:auto"><table><thead><tr><th>엔진</th><th>상태</th><th>사용 중</th><th>최신</th><th>마지막 확인</th></tr></thead><tbody id="eng"></tbody></table></div><p class="note">새 버전이 나오면 AI가 릴리스 내용을 해석해 보고서로 남깁니다. 엔진은 검증을 거쳐 다음 업데이트 파일에 담깁니다.</p></section>
+<section class="sec"><h2>알림</h2><div id="noti"><p class="note">아직 알림이 없습니다.</p></div><div style="margin-top:14px"><button class="run" id="ntest" type="button" style="background:var(--soft);color:var(--ink)">알림 시험</button><span class="note" id="ntMsg" style="margin-left:10px"></span></div><p class="note">새 KRDS 기준이 적용되거나 변경이 감지되면 알려 줍니다. Windows 설치형에서는 화면 오른쪽 아래 <b>Windows 알림</b>으로도 표시됩니다.</p></section>
 <section class="sec"><h2>변경 보고서</h2><div id="reps"><p class="note">아직 감지된 변경이 없습니다.</p></div></section>
 </main>
 <footer class="g-foot"><div class="g-foot-in"><span class="co" title="가디언즈 v6.19 · axe-core + Playwright · WCAG 2.1 / KRDS"><img src="/solideo-logo.png" alt="(주)솔리데오" class="co-logo">(주)솔리데오 · 공공 IT · 정부24</span><span class="fls"><a href="/manual.pdf" class="fl" target="_blank" rel="noopener">사용설명서</a><span class="sep">|</span><a href="/criteria.html" class="fl">검사 기준</a><span class="sep">|</span><a href="/pro.html#pptx-config" class="fl">결과서 설정</a></span></div></footer>
@@ -51,7 +53,8 @@ async function load() {
   const d = await (await fetch('/api/krds-watch')).json()
   $('#stat').innerHTML = `<div><small>감시 대상</small><strong>${d.sources.length}곳</strong></div><div><small>마지막 확인</small><strong>${dt(d.lastRun)}</strong></div><div><small>자동 확인</small><strong>${d.enabled ? d.schedule : '꺼짐'}</strong></div><div><small>AI 해석</small><strong>${d.ai ? '켜짐 · Claude' : '꺼짐 (키 없음)'}</strong></div>`
   $('#src').innerHTML = d.sources.map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${s.ok === false ? '<span class="bad">확인 실패</span><br><small>' + esc(s.error) + '</small>' : s.hash ? '<span class="ok">정상</span>' : '아직 확인 전'}</td><td>${dt(s.fetchedAt || s.checkedAt)}</td><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url.replace('https://www.krds.go.kr', ''))}</a></td></tr>`).join('')
-  if (d.reports.length) $('#reps').innerHTML = d.reports.map(r => `<details class="rep" id="${r.id}" data-id="${r.id}"><summary><b>${dt(r.at)}</b><span>${r.changedSources.length}곳 변경</span>${r.impact ? `<span class="tag ${esc(r.impact)}">${IMP[r.impact] || esc(r.impact)}</span>` : ''}<span class="tag">${esc(r.status)}</span><span style="color:var(--muted);font-size:14px;flex-basis:100%">${esc(r.summary || '')}</span></summary><div class="body">불러오는 중…</div></details>`).join('')
+  $('#eng').innerHTML = (d.engines || []).map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${e.ok === false ? '<span class="bad">확인 실패</span>' : !e.latest ? '아직 확인 전' : e.upToDate ? '<span class="ok">최신</span>' : '<span class="bad">새 버전 있음</span>'}</td><td>${esc(e.installed || '—')}</td><td>${e.latest ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.latest)}</a>` : '—'}</td><td>${dt(e.checkedAt)}</td></tr>`).join('')
+  if (d.reports.length) $('#reps').innerHTML = d.reports.map(r => `<details class="rep" id="${r.id}" data-id="${r.id}"><summary><b>${dt(r.at)}</b><span>${r.kind === 'engine' ? '검사 엔진 새 버전' : r.changedSources.length + '곳 변경'}</span>${r.impact ? `<span class="tag ${esc(r.impact)}">${IMP[r.impact] || esc(r.impact)}</span>` : ''}<span class="tag">${esc(r.status)}</span><span style="color:var(--muted);font-size:14px;flex-basis:100%">${esc(r.summary || '')}</span></summary><div class="body">불러오는 중…</div></details>`).join('')
   document.querySelectorAll('.rep').forEach(el => el.addEventListener('toggle', async () => { if (!el.open || el.dataset.loaded) return; el.dataset.loaded = 1
     const r = await (await fetch('/api/krds-watch/report/' + el.dataset.id)).json(); const ai = r.ai || {}
     const aiHtml = ai.items ? ai.items.map(i => `<div class="item"><b>${esc(i.what)}</b> <span class="tag ${esc(i.impact)}">${IMP[i.impact] || esc(i.impact)}</span><br>영향 규칙: ${esc((i.affects || []).join(', ') || '없음')}<br>제안: ${esc(i.proposal)}<br><span style="color:var(--muted)">근거: ${esc(i.reason)}</span></div>`).join('') : `<div class="item">${esc(ai.reason || ai.error || 'AI 해석 없음')}</div>`
@@ -66,6 +69,11 @@ $('#run').onclick = async () => { const b = $('#run'); b.disabled = true; $('#ru
   const d = await r.json().catch(() => ({})); b.disabled = false
   $('#runMsg').textContent = d.error ? d.error : d.busy ? '이미 확인 중입니다' : d.baseline && d.baseline.length ? `기준선 저장 ${d.baseline.length}곳 · 변경 ${d.changed}곳` : `변경 ${d.changed || 0}곳`; load() }
 load()
+async function loadNoti() { const n = await (await fetch('/api/notifications')).json().catch(() => ({ items: [] }))
+  if (n.items && n.items.length) $('#noti').innerHTML = '<table><tbody>' + n.items.slice(0, 8).map(i => `<tr><td style="white-space:nowrap;color:var(--muted)">${dt(i.at)}</td><td><b>${esc(i.title)}</b><br>${esc(i.body)}</td><td style="white-space:nowrap">${i.windows ? 'Windows 알림 표시' : '화면 기록'}</td></tr>`).join('') + '</tbody></table>' }
+$('#ntest').onclick = async () => { $('#ntMsg').textContent = '보내는 중…'; const r = await fetch('/api/notifications/test', { method: 'POST' }); const j = await r.json().catch(() => ({}))
+  $('#ntMsg').textContent = j.error ? j.error : j.windows ? '화면 오른쪽 아래에 Windows 알림이 표시됩니다' : '알림을 기록했습니다 (Windows 설치형에서는 Windows 알림으로 표시)'; loadNoti() }
+loadNoti()
 
 async function adminFetch(url, body) { let h = { 'Content-Type': 'application/json' }; const tk = sessionStorage.getItem('g-admin'); if (tk) h['x-admin-token'] = tk
   let r = await fetch(url, { method: 'POST', headers: h, body: JSON.stringify(body || {}) })

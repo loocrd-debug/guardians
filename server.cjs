@@ -97,7 +97,7 @@ const APP_ROOT = process.pkg
   : __dirname
 
 // ── 버전 상수 ─────────────────────────────────────────
-const APP_VERSION = '6.22.0'
+const APP_VERSION = '6.23.0'
 
 // ═══════════════════════════════════════════════════════════
 //  axe-core 규칙 한국어 번역 테이블 (help / description)
@@ -5237,8 +5237,10 @@ app.get('/api/criteria', (req, res) => res.json(CRITERIA))
 
 const PORT = process.env.PORT || 3000
 // ── ⑤ 예약·자동 검사 모듈
-try { require(join(__dirname, 'krds_standard.cjs'))(app, APP_ROOT, { isAdmin: req => { const t = process.env.GUARDIANS_ADMIN_TOKEN; if (t) return req.headers['x-admin-token'] === t; return /127\.0\.0\.1|::1$/.test(req.socket.remoteAddress || '') } }) } catch (e) { console.error('[KRDS 기준] 로드 실패', e.message) }
-try { require(join(__dirname, 'krds_watch.cjs'))(app, APP_ROOT) } catch (e) { console.error('[KRDS 추적] 로드 실패', e.message) }
+let GUARDIANS_NOTIFY = null
+try { GUARDIANS_NOTIFY = require(join(__dirname, 'notify.cjs'))(app, APP_ROOT).notify } catch (e) { console.warn('[알림 모듈 로드 실패]', e.message) }
+try { require(join(__dirname, 'krds_standard.cjs'))(app, APP_ROOT, { notify: GUARDIANS_NOTIFY, isAdmin: req => { const t = process.env.GUARDIANS_ADMIN_TOKEN; if (t) return req.headers['x-admin-token'] === t; return /127\.0\.0\.1|::1$/.test(req.socket.remoteAddress || '') } }) } catch (e) { console.error('[KRDS 기준] 로드 실패', e.message) }
+try { require(join(__dirname, 'krds_watch.cjs'))(app, APP_ROOT, { notify: GUARDIANS_NOTIFY }) } catch (e) { console.error('[KRDS 추적] 로드 실패', e.message) }
 try { require(join(__dirname, 'scheduler.cjs'))(app, APP_ROOT, () => PORT) } catch (e) { console.warn('[예약 모듈 로드 실패]', e.message) }
 createServer(app).listen(PORT, '0.0.0.0', () => {
   console.log('')

@@ -41,12 +41,13 @@ module.exports = function (app, APP_ROOT, opts = {}) {
   const KEYF = path.join(APP_ROOT, 'data', 'std-signing.key')
   const canPublish = () => PUB && fs.existsSync(KEYF)
   const isAdmin = opts.isAdmin || (() => false)
+  const tell = out => { if (out && out.ok && !out.unchanged && opts.notify) opts.notify('가디언즈 — KRDS 기준 업데이트', `새 기준 ${out.version}이(가) 적용되었습니다. 이제 최신 규칙으로 검사합니다.`, { kind: 'standard', link: '/krds-watch.html' }); return out }
   app.get('/api/krds-standard', (req, res) => { const c = current(); let pkg = null; try { pkg = JSON.parse(fs.readFileSync(path.join(APP_ROOT, 'data', 'krds-standard.json'), 'utf8')) } catch (_) {}
     res.json({ version: c.version, basedOn: c.basedOn, publishedAt: c.publishedAt, signed: !!c.signed, bundled: !!c.bundled, canPublish: canPublish(), source: process.env.GUARDIANS_STD_SOURCE || (PUB ? null : 'https://guardians.ai.kr'), package: pkg && verify(pkg) ? pkg : null,
       summary: { font: c.font, bodyPx: c.bodyPx, lineHeight: c.lineHeight, radii: c.radii, paletteColors: Object.keys(c.palette || {}).length } }) })
   app.get('/api/krds-standard/download', (req, res) => { const f = path.join(APP_ROOT, 'data', 'krds-standard.json'); if (!fs.existsSync(f)) return res.status(404).json({ error: '발행된 기준이 아직 없습니다 (기본 기준 사용 중)' })
     res.setHeader('Content-Disposition', `attachment; filename="guardians-krds-standard-${current().version}.json"`); res.type('application/json').send(fs.readFileSync(f)) })
-  app.post('/api/krds-standard/import', (req, res) => res.json(apply(req.body || {})))
+  app.post('/api/krds-standard/import', (req, res) => res.json(tell(apply(req.body || {}))))
   // 발행 (팀 웹 · 관리자) — 최신 공식 토큰 CSS 스냅샷으로 새 기준을 만들고 서명
   app.post('/api/krds-standard/publish', (req, res) => {
     if (!isAdmin(req)) return res.status(403).json({ error: '관리자만 발행할 수 있습니다' }); if (!canPublish()) return res.status(400).json({ error: '이 서버에는 서명 키가 없어 발행할 수 없습니다' })
@@ -59,7 +60,7 @@ module.exports = function (app, APP_ROOT, opts = {}) {
     save(pkg); res.json({ ok: true, version: d.version, paletteColors: Object.keys(d.palette).length }) })
   // 수신 (설치형 등 · 인터넷이 될 때) — 시작 1분 뒤 + 12시간마다
   const src = process.env.GUARDIANS_STD_SOURCE || (PUB ? '' : 'https://guardians.ai.kr')
-  const pull = async () => { if (!src) return; try { const r = await fetch(src + '/api/krds-standard', { signal: AbortSignal.timeout(15000) }); if (!r.ok) return; const j = await r.json(); if (j.package) { const out = apply(j.package); if (out.ok && !out.unchanged) console.log('[KRDS 기준] 새 기준 적용:', out.version) } } catch (_) {} }
+  const pull = async () => { if (!src) return; try { const r = await fetch(src + '/api/krds-standard', { signal: AbortSignal.timeout(15000) }); if (!r.ok) return; const j = await r.json(); if (j.package) { const out = tell(apply(j.package)); if (out.ok && !out.unchanged) console.log('[KRDS 기준] 새 기준 적용:', out.version) } } catch (_) {} }
   if (src) { setTimeout(pull, 60e3); setInterval(pull, 12 * 3600e3) }
   app.post('/api/krds-standard/pull', async (req, res) => { await pull(); res.json({ version: current().version }) })
   return { current, verify }

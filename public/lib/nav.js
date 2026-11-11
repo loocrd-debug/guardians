@@ -90,7 +90,7 @@ ${pct}${S.qr ? '<div class="gs-qr"><img src="/api/support/qr" alt="카카오페�
   }).catch(() => {})
 })()
 
-// ── v6.22: 화면 제목 핵심 단어 강조 · 크롬 확장 바로가기 · 메인 확장 배너 (설치형 · 웹 공통)
+// ── v6.23: 화면 제목 핵심 단어 강조 · 크롬 확장 바로가기 · 메인 확장 배너 (설치형 · 웹 공통)
 ;(() => {
   const KEY = [/KRDS/, /스크린 리더/, /브라우저 호환/, /사이트 전체/, /전문가/, /예약/, /보안/, /정합성/, /민원안내/, /개인정보/, /다운로드/, /기준/, /검사(?=할까요)/, /항목/, /결과/, /문제/]
   const em = () => document.querySelectorAll('main h1, .g-title h1').forEach(h => { if (h.querySelector('.g-em')) return
